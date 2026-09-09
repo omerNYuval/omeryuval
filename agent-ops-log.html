@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>יומן פעולות — סוכן השטח</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --charcoal:#1b1d21;
+    --panel:#24272c;
+    --panel-raised:#2b2f35;
+    --steel:#3a3e45;
+    --paper:#ede9e2;
+    --muted:#93969c;
+    --amber:#e8a33d;
+    --rust:#c1512f;
+    --moss:#7d9a68;
+    --wire:#5a92a8;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--charcoal);
+    color:var(--paper);
+    font-family:'Heebo', sans-serif;
+    min-height:100vh;
+    background-image:
+      linear-gradient(var(--charcoal), var(--charcoal)),
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+  }
+
+  .frame{
+    max-width:1180px;
+    margin:0 auto;
+    padding:28px 24px 80px;
+  }
+
+  /* ---- top bar ---- */
+  .topbar{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    border-bottom:1px solid var(--steel);
+    padding-bottom:18px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+  }
+  .brand h1{
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:700;
+    font-size:2.4rem;
+    letter-spacing:0.3px;
+    margin:0;
+    line-height:1;
+  }
+  .brand .sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    color:var(--muted);
+  }
+  .status-pill{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.82rem;
+    color:var(--moss);
+    background:rgba(125,154,104,0.08);
+    border:1px solid rgba(125,154,104,0.35);
+    padding:6px 12px;
+    border-radius:3px;
+  }
+  .status-pill .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--moss);
+    box-shadow:0 0 0 0 rgba(125,154,104,0.6);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(125,154,104,0.55);}
+    70%{box-shadow:0 0 0 7px rgba(125,154,104,0);}
+    100%{box-shadow:0 0 0 0 rgba(125,154,104,0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .status-pill .dot{animation:none;}
+  }
+
+  /* ---- stat strip ---- */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    border:1px solid var(--steel);
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:26px;
+  }
+  .stat{
+    padding:16px 18px;
+    border-inline-start:1px solid var(--steel);
+  }
+  .stat:first-child{border-inline-start:none;}
+  .stat .num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:1.7rem;
+    font-weight:600;
+    color:var(--amber);
+    display:block;
+  }
+  .stat .label{
+    font-size:0.82rem;
+    color:var(--muted);
+    margin-top:3px;
+  }
+  @media (max-width:720px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .stat:nth-child(3){border-inline-start:none;}
+  }
+
+  /* ---- filters ---- */
+  .filters{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .filters .filter-label{
+    font-size:0.82rem;
+    color:var(--muted);
+    margin-inline-end:4px;
+  }
+  .chip{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    padding:6px 12px;
+    border:1px solid var(--steel);
+    border-radius:999px;
+    background:transparent;
+    color:var(--muted);
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .chip:hover{border-color:var(--paper);}
+  .chip.active{
+    color:var(--charcoal);
+    background:var(--amber);
+    border-color:var(--amber);
+    font-weight:600;
+  }
+  .search{
+    margin-inline-start:auto;
+    background:var(--panel);
+    border:1px solid var(--steel);
+    border-radius:4px;
+    padding:7px 12px;
+    color:var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.82rem;
+    min-width:180px;
+  }
+  .search::placeholder{color:var(--muted);}
+
+  /* ---- log feed ---- */
+  .day-group{margin-bottom:30px;}
+  .day-heading{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.82rem;
+    color:var(--muted);
+    padding-bottom:8px;
+    margin-bottom:10px;
+    border-bottom:1px solid var(--steel);
+    display:flex;
+    justify-content:space-between;
+  }
+
+  .entry{
+    display:grid;
+    grid-template-columns:96px 3px 1fr;
+    gap:0;
+    background:var(--panel);
+    border:1px solid var(--steel);
+    border-radius:4px;
+    margin-bottom:8px;
+    overflow:hidden;
+  }
+  .entry .time{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.8rem;
+    color:var(--muted);
+    padding:14px 10px;
+    text-align:center;
+    align-self:center;
+    border-inline-end:1px solid var(--steel);
+  }
+  .entry .bar{
+    background:var(--wire);
+  }
+  .entry[data-type="scan"] .bar{background:var(--wire);}
+  .entry[data-type="score"] .bar{background:var(--amber);}
+  .entry[data-type="publish"] .bar{background:var(--moss);}
+  .entry[data-type="update"] .bar{background:#b98fc9;}
+  .entry[data-type="index"] .bar{background:var(--rust);}
+
+  .entry .body{
+    padding:12px 16px;
+  }
+  .entry .row1{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:4px;
+  }
+  .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    padding:2px 8px;
+    border-radius:3px;
+    border:1px solid var(--steel);
+    color:var(--muted);
+  }
+  .entry[data-type="scan"] .tag.type{color:var(--wire);border-color:var(--wire);}
+  .entry[data-type="score"] .tag.type{color:var(--amber);border-color:var(--amber);}
+  .entry[data-type="publish"] .tag.type{color:var(--moss);border-color:var(--moss);}
+  .entry[data-type="update"] .tag.type{color:#b98fc9;border-color:#b98fc9;}
+  .entry[data-type="index"] .tag.type{color:var(--rust);border-color:var(--rust);}
+
+  .entry .title{
+    font-weight:600;
+    font-size:0.98rem;
+  }
+  .entry .detail{
+    color:var(--muted);
+    font-size:0.88rem;
+    line-height:1.5;
+  }
+  .entry .meta{
+    margin-top:6px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .meta .badge{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:var(--paper);
+    background:var(--panel-raised);
+    padding:2px 8px;
+    border-radius:3px;
+  }
+
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    padding:50px 0;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.88rem;
+  }
+
+  .footnote{
+    margin-top:34px;
+    padding-top:16px;
+    border-top:1px solid var(--steel);
+    font-size:0.8rem;
+    color:var(--muted);
+    line-height:1.7;
+  }
+  .footnote code{
+    font-family:'IBM Plex Mono', monospace;
+    background:var(--panel);
+    padding:1px 6px;
+    border-radius:3px;
+  }
+
+  a{color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <div class="topbar">
+    <div class="brand">
+      <h1>יומן פעולות</h1>
+      <span class="sub">GARAGE-SIGNAL / OPS LOG</span>
+    </div>
+    <div class="status-pill"><span class="dot"></span>הסוכן פעיל — סריקה הבאה בעוד 41 דקות</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="num">6</span><span class="label">הזדמנויות שזוהו היום</span></div>
+    <div class="stat"><span class="num">3</span><span class="label">דפים ששודרגו</span></div>
+    <div class="stat"><span class="num">2</span><span class="label">בקשות אינדוקס שנשלחו</span></div>
+    <div class="stat"><span class="num">14</span><span class="label">אזורים במעקב פעיל</span></div>
+  </div>
+
+  <div class="filters">
+    <span class="filter-label">סוג פעולה:</span>
+    <button class="chip active" data-filter="all">הכול</button>
+    <button class="chip" data-filter="scan">סריקת נתונים</button>
+    <button class="chip" data-filter="score">ניקוד הזדמנות</button>
+    <button class="chip" data-filter="update">עדכון דף</button>
+    <button class="chip" data-filter="publish">פרסום דף</button>
+    <button class="chip" data-filter="index">בקשת אינדוקס</button>
+    <input class="search" id="search" type="text" placeholder="חיפוש לפי עיר / מילת מפתח…">
+  </div>
+
+  <div id="feed"></div>
+
+  <div class="footnote">
+    זהו קובץ תצוגה עצמאי עם נתוני דמו קבועים בתוך הקוד (מערך <code>LOG_DATA</code> למטה). כדי לחבר אותו לפעולות אמיתיות של הסוכן, יש להחליף את המערך בקריאת JSON/DB חיה — מבנה השדות כבר מוכן לכך.
+  </div>
+
+</div>
+
+<script>
+  const LOG_DATA = [
+    {date:"2026-09-09", time:"07:12", type:"scan", title:"סריקת נפח חיפוש יומית", detail:"נמשכו נתוני נפח חיפוש עבור 340 צירופי עיר+מילת מפתח באזור החוף המערבי.", region:"אזור: מערב ארה״ב", tags:["DataForSEO API"]},
+    {date:"2026-09-09", time:"07:19", type:"score", title:"עלייה חדה בביקוש זוהתה", detail:"עלייה של 210% בנפח החיפוש למונח 'garage door won't open' באזור Los Angeles, CA לעומת השבוע שעבר.", region:"Los Angeles, CA", tags:["+210% נפח","תחרות: נמוכה"]},
+    {date:"2026-09-09", time:"07:20", type:"score", title:"ציון הזדמנות: 8.4/10", detail:"שילוב נפח, CPC ותחרות מציב את המונח כעדיפות גבוהה להשקעה השבוע.", region:"Los Angeles, CA", tags:["CPC: $14.20","ניקוד גבוה"]},
+    {date:"2026-09-09", time:"09:03", type:"update", title:"שדרוג דף קיים", detail:"הדף /los-angeles-garage-door-repair עודכן: נוסף FAQ ייעודי לדלת שלא נפתחת + פרטים מקומיים (שכונות Van Nuys, Reseda).", region:"Los Angeles, CA", tags:["אותו URL","ללא שינוי title"]},
+    {date:"2026-09-09", time:"09:05", type:"index", title:"בקשת אינדוקס נשלחה", detail:"נשלחה בקשת Request Indexing ב-Search Console עבור הדף המעודכן.", region:"Los Angeles, CA", tags:["Search Console API"]},
+    {date:"2026-09-09", time:"11:47", type:"scan", title:"בדיקת SERP צולבת", detail:"הושוו תוצאות חיפוש ממדמה מובייל ומדמה מחשב עבור 5 ערים מובילות — אין פערים משמעותיים היום.", region:"5 ערים", tags:["Local Falcon"]},
+    {date:"2026-09-08", time:"08:31", type:"scan", title:"סריקת נפח חיפוש יומית", detail:"נמשכו נתוני נפח חיפוש עבור 340 צירופי עיר+מילת מפתח באזור החוף המזרחי.", region:"אזור: מזרח ארה״ב", tags:["DataForSEO API"]},
+    {date:"2026-09-08", time:"08:44", type:"score", title:"ציון הזדמנות: 6.1/10", detail:"עלייה מתונה במונח 'garage door spring repair cost' באזור Boston — מתויג למעקב, לא לפעולה מיידית.", region:"Boston, MA", tags:["ניקוד בינוני","למעקב"]},
+    {date:"2026-09-08", time:"13:15", type:"publish", title:"דף חדש פורסם", detail:"נוצר ופורסם דף חדש עבור 'emergency garage door repair' באזור Austin, TX. הדף נוסף ל-sitemap וקושר מדף האזור הראשי.", region:"Austin, TX", tags:["דף חדש","sitemap עודכן"]},
+    {date:"2026-09-08", time:"13:16", type:"index", title:"בקשת אינדוקס נשלחה", detail:"נשלחה בקשת סריקה ראשונית לדף החדש.", region:"Austin, TX", tags:["Search Console API"]},
+    {date:"2026-09-07", time:"07:05", type:"scan", title:"סריקת נפח חיפוש יומית", detail:"נמשכו נתונים עבור אזור הדרום-מערב (Phoenix, Las Vegas, Albuquerque).", region:"אזור: דרום-מערב", tags:["DataForSEO API"]},
+    {date:"2026-09-07", time:"10:22", type:"update", title:"עדכון CTA לפי ביצועים", detail:"הוחלף ניסוח כפתור הפנייה בדף Phoenix מ-'צור קשר' ל-'קבל הצעת מחיר תוך שעה' לאחר בדיקת A/B של 3 שבועות.", region:"Phoenix, AZ", tags:["A/B test","אותו URL"]},
+  ];
+
+  const feed = document.getElementById("feed");
+  const chips = document.querySelectorAll(".chip");
+  const searchInput = document.getElementById("search");
+  let activeFilter = "all";
+
+  const typeLabels = {
+    scan:"סריקת נתונים",
+    score:"ניקוד הזדמנות",
+    update:"עדכון דף",
+    publish:"פרסום דף",
+    index:"בקשת אינדוקס"
+  };
+
+  function dayLabel(dateStr){
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString('he-IL', { weekday:'long', day:'numeric', month:'long' });
+  }
+
+  function render(){
+    const term = searchInput.value.trim().toLowerCase();
+    const filtered = LOG_DATA.filter(e=>{
+      const matchesType = activeFilter === "all" || e.type === activeFilter;
+      const haystack = (e.title + " " + e.detail + " " + e.region + " " + e.tags.join(" ")).toLowerCase();
+      const matchesTerm = term === "" || haystack.includes(term);
+      return matchesType && matchesTerm;
+    });
+
+    feed.innerHTML = "";
+
+    if(filtered.length === 0){
+      feed.innerHTML = '<div class="empty">אין פעולות שתואמות את הסינון הנוכחי.</div>';
+      return;
+    }
+
+    const groups = {};
+    filtered.forEach(e=>{
+      if(!groups[e.date]) groups[e.date] = [];
+      groups[e.date].push(e);
+    });
+
+    Object.keys(groups).sort().reverse().forEach(date=>{
+      const groupDiv = document.createElement("div");
+      groupDiv.className = "day-group";
+
+      const heading = document.createElement("div");
+      heading.className = "day-heading";
+      heading.innerHTML = `<span>${dayLabel(date)}</span><span>${groups[date].length} פעולות</span>`;
+      groupDiv.appendChild(heading);
+
+      groups[date].forEach(e=>{
+        const entry = document.createElement("div");
+        entry.className = "entry";
+        entry.setAttribute("data-type", e.type);
+        entry.innerHTML = `
+          <div class="time">${e.time}</div>
+          <div class="bar"></div>
+          <div class="body">
+            <div class="row1">
+              <span class="tag type">${typeLabels[e.type]}</span>
+              <span class="title">${e.title}</span>
+            </div>
+            <div class="detail">${e.detail}</div>
+            <div class="meta">
+              <span class="badge">${e.region}</span>
+              ${e.tags.map(t=>`<span class="badge">${t}</span>`).join("")}
+            </div>
+          </div>
+        `;
+        groupDiv.appendChild(entry);
+      });
+
+      feed.appendChild(groupDiv);
+    });
+  }
+
+  chips.forEach(chip=>{
+    chip.addEventListener("click", ()=>{
+      chips.forEach(c=>c.classList.remove("active"));
+      chip.classList.add("active");
+      activeFilter = chip.dataset.filter;
+      render();
+    });
+  });
+
+  searchInput.addEventListener("input", render);
+
+  render();
+</script>
+</body>
+</html>
