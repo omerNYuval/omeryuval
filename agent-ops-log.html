@@ -415,7 +415,7 @@
         <div class="stat"><span class="num" id="statKeywords">–</span><span class="label">מונחי מפתח במעקב</span></div>
         <div class="stat"><span class="num" id="statSignals">–</span><span class="label">איתותי עלייה שזוהו בסריקה האחרונה</span></div>
         <div class="stat"><span class="num" id="statRuns">–</span><span class="label">סריקות שבוצעו בסך הכול</span></div>
-        <div class="stat"><span class="num" id="statMarket">–</span><span class="label">אזור נבדק</span></div>
+        <div class="stat"><span class="num" id="statMarket">–</span><span class="label">אזור אחרון שנבדק</span></div>
       </div>
 
       <div id="feed"></div>
@@ -500,7 +500,7 @@
     document.getElementById("statKeywords").textContent = keywordCount || "–";
     document.getElementById("statSignals").textContent = signalsLatest;
     document.getElementById("statRuns").textContent = scanCount;
-    document.getElementById("statMarket").textContent = meta.market || "–";
+    document.getElementById("statMarket").textContent = allEntries.length ? allEntries[0].region : "–";
   }
 
   function render(){
