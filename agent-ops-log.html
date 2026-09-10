@@ -53,7 +53,7 @@
   }
 
   .frame{
-    max-width:1180px;
+    max-width:1600px;
     margin:0 auto;
     padding:28px 24px 80px;
   }
@@ -68,6 +68,9 @@
     margin-bottom:22px;
     flex-wrap:wrap;
     gap:14px;
+  }
+  .brand, .topbar-actions{
+    min-width:0;
   }
   .brand{
     display:flex;
@@ -95,6 +98,10 @@
     border:1px solid rgba(125,154,104,0.35);
     padding:6px 12px;
     border-radius:3px;
+    min-width:0;
+  }
+  .status-pill span:last-child{
+    overflow-wrap:anywhere;
   }
   .status-pill.stale{
     color:var(--muted);
