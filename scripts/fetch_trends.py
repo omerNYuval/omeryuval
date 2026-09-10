@@ -1,12 +1,12 @@
 import json
 import os
-import time
 from datetime import datetime, timezone
 
-from pytrends.request import TrendReq
+import requests
 
 MARKET_NAME = "Boston, MA"
-GEO = "US-MA-506"  # Boston-Manchester Nielsen DMA
+LOCATION_NAME = "Boston,Massachusetts,United States"
+LANGUAGE_NAME = "English"
 KEYWORDS = [
     "garage door repair",
     "garage door spring repair",
@@ -14,22 +14,53 @@ KEYWORDS = [
     "garage door won't open",
     "garage door off track",
 ]
+RISE_THRESHOLD_PCT = 15
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "trends.json")
 MAX_ENTRIES = 300
+API_URL = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
 
 
-def fetch_rising_queries(pytrends, keyword, retries=3, backoff=20):
-    last_error = None
-    for attempt in range(retries):
-        try:
-            pytrends.build_payload([keyword], timeframe="today 1-m", geo=GEO)
-            related = pytrends.related_queries()
-            return related.get(keyword, {}).get("rising")
-        except Exception as exc:  # pytrends raises on rate limiting / network errors
-            last_error = exc
-            time.sleep(backoff * (attempt + 1))
-    raise RuntimeError(f"Failed to fetch '{keyword}' after {retries} attempts: {last_error}")
+def get_credentials():
+    login = os.environ.get("DATAFORSEO_LOGIN")
+    password = os.environ.get("DATAFORSEO_PASSWORD")
+    if not login or not password:
+        raise RuntimeError("Missing DATAFORSEO_LOGIN / DATAFORSEO_PASSWORD environment variables")
+    return login, password
+
+
+def fetch_search_volume(login, password):
+    payload = [{
+        "keywords": KEYWORDS,
+        "location_name": LOCATION_NAME,
+        "language_name": LANGUAGE_NAME,
+    }]
+    response = requests.post(API_URL, auth=(login, password), json=payload, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+
+    if data.get("status_code") != 20000:
+        raise RuntimeError(f"DataForSEO API error: {data.get('status_message')}")
+
+    tasks = data.get("tasks") or []
+    if not tasks or tasks[0].get("status_code") != 20000:
+        message = tasks[0].get("status_message") if tasks else "no tasks returned"
+        raise RuntimeError(f"DataForSEO task error: {message}")
+
+    return tasks[0].get("result") or []
+
+
+def trend_pct_change(monthly_searches):
+    points = sorted(
+        (m for m in (monthly_searches or []) if m.get("search_volume") is not None),
+        key=lambda m: (m["year"], m["month"]),
+    )
+    if len(points) < 2:
+        return None
+    prev, current = points[-2], points[-1]
+    if not prev.get("search_volume"):
+        return None
+    return round((current["search_volume"] - prev["search_volume"]) / prev["search_volume"] * 100)
 
 
 def load_existing_entries():
@@ -40,32 +71,31 @@ def load_existing_entries():
 
 
 def main():
-    pytrends = TrendReq(hl="en-US", tz=300)
+    login, password = get_credentials()
     now = datetime.now(timezone.utc)
     run_date = now.strftime("%Y-%m-%d")
     run_time = now.strftime("%H:%M")
 
+    results = fetch_search_volume(login, password)
+
     new_entries = []
     signals_found = 0
 
-    for keyword in KEYWORDS:
-        rising = fetch_rising_queries(pytrends, keyword)
-        if rising is None or rising.empty:
+    for row in results:
+        keyword = row.get("keyword")
+        volume = row.get("search_volume")
+        if keyword is None or volume is None:
             continue
-        for row in rising.head(3).itertuples(index=False):
-            value_label = (
-                "עלייה חדה מאוד"
-                if isinstance(row.value, str) and row.value.lower() == "breakout"
-                else f"+{row.value}%"
-            )
+        pct = trend_pct_change(row.get("monthly_searches"))
+        if pct is not None and pct >= RISE_THRESHOLD_PCT:
             new_entries.append({
                 "date": run_date,
                 "time": run_time,
                 "type": "score",
-                "title": f"מונח מבוקש בעלייה: {row.query}",
-                "detail": f"החיפוש \"{row.query}\", הקשור למונח הבסיס \"{keyword}\", נמצא בעלייה באזור {MARKET_NAME} בחודש האחרון.",
+                "title": f"עלייה בביקוש: {keyword}",
+                "detail": f"נפח החיפוש למונח \"{keyword}\" עלה ב-{pct}% לעומת החודש הקודם באזור {MARKET_NAME} (נפח נוכחי: כ-{volume} חיפושים בחודש).",
                 "region": MARKET_NAME,
-                "tags": [value_label, "גוגל טרנדס"],
+                "tags": [f"+{pct}%", f"{volume} חיפושים לחודש"],
             })
             signals_found += 1
 
@@ -74,9 +104,9 @@ def main():
         "time": run_time,
         "type": "scan",
         "title": "סריקת ביקוש הושלמה",
-        "detail": f"נבדקו {len(KEYWORDS)} מונחי מפתח מרכזיים מול Google Trends עבור {MARKET_NAME}. נמצאו {signals_found} מונחים בעלייה.",
+        "detail": f"נבדקו {len(KEYWORDS)} מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור {MARKET_NAME}. נמצאו {signals_found} מונחים בעלייה.",
         "region": MARKET_NAME,
-        "tags": ["גוגל טרנדס"],
+        "tags": ["נתונים אמיתיים"],
     })
 
     entries = new_entries + load_existing_entries()
