@@ -25,14 +25,30 @@ def main():
         raise RuntimeError(f"DataForSEO task error: {message}")
 
     results = tasks[0].get("result") or []
-    neighborhoods = [
-        r for r in results
-        if r.get("location_type") == "Neighborhood" and r.get("location_code_parent") == 21152
+
+    candidates = [
+        "Allston", "Back Bay", "Beacon Hill", "Brighton", "Charlestown",
+        "Dorchester", "Downtown Boston", "East Boston", "Fenway", "Hyde Park",
+        "Jamaica Plain", "Mattapan", "Mission Hill", "North End", "Roslindale",
+        "Roxbury", "South Boston", "South End", "West Roxbury", "West End",
+        "Wharf District", "Bay Village", "Chinatown", "Longwood",
     ]
 
-    print(f"Total US locations returned: {len(results)}")
-    print(f"Neighborhoods under parent 21152: {len(neighborhoods)}")
-    print(json.dumps(sorted(neighborhoods, key=lambda r: r["location_name"]), ensure_ascii=False, indent=2))
+    by_first_segment = {}
+    for r in results:
+        name = r.get("location_name") or ""
+        first = name.split(",")[0].strip().lower()
+        by_first_segment.setdefault(first, []).append(r)
+
+    print("Checking known Boston neighborhood names against DataForSEO's location database:\n")
+    for candidate in candidates:
+        matches = by_first_segment.get(candidate.lower(), [])
+        ma_matches = [m for m in matches if "Massachusetts" in (m.get("location_name") or "")]
+        if ma_matches:
+            for m in ma_matches:
+                print(f"FOUND  | {candidate:20s} -> {m['location_name']} | type={m['location_type']} | code={m['location_code']}")
+        else:
+            print(f"MISSING| {candidate:20s} -> not found in Massachusetts")
 
 
 if __name__ == "__main__":
