@@ -25,11 +25,14 @@ def main():
         raise RuntimeError(f"DataForSEO task error: {message}")
 
     results = tasks[0].get("result") or []
-    matches = [r for r in results if "boston" in (r.get("location_name") or "").lower()]
+    neighborhoods = [
+        r for r in results
+        if r.get("location_type") == "Neighborhood" and r.get("location_code_parent") == 21152
+    ]
 
     print(f"Total US locations returned: {len(results)}")
-    print(f"Locations matching 'boston': {len(matches)}")
-    print(json.dumps(matches, ensure_ascii=False, indent=2))
+    print(f"Neighborhoods under parent 21152: {len(neighborhoods)}")
+    print(json.dumps(sorted(neighborhoods, key=lambda r: r["location_name"]), ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
