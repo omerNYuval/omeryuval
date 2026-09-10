@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>יומן פעולות — סוכן השטח</title>
+<script>
+  try{
+    if(localStorage.getItem('agent-ops-theme') === 'light'){
+      document.documentElement.setAttribute('data-theme','light');
+    }
+  }catch(e){}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -20,6 +27,19 @@
     --wire:#5a92a8;
   }
 
+  :root[data-theme="light"]{
+    --charcoal:#f4f1ea;
+    --panel:#ffffff;
+    --panel-raised:#ece6d9;
+    --steel:#d9d2c2;
+    --paper:#23262b;
+    --muted:#6b7078;
+    --amber:#8a5209;
+    --rust:#9c3f22;
+    --moss:#4f6b3d;
+    --wire:#2f6478;
+  }
+
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
@@ -30,6 +50,7 @@
     background-image:
       linear-gradient(var(--charcoal), var(--charcoal)),
       repeating-linear-gradient(180deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    transition:background-color .2s ease, color .2s ease;
   }
 
   .frame{
@@ -93,6 +114,29 @@
   @media (prefers-reduced-motion: reduce){
     .status-pill .dot{animation:none;}
   }
+
+  .topbar-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .theme-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    border:1px solid var(--steel);
+    background:var(--panel);
+    color:var(--paper);
+    font-size:1rem;
+    line-height:1;
+    cursor:pointer;
+    transition:border-color .15s ease, background-color .15s ease;
+  }
+  .theme-toggle:hover{border-color:var(--paper);}
 
   /* ---- stat strip ---- */
   .stats{
@@ -292,7 +336,10 @@
       <h1>יומן פעולות</h1>
       <span class="sub">GARAGE-SIGNAL / OPS LOG</span>
     </div>
-    <div class="status-pill"><span class="dot"></span>הסוכן פעיל — סריקה הבאה בעוד 41 דקות</div>
+    <div class="topbar-actions">
+      <div class="status-pill"><span class="dot"></span>הסוכן פעיל — סריקה הבאה בעוד 41 דקות</div>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="החלף מצב תצוגה">🌙</button>
+    </div>
   </div>
 
   <div class="stats">
@@ -340,7 +387,30 @@
   const feed = document.getElementById("feed");
   const chips = document.querySelectorAll(".chip");
   const searchInput = document.getElementById("search");
+  const themeToggle = document.getElementById("themeToggle");
+  const THEME_KEY = "agent-ops-theme";
   let activeFilter = "all";
+
+  function applyTheme(theme){
+    if(theme === "light"){
+      document.documentElement.setAttribute("data-theme", "light");
+      themeToggle.textContent = "☀️";
+      themeToggle.title = "עבור למצב לילה";
+    }else{
+      document.documentElement.removeAttribute("data-theme");
+      themeToggle.textContent = "🌙";
+      themeToggle.title = "עבור למצב יום";
+    }
+  }
+
+  applyTheme(document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark");
+
+  themeToggle.addEventListener("click", ()=>{
+    const isLight = document.documentElement.getAttribute("data-theme") === "light";
+    const next = isLight ? "dark" : "light";
+    applyTheme(next);
+    try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+  });
 
   const typeLabels = {
     scan:"סריקת נתונים",
