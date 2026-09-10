@@ -23,8 +23,6 @@ def main():
 
     payload = [{
         "keywords": [SEED_KEYWORD],
-        "location_name": "Indianapolis,Indiana,United States",
-        "language_code": "en",
         "limit": LIMIT,
     }]
     response = requests.post(API_URL, auth=(login, password), json=payload, timeout=60)
