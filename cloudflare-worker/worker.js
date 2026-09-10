@@ -17,6 +17,15 @@ const COOLDOWN_MINUTES = 30;
 const MAX_ENTRIES = 300;
 const ALLOWED_ORIGIN = "https://omernyuval.github.io";
 
+// Wraps embedded Latin/numeric text in a bidi-isolate so it doesn't
+// scramble the surrounding Hebrew sentence's punctuation/word order.
+// dir="ltr" is required (not just isolation) because purely numeric/symbol
+// text (e.g. "+39%") has no strong-direction character of its own, so a
+// plain isolate falls back to the ambient RTL direction and still flips.
+function bdi(text) {
+  return `<bdi dir="ltr">${text}</bdi>`;
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
@@ -67,8 +76,8 @@ export default {
             date: runDate,
             time: runTime,
             type: "score",
-            title: `עלייה בביקוש: ${row.keyword}`,
-            detail: `נפח החיפוש למונח "${row.keyword}" עלה ב-${pct}% לעומת החודש הקודם באזור ${MARKET_NAME} (נפח נוכחי: כ-${row.search_volume} חיפושים בחודש).`,
+            title: `עלייה בביקוש: ${bdi(row.keyword)}`,
+            detail: `נפח החיפוש למונח ${bdi(`"${row.keyword}"`)} עלה ב-${bdi(pct + "%")} לעומת החודש הקודם באזור ${bdi(MARKET_NAME)} (נפח נוכחי: כ-${bdi(row.search_volume)} חיפושים בחודש).`,
             region: MARKET_NAME,
             tags: [`+${pct}%`, `${row.search_volume} חיפושים לחודש`],
           });
@@ -81,7 +90,7 @@ export default {
         time: runTime,
         type: "scan",
         title: "סריקת ביקוש הושלמה",
-        detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור ${MARKET_NAME}. נמצאו ${signalsFound} מונחים בעלייה.`,
+        detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור ${bdi(MARKET_NAME)}. נמצאו ${signalsFound} מונחים בעלייה.`,
         region: MARKET_NAME,
         tags: ["נתונים אמיתיים"],
       });

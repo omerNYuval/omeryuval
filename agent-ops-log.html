@@ -269,6 +269,7 @@
     font-weight:700;
     color:var(--amber);
     display:block;
+    direction:ltr;
   }
   .stat .label{
     font-size:0.82rem;
@@ -321,7 +322,7 @@
   .insights-lead b{color:var(--amber);}
   .insights-stats{
     display:grid;
-    grid-template-columns:repeat(3,1fr);
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
     gap:14px;
     margin-bottom:22px;
     position:relative;
@@ -338,6 +339,7 @@
     font-size:1.5rem;
     font-weight:800;
     color:var(--amber);
+    direction:ltr;
   }
   .insight-stat .label{
     font-size:0.78rem;
@@ -489,6 +491,7 @@
     border:1px solid rgba(255,255,255,0.07);
     padding:3px 9px;
     border-radius:999px;
+    direction:ltr;
   }
 
   .empty{
@@ -556,6 +559,13 @@
           <div class="insight-stat"><span class="value" id="insightScans">0</span><span class="label">סריקות שבוצעו</span></div>
           <div class="insight-stat"><span class="value" id="insightSignals">0</span><span class="label">איתותי עלייה</span></div>
           <div class="insight-stat"><span class="value" id="insightRegions">0</span><span class="label">אזורים במעקב</span></div>
+          <div class="insight-stat"><span class="value" id="insightDiscoveries">0</span><span class="label">גילויי מילות מפתח</span></div>
+          <div class="insight-stat"><span class="value" id="insightAvgGrowth">–</span><span class="label">עלייה ממוצעת באיתותים</span></div>
+          <div class="insight-stat"><span class="value" id="insightTopGrowth">–</span><span class="label">העלייה החדה ביותר שנמדדה</span></div>
+          <div class="insight-stat"><span class="value" id="insightTopVolume">–</span><span class="label">נפח החיפוש הגבוה ביותר</span></div>
+          <div class="insight-stat"><span class="value" id="insightTopRegion">–</span><span class="label">האזור הפעיל ביותר</span></div>
+          <div class="insight-stat"><span class="value" id="insightFirstDate">–</span><span class="label">תחילת המעקב</span></div>
+          <div class="insight-stat"><span class="value" id="insightDaysTracked">0</span><span class="label">ימים במעקב</span></div>
         </div>
         <div class="insights-timeline-label">מתי הסוכן יצא לפעולה</div>
         <div class="run-timeline" id="runTimeline"></div>
@@ -651,6 +661,10 @@
     return tag ? parseInt(tag, 10) : null;
   }
 
+  function bdi(text){
+    return `<bdi dir="ltr">${text}</bdi>`;
+  }
+
   function renderInsights(){
     const insightsPanel = document.getElementById("insightsPanel");
     const showInsights = activeAxis === "filter" && activeFilter === "all";
@@ -660,10 +674,58 @@
     const scans = allEntries.filter(e=>e.type === "scan");
     const signals = allEntries.filter(e=>e.type === "score");
     const regions = new Set(allEntries.map(e=>e.region));
+    const discoveries = allEntries.filter(e=>(e.tags||[]).includes("גילוי מילות מפתח"));
 
     document.getElementById("insightScans").textContent = scans.length;
     document.getElementById("insightSignals").textContent = signals.length;
     document.getElementById("insightRegions").textContent = regions.size;
+    document.getElementById("insightDiscoveries").textContent = discoveries.length;
+
+    const pcts = signals.map(parsePct).filter(p => p !== null);
+    const avgGrowth = pcts.length ? Math.round(pcts.reduce((a,b)=>a+b,0) / pcts.length) : null;
+    document.getElementById("insightAvgGrowth").textContent = avgGrowth !== null ? `+${avgGrowth}%` : "–";
+
+    let topGrowthEntry = null;
+    signals.forEach(s=>{
+      const p = parsePct(s);
+      if(p !== null && (!topGrowthEntry || p > parsePct(topGrowthEntry))) topGrowthEntry = s;
+    });
+    const topGrowthEl = document.getElementById("insightTopGrowth");
+    if(topGrowthEntry){
+      topGrowthEl.textContent = `+${parsePct(topGrowthEntry)}%`;
+      topGrowthEl.title = topGrowthEntry.region;
+    }else{
+      topGrowthEl.textContent = "–";
+      topGrowthEl.removeAttribute("title");
+    }
+
+    let topVolume = null;
+    allEntries.forEach(e=>{
+      (e.tags||[]).forEach(t=>{
+        const m = t.match(/^(\d+)\s*חיפושים לחודש$/);
+        if(m){
+          const v = parseInt(m[1], 10);
+          if(topVolume === null || v > topVolume) topVolume = v;
+        }
+      });
+    });
+    document.getElementById("insightTopVolume").textContent = topVolume !== null ? topVolume.toLocaleString('en-US') : "–";
+
+    const regionCounts = {};
+    allEntries.forEach(e=>{ regionCounts[e.region] = (regionCounts[e.region]||0) + 1; });
+    const topRegion = Object.keys(regionCounts).sort((a,b)=> regionCounts[b]-regionCounts[a])[0];
+    document.getElementById("insightTopRegion").textContent = topRegion || "–";
+
+    const firstDate = allEntries.length ? allEntries.reduce((min,e)=> e.date < min ? e.date : min, allEntries[0].date) : null;
+    if(firstDate){
+      const d = new Date(firstDate + "T00:00:00");
+      document.getElementById("insightFirstDate").textContent = d.toLocaleDateString('he-IL', { day:'numeric', month:'numeric', year:'numeric' });
+      const days = Math.max(0, Math.round((Date.now() - d.getTime()) / 86400000));
+      document.getElementById("insightDaysTracked").textContent = days;
+    }else{
+      document.getElementById("insightFirstDate").textContent = "–";
+      document.getElementById("insightDaysTracked").textContent = "0";
+    }
 
     const lead = document.getElementById("insightsLead");
     if(signals.length === 0){
@@ -674,7 +736,8 @@
       const ranked = [...signals].sort((a,b)=> (parsePct(b) ?? 0) - (parsePct(a) ?? 0));
       const top = ranked[0];
       const cleanTitle = top.title.replace(/^עלייה בביקוש:\s*/, "").replace(/^גילוי:.*?"(.*)".*$/, "$1");
-      lead.innerHTML = `ההזדמנות החזקה ביותר שזוהתה עד כה: <b>"${cleanTitle}"</b> באזור <b>${top.region}</b> — ${top.tags.join(" · ")}.`;
+      const tagsHtml = top.tags.map(t => bdi(t)).join(" · ");
+      lead.innerHTML = `ההזדמנות החזקה ביותר שזוהתה עד כה: <b>${bdi(`"${cleanTitle}"`)}</b> באזור <b>${bdi(top.region)}</b> — ${tagsHtml}.`;
     }
 
     const timeline = document.getElementById("runTimeline");

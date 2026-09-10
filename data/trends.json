@@ -13,20 +13,23 @@
       "date": "2026-09-10",
       "time": "15:09",
       "type": "score",
-      "title": "גילוי: המונח הכי מבוקש הוא \"garage door repair\"",
-      "detail": "מתוך 30 ביטויים אמיתיים שנבדקו סביב \"garage door\" באזור Indianapolis, IN, \"garage door repair\" מוביל עם כ-246000 חיפושים בחודש. אחריו: garage doors (201000), garage door opener repair (201000), garage door opener (135000).",
+      "title": "גילוי: המונח הכי מבוקש הוא <bdi dir=\"ltr\">\"garage door repair\"</bdi>",
+      "detail": "מתוך 30 ביטויים אמיתיים שנבדקו סביב <bdi dir=\"ltr\">\"garage door\"</bdi> באזור <bdi dir=\"ltr\">Indianapolis, IN</bdi>, <bdi dir=\"ltr\">\"garage door repair\"</bdi> מוביל עם כ-<bdi dir=\"ltr\">246,000</bdi> חיפושים בחודש.",
       "region": "Indianapolis, IN",
       "tags": [
         "246000 חיפושים לחודש",
-        "גילוי מילות מפתח"
+        "גילוי מילות מפתח",
+        "garage doors – 201000",
+        "garage door opener repair – 201000",
+        "garage door opener – 135000"
       ]
     },
     {
       "date": "2026-09-10",
       "time": "14:44",
       "type": "score",
-      "title": "עלייה בביקוש: garage door repair",
-      "detail": "נפח החיפוש למונח \"garage door repair\" עלה ב-39% לעומת החודש הקודם באזור Indianapolis, IN (נפח נוכחי: כ-880 חיפושים בחודש).",
+      "title": "עלייה בביקוש: <bdi dir=\"ltr\">garage door repair</bdi>",
+      "detail": "נפח החיפוש למונח <bdi dir=\"ltr\">\"garage door repair\"</bdi> עלה ב-<bdi dir=\"ltr\">39%</bdi> לעומת החודש הקודם באזור <bdi dir=\"ltr\">Indianapolis, IN</bdi> (נפח נוכחי: כ-<bdi dir=\"ltr\">880</bdi> חיפושים בחודש).",
       "region": "Indianapolis, IN",
       "tags": [
         "+39%",
@@ -38,7 +41,7 @@
       "time": "14:38",
       "type": "scan",
       "title": "סריקת ביקוש הושלמה",
-      "detail": "נבדק המונח \"garage door repair\" באזור Meridian-Kessler, Indianapolis, IN. נפח חיפוש נוכחי: כ-10 חיפושים בחודש.",
+      "detail": "נבדק המונח <bdi dir=\"ltr\">\"garage door repair\"</bdi> באזור <bdi dir=\"ltr\">Meridian-Kessler, Indianapolis, IN</bdi>. נפח חיפוש נוכחי: כ-<bdi dir=\"ltr\">10</bdi> חיפושים בחודש.",
       "region": "Meridian-Kessler, Indianapolis, IN",
       "tags": [
         "10 חיפושים לחודש",
@@ -49,8 +52,8 @@
       "date": "2026-09-10",
       "time": "13:44",
       "type": "score",
-      "title": "עלייה בביקוש: garage door spring repair",
-      "detail": "נפח החיפוש למונח \"garage door spring repair\" עלה ב-100% לעומת החודש הקודם באזור Boston, MA (נפח נוכחי: כ-20 חיפושים בחודש).",
+      "title": "עלייה בביקוש: <bdi dir=\"ltr\">garage door spring repair</bdi>",
+      "detail": "נפח החיפוש למונח <bdi dir=\"ltr\">\"garage door spring repair\"</bdi> עלה ב-<bdi dir=\"ltr\">100%</bdi> לעומת החודש הקודם באזור <bdi dir=\"ltr\">Boston, MA</bdi> (נפח נוכחי: כ-<bdi dir=\"ltr\">20</bdi> חיפושים בחודש).",
       "region": "Boston, MA",
       "tags": [
         "+100%",
@@ -61,8 +64,8 @@
       "date": "2026-09-10",
       "time": "13:44",
       "type": "score",
-      "title": "עלייה בביקוש: garage door opener repair",
-      "detail": "נפח החיפוש למונח \"garage door opener repair\" עלה ב-24% לעומת החודש הקודם באזור Boston, MA (נפח נוכחי: כ-210 חיפושים בחודש).",
+      "title": "עלייה בביקוש: <bdi dir=\"ltr\">garage door opener repair</bdi>",
+      "detail": "נפח החיפוש למונח <bdi dir=\"ltr\">\"garage door opener repair\"</bdi> עלה ב-<bdi dir=\"ltr\">24%</bdi> לעומת החודש הקודם באזור <bdi dir=\"ltr\">Boston, MA</bdi> (נפח נוכחי: כ-<bdi dir=\"ltr\">210</bdi> חיפושים בחודש).",
       "region": "Boston, MA",
       "tags": [
         "+24%",
@@ -74,7 +77,7 @@
       "time": "13:44",
       "type": "scan",
       "title": "סריקת ביקוש הושלמה",
-      "detail": "נבדקו 5 מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור Boston, MA. נמצאו 2 מונחים בעלייה.",
+      "detail": "נבדקו 5 מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור <bdi dir=\"ltr\">Boston, MA</bdi>. נמצאו 2 מונחים בעלייה.",
       "region": "Boston, MA",
       "tags": [
         "נתונים אמיתיים"

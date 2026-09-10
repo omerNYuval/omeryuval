@@ -16,6 +16,19 @@ KEYWORDS = [
 ]
 RISE_THRESHOLD_PCT = 15
 
+def bdi(text):
+    """Wrap embedded Latin/numeric text in a bidi-isolate so it doesn't
+    scramble the surrounding Hebrew sentence's punctuation/word order.
+    dir="ltr" is required (not just isolation) because purely numeric/symbol
+    text (e.g. "+39%") has no strong-direction character of its own, so a
+    plain isolate falls back to the ambient RTL direction and still flips."""
+    return f'<bdi dir="ltr">{text}</bdi>'
+
+
+def quoted(text):
+    return f'"{text}"'
+
+
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "trends.json")
 MAX_ENTRIES = 300
 API_URL = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
@@ -106,8 +119,8 @@ def main():
                 "date": run_date,
                 "time": run_time,
                 "type": "score",
-                "title": f"עלייה בביקוש: {keyword}",
-                "detail": f"נפח החיפוש למונח \"{keyword}\" עלה ב-{pct}% לעומת החודש הקודם באזור {MARKET_NAME} (נפח נוכחי: כ-{volume} חיפושים בחודש).",
+                "title": f"עלייה בביקוש: {bdi(keyword)}",
+                "detail": f"נפח החיפוש למונח {bdi(quoted(keyword))} עלה ב-{bdi(f'{pct}%')} לעומת החודש הקודם באזור {bdi(MARKET_NAME)} (נפח נוכחי: כ-{bdi(volume)} חיפושים בחודש).",
                 "region": MARKET_NAME,
                 "tags": [f"+{pct}%", f"{volume} חיפושים לחודש"],
             })
@@ -118,7 +131,7 @@ def main():
         "time": run_time,
         "type": "scan",
         "title": "סריקת ביקוש הושלמה",
-        "detail": f"נבדקו {len(KEYWORDS)} מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור {MARKET_NAME}. נמצאו {signals_found} מונחים בעלייה.",
+        "detail": f"נבדקו {len(KEYWORDS)} מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור {bdi(MARKET_NAME)}. נמצאו {signals_found} מונחים בעלייה.",
         "region": MARKET_NAME,
         "tags": ["נתונים אמיתיים"],
     })
