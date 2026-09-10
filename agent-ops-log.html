@@ -67,14 +67,16 @@
 
   /* ---- top bar ---- */
   .topbar{
-    display:flex;
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
     align-items:flex-end;
-    justify-content:space-between;
     border-bottom:1px solid var(--steel);
     padding-bottom:18px;
     margin-bottom:22px;
-    flex-wrap:wrap;
     gap:14px;
+  }
+  @media (max-width:760px){
+    .topbar{grid-template-columns:1fr; justify-items:start;}
   }
   .brand, .topbar-actions{
     min-width:0;
@@ -147,6 +149,7 @@
   .topbar-actions{
     display:flex;
     align-items:center;
+    justify-content:flex-end;
     gap:10px;
     flex-wrap:wrap;
   }
@@ -381,7 +384,7 @@
     <div class="brand">
       <h1>דשבורד הסוכן</h1>
     </div>
-    <div class="balance-badge">💰 יתרת DataForSEO: <span class="value" id="balanceValue">–</span></div>
+    <div class="balance-badge">💰 יתרה: <span class="value" id="balanceValue">–</span></div>
     <div class="topbar-actions">
       <div class="status-pill" id="statusPill"><span class="dot"></span><span id="statusText">טוען נתוני סריקה…</span></div>
       <button id="refreshBtn" class="icon-button" type="button" aria-label="הרץ סריקה עכשיו" title="הרץ סריקה עכשיו">🤖</button>
@@ -475,7 +478,7 @@
   }
 
   function updateStatusPill(){
-    balanceValue.textContent = typeof meta.balance === "number" ? `$${meta.balance.toFixed(2)}` : "–";
+    balanceValue.textContent = typeof meta.balance === "number" ? `$${meta.balance.toFixed(3)}` : "–";
     if(!meta.generated_at){
       statusPill.classList.add("stale");
       statusText.textContent = "עדיין אין נתוני סריקה — ממתין להרצה הראשונה של הסוכן";
