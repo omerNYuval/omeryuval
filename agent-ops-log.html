@@ -21,7 +21,7 @@
     --steel:#3a3e45;
     --paper:#ffffff;
     --muted:rgba(255,255,255,0.72);
-    --amber:#e8a33d;
+    --amber:#38bdf8;
     --moss:#7d9a68;
     --wire:#5a92a8;
   }
@@ -33,7 +33,7 @@
     --steel:#d9d2c2;
     --paper:#23262b;
     --muted:#6b7078;
-    --amber:#8a5209;
+    --amber:#0369a1;
     --moss:#4f6b3d;
     --wire:#2f6478;
   }
@@ -283,22 +283,12 @@
   /* ---- insights panel ---- */
   .insights-panel{
     position:relative;
-    background:linear-gradient(155deg, rgba(232,163,61,0.10), rgba(90,146,168,0.06) 60%, transparent);
-    border:1px solid rgba(232,163,61,0.28);
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.08);
     border-radius:16px;
     padding:26px 28px;
     margin-bottom:26px;
     overflow:hidden;
-  }
-  .insights-glow{
-    position:absolute;
-    top:-60px;
-    inset-inline-end:-60px;
-    width:220px;
-    height:220px;
-    background:radial-gradient(circle, rgba(232,163,61,0.25), transparent 70%);
-    filter:blur(10px);
-    pointer-events:none;
   }
   .insights-header{
     display:flex;
@@ -554,7 +544,6 @@
       </div>
 
       <div class="insights-panel" id="insightsPanel" hidden>
-        <div class="insights-glow"></div>
         <div class="insights-header">
           <span class="insights-icon">🧠</span>
           <div>
