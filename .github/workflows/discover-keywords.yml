@@ -3,6 +3,9 @@ name: One-off keyword discovery
 on:
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   discover-keywords:
     runs-on: ubuntu-latest
@@ -23,3 +26,13 @@ jobs:
           DATAFORSEO_LOGIN: ${{ secrets.DATAFORSEO_LOGIN }}
           DATAFORSEO_PASSWORD: ${{ secrets.DATAFORSEO_PASSWORD }}
         run: python scripts/discover_keywords.py
+
+      - name: Commit and push updated data
+        run: |
+          git config user.name "garage-signal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/trends.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Add keyword discovery result"
+            git push
+          fi
