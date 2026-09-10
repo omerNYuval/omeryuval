@@ -705,6 +705,14 @@
 
   function render(){
     renderInsights();
+
+    const showingAll = activeAxis === "filter" && activeFilter === "all";
+    feed.hidden = showingAll;
+    if(showingAll){
+      feed.innerHTML = "";
+      return;
+    }
+
     const term = searchInput.value.trim().toLowerCase();
     const filtered = allEntries.filter(e=>{
       let matchesAxis;
