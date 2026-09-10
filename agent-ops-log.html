@@ -40,6 +40,13 @@
 
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
+  html{
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+  }
+  html::-webkit-scrollbar{
+    display:none;
+  }
   body{
     background:var(--charcoal);
     color:var(--paper);
@@ -53,7 +60,7 @@
   }
 
   .frame{
-    max-width:1600px;
+    max-width:1900px;
     margin:0 auto;
     padding:28px 24px 80px;
   }
