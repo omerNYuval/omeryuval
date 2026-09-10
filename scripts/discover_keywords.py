@@ -28,6 +28,8 @@ def main():
     response = requests.post(API_URL, auth=(login, password), json=payload, timeout=60)
     response.raise_for_status()
     data = response.json()
+    print("RAW RESPONSE:")
+    print(json.dumps(data, indent=2))
 
     if data.get("status_code") != 20000:
         raise RuntimeError(f"DataForSEO API error: {data.get('status_message')}")
