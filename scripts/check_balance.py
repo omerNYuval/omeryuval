@@ -15,8 +15,15 @@ def main():
     response = requests.get(API_URL, auth=(login, password), timeout=30)
     response.raise_for_status()
     data = response.json()
-    print("RAW RESPONSE:")
-    print(json.dumps(data, indent=2))
+
+    tasks = data.get("tasks") or []
+    result = (tasks[0].get("result") if tasks else None) or []
+    top = result[0] if result else {}
+
+    print("Top-level keys:", list(top.keys()))
+    for key in ("login", "money", "balance", "credit", "rate_limit_per_minute"):
+        if key in top:
+            print(f"{key}: {json.dumps(top[key])}")
 
 
 if __name__ == "__main__":
