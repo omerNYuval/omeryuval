@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-09-10T13:44:32.352875+00:00",
+  "market": "Boston, MA",
+  "keywords": [
+    "garage door repair",
+    "garage door spring repair",
+    "garage door opener repair",
+    "garage door won't open",
+    "garage door off track"
+  ],
+  "entries": [
+    {
+      "date": "2026-09-10",
+      "time": "13:44",
+      "type": "score",
+      "title": "עלייה בביקוש: garage door spring repair",
+      "detail": "נפח החיפוש למונח \"garage door spring repair\" עלה ב-100% לעומת החודש הקודם באזור Boston, MA (נפח נוכחי: כ-20 חיפושים בחודש).",
+      "region": "Boston, MA",
+      "tags": [
+        "+100%",
+        "20 חיפושים לחודש"
+      ]
+    },
+    {
+      "date": "2026-09-10",
+      "time": "13:44",
+      "type": "score",
+      "title": "עלייה בביקוש: garage door opener repair",
+      "detail": "נפח החיפוש למונח \"garage door opener repair\" עלה ב-24% לעומת החודש הקודם באזור Boston, MA (נפח נוכחי: כ-210 חיפושים בחודש).",
+      "region": "Boston, MA",
+      "tags": [
+        "+24%",
+        "210 חיפושים לחודש"
+      ]
+    },
+    {
+      "date": "2026-09-10",
+      "time": "13:44",
+      "type": "scan",
+      "title": "סריקת ביקוש הושלמה",
+      "detail": "נבדקו 5 מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור Boston, MA. נמצאו 2 מונחים בעלייה.",
+      "region": "Boston, MA",
+      "tags": [
+        "נתונים אמיתיים"
+      ]
+    }
+  ]
+}
