@@ -374,6 +374,11 @@
   <div class="layout">
     <aside class="sidebar">
       <input class="search" id="search" type="text" placeholder="חיפוש לפי מונח חיפוש…">
+      <div class="side-label">אזור</div>
+      <button class="side-link active" data-region="all">הכול</button>
+      <button class="side-link" data-region="Indianapolis">🏁 אינדיאנפוליס</button>
+      <button class="side-link" data-region="Boston">🦞 בוסטון</button>
+      <button class="side-link" data-region="Miami">🌴 מיאמי</button>
       <div class="side-label">סוג פעולה</div>
       <button class="side-link active" data-filter="all">הכול</button>
       <button class="side-link" data-filter="scan">סריקת נתונים</button>
@@ -403,7 +408,8 @@
   const WORKER_URL = "https://REPLACE_WITH_YOUR_WORKER_URL.workers.dev";
 
   const feed = document.getElementById("feed");
-  const sideLinks = document.querySelectorAll(".side-link[data-filter]");
+  const typeLinks = document.querySelectorAll(".side-link[data-filter]");
+  const regionLinks = document.querySelectorAll(".side-link[data-region]");
   const searchInput = document.getElementById("search");
   const themeToggle = document.getElementById("themeToggle");
   const refreshBtn = document.getElementById("refreshBtn");
@@ -414,6 +420,7 @@
   let allEntries = [];
   let meta = {};
   let activeFilter = "all";
+  let activeRegion = "all";
 
   function applyTheme(theme){
     if(theme === "light"){
@@ -475,9 +482,10 @@
     const term = searchInput.value.trim().toLowerCase();
     const filtered = allEntries.filter(e=>{
       const matchesType = activeFilter === "all" || e.type === activeFilter;
+      const matchesRegion = activeRegion === "all" || e.region.includes(activeRegion);
       const haystack = (e.title + " " + e.detail + " " + e.region + " " + e.tags.join(" ")).toLowerCase();
       const matchesTerm = term === "" || haystack.includes(term);
-      return matchesType && matchesTerm;
+      return matchesType && matchesRegion && matchesTerm;
     });
 
     feed.innerHTML = "";
@@ -588,11 +596,20 @@
 
   refreshBtn.addEventListener("click", runAgentNow);
 
-  sideLinks.forEach(link=>{
+  typeLinks.forEach(link=>{
     link.addEventListener("click", ()=>{
-      sideLinks.forEach(l=>l.classList.remove("active"));
+      typeLinks.forEach(l=>l.classList.remove("active"));
       link.classList.add("active");
       activeFilter = link.dataset.filter;
+      render();
+    });
+  });
+
+  regionLinks.forEach(link=>{
+    link.addEventListener("click", ()=>{
+      regionLinks.forEach(l=>l.classList.remove("active"));
+      link.classList.add("active");
+      activeRegion = link.dataset.region;
       render();
     });
   });
