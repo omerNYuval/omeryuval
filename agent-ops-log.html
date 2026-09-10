@@ -79,6 +79,20 @@
   .brand, .topbar-actions{
     min-width:0;
   }
+  .balance-badge{
+    font-size:0.85rem;
+    font-weight:600;
+    color:var(--muted);
+    background:var(--panel);
+    border:1px solid var(--steel);
+    padding:6px 14px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .balance-badge .value{
+    color:var(--amber);
+    font-weight:700;
+  }
   .brand{
     display:flex;
     align-items:baseline;
@@ -367,6 +381,7 @@
     <div class="brand">
       <h1>דשבורד הסוכן</h1>
     </div>
+    <div class="balance-badge">💰 יתרת DataForSEO: <span class="value" id="balanceValue">–</span></div>
     <div class="topbar-actions">
       <div class="status-pill" id="statusPill"><span class="dot"></span><span id="statusText">טוען נתוני סריקה…</span></div>
       <button id="refreshBtn" class="icon-button" type="button" aria-label="הרץ סריקה עכשיו" title="הרץ סריקה עכשיו">🤖</button>
@@ -419,6 +434,7 @@
   const refreshBtn = document.getElementById("refreshBtn");
   const statusPill = document.getElementById("statusPill");
   const statusText = document.getElementById("statusText");
+  const balanceValue = document.getElementById("balanceValue");
   const THEME_KEY = "agent-ops-theme";
 
   let allEntries = [];
@@ -459,6 +475,7 @@
   }
 
   function updateStatusPill(){
+    balanceValue.textContent = typeof meta.balance === "number" ? `$${meta.balance.toFixed(2)}` : "–";
     if(!meta.generated_at){
       statusPill.classList.add("stale");
       statusText.textContent = "עדיין אין נתוני סריקה — ממתין להרצה הראשונה של הסוכן";

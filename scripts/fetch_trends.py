@@ -19,6 +19,20 @@ RISE_THRESHOLD_PCT = 15
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "trends.json")
 MAX_ENTRIES = 300
 API_URL = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
+BALANCE_URL = "https://api.dataforseo.com/v3/appendix/user_data"
+
+
+def fetch_balance(login, password):
+    try:
+        response = requests.get(BALANCE_URL, auth=(login, password), timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        tasks = data.get("tasks") or []
+        result = (tasks[0].get("result") if tasks else None) or []
+        money = (result[0].get("money") if result else None) or {}
+        return money.get("balance")
+    except Exception:
+        return None
 
 
 def get_credentials():
@@ -127,6 +141,7 @@ def main():
         "generated_at": now.isoformat(),
         "market": MARKET_NAME,
         "keywords": KEYWORDS,
+        "balance": fetch_balance(login, password),
         "entries": deduped,
     }
 

@@ -4,6 +4,7 @@ import os
 import requests
 
 API_URL = "https://api.dataforseo.com/v3/appendix/user_data"
+DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "trends.json")
 
 
 def main():
@@ -19,11 +20,15 @@ def main():
     tasks = data.get("tasks") or []
     result = (tasks[0].get("result") if tasks else None) or []
     top = result[0] if result else {}
+    balance = (top.get("money") or {}).get("balance")
 
-    print("Top-level keys:", list(top.keys()))
-    for key in ("login", "money", "balance", "credit", "rate_limit_per_minute"):
-        if key in top:
-            print(f"{key}: {json.dumps(top[key])}")
+    print(f"Current balance: {balance}")
+
+    with open(DATA_PATH, "r", encoding="utf-8") as f:
+        output = json.load(f)
+    output["balance"] = balance
+    with open(DATA_PATH, "w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":
