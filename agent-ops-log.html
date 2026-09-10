@@ -378,7 +378,7 @@
     <aside class="sidebar">
       <input class="search" id="search" type="text" placeholder="חיפוש לפי מונח חיפוש…">
       <div class="side-label">סוג פעולה</div>
-      <button class="side-link active" data-filter="all">הכול</button>
+      <button class="side-link" data-filter="all">הכול</button>
       <button class="side-link" data-filter="scan">סריקת נתונים</button>
       <button class="side-link" data-filter="score">מונח בעלייה</button>
       <div class="side-label">אזור</div>
@@ -413,6 +413,7 @@
   const feed = document.getElementById("feed");
   const typeLinks = document.querySelectorAll(".side-link[data-filter]");
   const regionLinks = document.querySelectorAll(".side-link[data-region]");
+  const allSideLinks = document.querySelectorAll(".side-link[data-filter], .side-link[data-region]");
   const searchInput = document.getElementById("search");
   const themeToggle = document.getElementById("themeToggle");
   const refreshBtn = document.getElementById("refreshBtn");
@@ -424,6 +425,7 @@
   let meta = {};
   let activeFilter = "all";
   let activeRegion = "history";
+  let activeAxis = "region";
 
   function applyTheme(theme){
     if(theme === "light"){
@@ -484,11 +486,15 @@
   function render(){
     const term = searchInput.value.trim().toLowerCase();
     const filtered = allEntries.filter(e=>{
-      const matchesType = activeFilter === "all" || e.type === activeFilter;
-      const matchesRegion = activeRegion === "history" ? e.type === "scan" : e.region.includes(activeRegion);
+      let matchesAxis;
+      if(activeAxis === "filter"){
+        matchesAxis = activeFilter === "all" || e.type === activeFilter;
+      }else{
+        matchesAxis = activeRegion === "history" ? e.type === "scan" : e.region.includes(activeRegion);
+      }
       const haystack = (e.title + " " + e.detail + " " + e.region + " " + e.tags.join(" ")).toLowerCase();
       const matchesTerm = term === "" || haystack.includes(term);
-      return matchesType && matchesRegion && matchesTerm;
+      return matchesAxis && matchesTerm;
     });
 
     feed.innerHTML = "";
@@ -600,18 +606,20 @@
 
   typeLinks.forEach(link=>{
     link.addEventListener("click", ()=>{
-      typeLinks.forEach(l=>l.classList.remove("active"));
+      allSideLinks.forEach(l=>l.classList.remove("active"));
       link.classList.add("active");
       activeFilter = link.dataset.filter;
+      activeAxis = "filter";
       render();
     });
   });
 
   regionLinks.forEach(link=>{
     link.addEventListener("click", ()=>{
-      regionLinks.forEach(l=>l.classList.remove("active"));
+      allSideLinks.forEach(l=>l.classList.remove("active"));
       link.classList.add("active");
       activeRegion = link.dataset.region;
+      activeAxis = "region";
       render();
     });
   });
