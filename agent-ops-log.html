@@ -352,7 +352,7 @@
     </div>
     <div class="topbar-actions">
       <div class="status-pill" id="statusPill"><span class="dot"></span><span id="statusText">טוען נתוני סריקה…</span></div>
-      <button id="refreshBtn" class="icon-button" type="button" aria-label="רענן נתונים" title="רענן נתונים">🤖</button>
+      <button id="refreshBtn" class="icon-button" type="button" aria-label="הרץ סריקה עכשיו" title="הרץ סריקה עכשיו">🤖</button>
       <button id="themeToggle" class="icon-button" type="button" aria-label="החלף מצב תצוגה">🌜</button>
     </div>
   </div>
@@ -386,6 +386,7 @@
 
 <script>
   const DATA_URL = "data/trends.json";
+  const WORKER_URL = "https://REPLACE_WITH_YOUR_WORKER_URL.workers.dev";
 
   const feed = document.getElementById("feed");
   const sideLinks = document.querySelectorAll(".side-link[data-filter]");
@@ -537,7 +538,41 @@
     }
   }
 
-  refreshBtn.addEventListener("click", ()=> loadData(true));
+  async function runAgentNow(){
+    refreshBtn.disabled = true;
+    refreshBtn.classList.add("spinning");
+    statusPill.classList.remove("stale");
+    statusText.textContent = "מריץ סריקה חיה… (עד כ-20 שניות)";
+    try{
+      const res = await fetch(WORKER_URL, { method: "POST" });
+      if(!res.ok) throw new Error("worker request failed");
+      const result = await res.json();
+
+      if(result.skipped){
+        const waitMin = Math.max(0, result.cooldown_minutes - result.minutes_since_last_run);
+        meta = result.data;
+        allEntries = meta.entries || [];
+        renderStats();
+        render();
+        updateStatusPill();
+        statusText.textContent = `הסריקה האחרונה הייתה לפני ${result.minutes_since_last_run} דקות — אפשר להריץ שוב בעוד כ-${waitMin} דקות`;
+        return;
+      }
+
+      meta = result;
+      allEntries = result.entries || [];
+      renderStats();
+      render();
+      updateStatusPill();
+    }catch(err){
+      statusText.textContent = "הריצה נכשלה — נסה שוב בעוד רגע";
+    }finally{
+      refreshBtn.disabled = false;
+      refreshBtn.classList.remove("spinning");
+    }
+  }
+
+  refreshBtn.addEventListener("click", runAgentNow);
 
   sideLinks.forEach(link=>{
     link.addEventListener("click", ()=>{
