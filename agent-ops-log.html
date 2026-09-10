@@ -378,7 +378,7 @@
     <aside class="sidebar">
       <input class="search" id="search" type="text" placeholder="חיפוש לפי מונח חיפוש…">
       <div class="side-label">אזור</div>
-      <button class="side-link active" data-region="all">הכול</button>
+      <button class="side-link active" data-region="history">היסטוריה</button>
       <button class="side-link" data-region="Indianapolis">🏁 אינדיאנפוליס</button>
       <button class="side-link" data-region="Boston">🦞 בוסטון</button>
       <button class="side-link" data-region="Miami">🌴 מיאמי</button>
@@ -423,7 +423,7 @@
   let allEntries = [];
   let meta = {};
   let activeFilter = "all";
-  let activeRegion = "all";
+  let activeRegion = "history";
 
   function applyTheme(theme){
     if(theme === "light"){
@@ -485,7 +485,7 @@
     const term = searchInput.value.trim().toLowerCase();
     const filtered = allEntries.filter(e=>{
       const matchesType = activeFilter === "all" || e.type === activeFilter;
-      const matchesRegion = activeRegion === "all" || e.region.includes(activeRegion);
+      const matchesRegion = activeRegion === "history" ? e.type === "scan" : e.region.includes(activeRegion);
       const haystack = (e.title + " " + e.detail + " " + e.region + " " + e.tags.join(" ")).toLowerCase();
       const matchesTerm = term === "" || haystack.includes(term);
       return matchesType && matchesRegion && matchesTerm;
