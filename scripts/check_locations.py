@@ -3,7 +3,7 @@ import os
 
 import requests
 
-API_URL = "https://api.dataforseo.com/v3/keywords_data/google_ads/locations/United States"
+API_URL = "https://api.dataforseo.com/v3/keywords_data/google_ads/locations"
 
 
 def main():
