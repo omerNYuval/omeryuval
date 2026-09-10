@@ -588,6 +588,19 @@
     }
   }
 
+  async function refreshLiveBalance(){
+    try{
+      const res = await fetch(WORKER_URL, { method: "GET" });
+      if(!res.ok) return;
+      const data = await res.json();
+      if(typeof data.balance === "number"){
+        balanceValue.textContent = `$${data.balance.toFixed(3)}`;
+      }
+    }catch(err){
+      // Worker not deployed yet (or offline) — keep the last saved value from trends.json.
+    }
+  }
+
   async function runAgentNow(){
     refreshBtn.disabled = true;
     refreshBtn.classList.add("spinning");
@@ -646,7 +659,7 @@
 
   searchInput.addEventListener("input", render);
 
-  loadData(false);
+  loadData(false).then(refreshLiveBalance);
 </script>
 </body>
 </html>

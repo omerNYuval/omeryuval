@@ -22,8 +22,18 @@ export default {
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders() });
     }
+
+    if (request.method === "GET") {
+      try {
+        const balance = await fetchBalance(env);
+        return json({ balance }, 200);
+      } catch (err) {
+        return json({ error: String(err && err.message ? err.message : err) }, 500);
+      }
+    }
+
     if (request.method !== "POST") {
-      return json({ error: "Use POST" }, 405);
+      return json({ error: "Use GET or POST" }, 405);
     }
 
     try {
@@ -77,11 +87,13 @@ export default {
       });
 
       const merged = dedupeAndSort([...newEntries, ...(current.json.entries || [])]).slice(0, MAX_ENTRIES);
+      const balance = await fetchBalance(env).catch(() => current.json.balance ?? null);
 
       const output = {
         generated_at: now.toISOString(),
         market: MARKET_NAME,
         keywords: KEYWORDS,
+        balance,
         entries: merged,
       };
 
@@ -97,7 +109,7 @@ export default {
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }
@@ -168,6 +180,18 @@ async function fetchSearchVolume(env) {
     throw new Error(`DataForSEO task error: ${task ? task.status_message : "no task"}`);
   }
   return task.result || [];
+}
+
+async function fetchBalance(env) {
+  const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
+  const res = await fetch("https://api.dataforseo.com/v3/appendix/user_data", {
+    headers: { Authorization: `Basic ${auth}` },
+  });
+  if (!res.ok) throw new Error(`DataForSEO HTTP error: ${res.status}`);
+  const data = await res.json();
+  const task = data.tasks && data.tasks[0];
+  const result = task && task.result && task.result[0];
+  return result && result.money ? result.money.balance : null;
 }
 
 function trendPctChange(monthlySearches) {
