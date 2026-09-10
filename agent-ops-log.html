@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>יומן פעולות — סוכן השטח</title>
+<title>דשבורד הסוכן</title>
 <script>
   try{
     if(localStorage.getItem('agent-ops-theme') === 'light'){
@@ -19,8 +19,8 @@
     --panel:#24272c;
     --panel-raised:#2b2f35;
     --steel:#3a3e45;
-    --paper:#ede9e2;
-    --muted:#93969c;
+    --paper:#ffffff;
+    --muted:rgba(255,255,255,0.72);
     --amber:#e8a33d;
     --moss:#7d9a68;
     --wire:#5a92a8;
@@ -44,6 +44,7 @@
     background:var(--charcoal);
     color:var(--paper);
     font-family:'Heebo', sans-serif;
+    font-weight:600;
     min-height:100vh;
     background-image:
       linear-gradient(var(--charcoal), var(--charcoal)),
@@ -88,7 +89,7 @@
     align-items:center;
     gap:8px;
     font-size:0.85rem;
-    font-weight:500;
+    font-weight:600;
     color:var(--moss);
     background:rgba(125,154,104,0.08);
     border:1px solid rgba(125,154,104,0.35);
@@ -131,7 +132,7 @@
     border:1px solid var(--steel);
     background:var(--panel);
     color:var(--paper);
-    font-size:1rem;
+    font-size:1.05rem;
     line-height:1;
     cursor:pointer;
     transition:border-color .15s ease, background-color .15s ease, transform .4s ease;
@@ -140,6 +141,83 @@
   .icon-button:disabled{opacity:0.6;cursor:default;}
   .icon-button.spinning{animation:spin 0.9s linear infinite;}
   @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* ---- layout: sidebar + main ---- */
+  .layout{
+    display:flex;
+    gap:24px;
+    align-items:flex-start;
+  }
+  .sidebar{
+    width:210px;
+    flex:none;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    position:sticky;
+    top:20px;
+  }
+  .main-col{
+    flex:1;
+    min-width:0;
+  }
+  @media (max-width:760px){
+    .layout{flex-direction:column;}
+    .sidebar{
+      width:100%;
+      flex-direction:row;
+      flex-wrap:wrap;
+      position:static;
+    }
+  }
+
+  .search{
+    background:var(--panel);
+    border:1px solid var(--steel);
+    border-radius:4px;
+    padding:8px 12px;
+    color:var(--paper);
+    font-family:'Heebo', sans-serif;
+    font-weight:600;
+    font-size:0.85rem;
+    width:100%;
+    margin-bottom:8px;
+  }
+  .search::placeholder{color:var(--muted);}
+
+  .side-label{
+    font-size:0.75rem;
+    font-weight:600;
+    color:var(--muted);
+    margin:12px 4px 2px;
+  }
+  .side-label:first-of-type{margin-top:4px;}
+
+  .side-link{
+    display:block;
+    width:100%;
+    text-align:right;
+    font-size:0.88rem;
+    font-weight:600;
+    padding:8px 12px;
+    border:1px solid transparent;
+    border-radius:4px;
+    background:transparent;
+    color:var(--paper);
+    cursor:pointer;
+    transition:background-color .15s ease, color .15s ease;
+  }
+  .side-link:hover{background:var(--panel);}
+  .side-link.active{
+    background:var(--amber);
+    color:var(--charcoal);
+  }
+  .side-link:disabled{
+    color:var(--muted);
+    opacity:0.55;
+    cursor:default;
+  }
+  .side-link:disabled:hover{background:transparent;}
 
   /* ---- stat strip ---- */
   .stats{
@@ -166,59 +244,16 @@
     color:var(--muted);
     margin-top:3px;
   }
-  @media (max-width:720px){
+  @media (max-width:520px){
     .stats{grid-template-columns:repeat(2,1fr);}
     .stat:nth-child(3){border-inline-start:none;}
   }
-
-  /* ---- filters ---- */
-  .filters{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-bottom:22px;
-  }
-  .filters .filter-label{
-    font-size:0.82rem;
-    color:var(--muted);
-    margin-inline-end:4px;
-  }
-  .chip{
-    font-size:0.8rem;
-    font-weight:500;
-    padding:6px 12px;
-    border:1px solid var(--steel);
-    border-radius:999px;
-    background:transparent;
-    color:var(--muted);
-    cursor:pointer;
-    transition:border-color .15s ease, color .15s ease;
-  }
-  .chip:hover{border-color:var(--paper);}
-  .chip.active{
-    color:var(--charcoal);
-    background:var(--amber);
-    border-color:var(--amber);
-    font-weight:600;
-  }
-  .search{
-    margin-inline-start:auto;
-    background:var(--panel);
-    border:1px solid var(--steel);
-    border-radius:4px;
-    padding:7px 12px;
-    color:var(--paper);
-    font-family:'Heebo', sans-serif;
-    font-size:0.85rem;
-    min-width:180px;
-  }
-  .search::placeholder{color:var(--muted);}
 
   /* ---- log feed ---- */
   .day-group{margin-bottom:30px;}
   .day-heading{
     font-size:0.85rem;
+    font-weight:600;
     color:var(--muted);
     padding-bottom:8px;
     margin-bottom:10px;
@@ -239,6 +274,7 @@
   }
   .entry .time{
     font-size:0.85rem;
+    font-weight:600;
     color:var(--muted);
     padding:14px 10px;
     text-align:center;
@@ -263,7 +299,7 @@
   }
   .tag{
     font-size:0.75rem;
-    font-weight:500;
+    font-weight:600;
     padding:2px 8px;
     border-radius:3px;
     border:1px solid var(--steel);
@@ -273,7 +309,7 @@
   .entry[data-type="score"] .tag.type{color:var(--amber);border-color:var(--amber);}
 
   .entry .title{
-    font-weight:600;
+    font-weight:700;
     font-size:0.98rem;
   }
   .entry .detail{
@@ -289,6 +325,7 @@
   }
   .meta .badge{
     font-size:0.75rem;
+    font-weight:600;
     color:var(--paper);
     background:var(--panel-raised);
     padding:2px 8px;
@@ -311,32 +348,40 @@
 
   <div class="topbar">
     <div class="brand">
-      <h1>יומן פעולות</h1>
+      <h1>דשבורד הסוכן</h1>
       <span class="sub">ניטור ביקוש חיפוש — תיקון דלתות גראז׳, בוסטון</span>
     </div>
     <div class="topbar-actions">
       <div class="status-pill" id="statusPill"><span class="dot"></span><span id="statusText">טוען נתוני סריקה…</span></div>
-      <button id="refreshBtn" class="icon-button" type="button" aria-label="רענן נתונים" title="רענן נתונים">🔄</button>
-      <button id="themeToggle" class="icon-button" type="button" aria-label="החלף מצב תצוגה">🌙</button>
+      <button id="refreshBtn" class="icon-button" type="button" aria-label="רענן נתונים" title="רענן נתונים">🤖</button>
+      <button id="themeToggle" class="icon-button" type="button" aria-label="החלף מצב תצוגה">🌜</button>
     </div>
   </div>
 
-  <div class="stats">
-    <div class="stat"><span class="num" id="statKeywords">–</span><span class="label">מונחי מפתח במעקב</span></div>
-    <div class="stat"><span class="num" id="statSignals">–</span><span class="label">איתותי עלייה שזוהו בסריקה האחרונה</span></div>
-    <div class="stat"><span class="num" id="statRuns">–</span><span class="label">סריקות שבוצעו בסך הכול</span></div>
-    <div class="stat"><span class="num" id="statMarket">–</span><span class="label">אזור נבדק</span></div>
-  </div>
+  <div class="layout">
+    <aside class="sidebar">
+      <input class="search" id="search" type="text" placeholder="חיפוש לפי מונח חיפוש…">
+      <div class="side-label">סוג פעולה</div>
+      <button class="side-link active" data-filter="all">הכול</button>
+      <button class="side-link" data-filter="scan">סריקת נתונים</button>
+      <button class="side-link" data-filter="score">מונח בעלייה</button>
+      <div class="side-label">בקרוב</div>
+      <button class="side-link" disabled>עדכון דף</button>
+      <button class="side-link" disabled>פרסום דף</button>
+      <button class="side-link" disabled>בקשת אינדוקס</button>
+    </aside>
 
-  <div class="filters">
-    <span class="filter-label">סוג פעולה:</span>
-    <button class="chip active" data-filter="all">הכול</button>
-    <button class="chip" data-filter="scan">סריקת נתונים</button>
-    <button class="chip" data-filter="score">מונח בעלייה</button>
-    <input class="search" id="search" type="text" placeholder="חיפוש לפי מונח חיפוש…">
-  </div>
+    <main class="main-col">
+      <div class="stats">
+        <div class="stat"><span class="num" id="statKeywords">–</span><span class="label">מונחי מפתח במעקב</span></div>
+        <div class="stat"><span class="num" id="statSignals">–</span><span class="label">איתותי עלייה שזוהו בסריקה האחרונה</span></div>
+        <div class="stat"><span class="num" id="statRuns">–</span><span class="label">סריקות שבוצעו בסך הכול</span></div>
+        <div class="stat"><span class="num" id="statMarket">–</span><span class="label">אזור נבדק</span></div>
+      </div>
 
-  <div id="feed"></div>
+      <div id="feed"></div>
+    </main>
+  </div>
 
 </div>
 
@@ -344,7 +389,7 @@
   const DATA_URL = "data/trends.json";
 
   const feed = document.getElementById("feed");
-  const chips = document.querySelectorAll(".chip");
+  const sideLinks = document.querySelectorAll(".side-link[data-filter]");
   const searchInput = document.getElementById("search");
   const themeToggle = document.getElementById("themeToggle");
   const refreshBtn = document.getElementById("refreshBtn");
@@ -363,7 +408,7 @@
       themeToggle.title = "עבור למצב לילה";
     }else{
       document.documentElement.removeAttribute("data-theme");
-      themeToggle.textContent = "🌙";
+      themeToggle.textContent = "🌜";
       themeToggle.title = "עבור למצב יום";
     }
   }
@@ -495,11 +540,11 @@
 
   refreshBtn.addEventListener("click", ()=> loadData(true));
 
-  chips.forEach(chip=>{
-    chip.addEventListener("click", ()=>{
-      chips.forEach(c=>c.classList.remove("active"));
-      chip.classList.add("active");
-      activeFilter = chip.dataset.filter;
+  sideLinks.forEach(link=>{
+    link.addEventListener("click", ()=>{
+      sideLinks.forEach(l=>l.classList.remove("active"));
+      link.classList.add("active");
+      activeFilter = link.dataset.filter;
       render();
     });
   });
