@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-10T13:44:32.352875+00:00",
+  "generated_at": "2026-09-10T14:38:15.833270+00:00",
   "market": "Boston, MA",
   "keywords": [
     "garage door repair",
@@ -9,6 +9,18 @@
     "garage door off track"
   ],
   "entries": [
+    {
+      "date": "2026-09-10",
+      "time": "14:38",
+      "type": "scan",
+      "title": "סריקת ביקוש הושלמה",
+      "detail": "נבדק המונח \"garage door repair\" באזור Meridian-Kessler, Indianapolis, IN. נפח חיפוש נוכחי: כ-10 חיפושים בחודש.",
+      "region": "Meridian-Kessler, Indianapolis, IN",
+      "tags": [
+        "10 חיפושים לחודש",
+        "נתונים אמיתיים"
+      ]
+    },
     {
       "date": "2026-09-10",
       "time": "13:44",
