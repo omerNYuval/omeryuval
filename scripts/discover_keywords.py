@@ -23,7 +23,7 @@ def main():
 
     payload = [{
         "keywords": [SEED_KEYWORD],
-        "location_name": "United States",
+        "location_name": "Indianapolis, Indiana, United States",
         "language_name": "English",
         "limit": LIMIT,
     }]
