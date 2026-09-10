@@ -280,6 +280,141 @@
     .stat:nth-child(3){border-inline-start:none;}
   }
 
+  /* ---- insights panel ---- */
+  .insights-panel{
+    position:relative;
+    background:linear-gradient(155deg, rgba(232,163,61,0.10), rgba(90,146,168,0.06) 60%, transparent);
+    border:1px solid rgba(232,163,61,0.28);
+    border-radius:16px;
+    padding:26px 28px;
+    margin-bottom:26px;
+    overflow:hidden;
+  }
+  .insights-glow{
+    position:absolute;
+    top:-60px;
+    inset-inline-end:-60px;
+    width:220px;
+    height:220px;
+    background:radial-gradient(circle, rgba(232,163,61,0.25), transparent 70%);
+    filter:blur(10px);
+    pointer-events:none;
+  }
+  .insights-header{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:16px;
+    position:relative;
+  }
+  .insights-icon{
+    font-size:1.8rem;
+    line-height:1;
+  }
+  .insights-header h2{
+    margin:0;
+    font-size:1.15rem;
+    font-weight:800;
+  }
+  .insights-sub{
+    font-size:0.8rem;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .insights-lead{
+    font-size:1rem;
+    line-height:1.7;
+    color:var(--paper);
+    margin:0 0 20px;
+    position:relative;
+  }
+  .insights-lead b{color:var(--amber);}
+  .insights-stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+    margin-bottom:22px;
+    position:relative;
+  }
+  .insight-stat{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    padding:14px 16px;
+    text-align:center;
+  }
+  .insight-stat .value{
+    display:block;
+    font-size:1.5rem;
+    font-weight:800;
+    color:var(--amber);
+  }
+  .insight-stat .label{
+    font-size:0.78rem;
+    color:var(--muted);
+  }
+  .insights-timeline-label{
+    font-size:0.78rem;
+    font-weight:600;
+    color:var(--muted);
+    margin-bottom:10px;
+    position:relative;
+  }
+  .run-timeline{
+    display:flex;
+    align-items:flex-start;
+    gap:0;
+    overflow-x:auto;
+    padding-bottom:6px;
+    position:relative;
+  }
+  .run-marker{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-width:64px;
+    position:relative;
+  }
+  .run-marker::before{
+    content:"";
+    position:absolute;
+    top:5px;
+    inset-inline-start:0;
+    width:100%;
+    height:2px;
+    background:rgba(255,255,255,0.1);
+    z-index:0;
+  }
+  .run-marker:first-child::before{inset-inline-start:50%;width:50%;}
+  .run-marker:last-child::before{width:50%;}
+  .run-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:var(--wire);
+    border:2px solid var(--charcoal);
+    z-index:1;
+    margin-bottom:6px;
+  }
+  .run-marker.has-signal .run-dot{background:var(--amber);}
+  .run-time{
+    font-size:0.68rem;
+    color:var(--muted);
+    white-space:nowrap;
+  }
+  .run-region{
+    font-size:0.65rem;
+    color:var(--muted);
+    white-space:nowrap;
+    max-width:90px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    direction:ltr;
+  }
+  @media (max-width:520px){
+    .insights-stats{grid-template-columns:1fr;}
+  }
+
   /* ---- log feed ---- */
   .day-group{margin-bottom:30px;}
   .day-heading{
@@ -418,6 +553,25 @@
         <div class="stat"><span class="num" id="statMarket">–</span><span class="label">אזור אחרון שנבדק</span></div>
       </div>
 
+      <div class="insights-panel" id="insightsPanel" hidden>
+        <div class="insights-glow"></div>
+        <div class="insights-header">
+          <span class="insights-icon">🧠</span>
+          <div>
+            <h2>תובנות הסוכן</h2>
+            <div class="insights-sub">מבוסס על כל הסריקות שבוצעו עד כה</div>
+          </div>
+        </div>
+        <p class="insights-lead" id="insightsLead">אין עדיין מספיק נתונים למסקנות.</p>
+        <div class="insights-stats">
+          <div class="insight-stat"><span class="value" id="insightScans">0</span><span class="label">סריקות שבוצעו</span></div>
+          <div class="insight-stat"><span class="value" id="insightSignals">0</span><span class="label">איתותי עלייה</span></div>
+          <div class="insight-stat"><span class="value" id="insightRegions">0</span><span class="label">אזורים במעקב</span></div>
+        </div>
+        <div class="insights-timeline-label">מתי הסוכן יצא לפעולה</div>
+        <div class="run-timeline" id="runTimeline"></div>
+      </div>
+
       <div id="feed"></div>
     </main>
   </div>
@@ -503,7 +657,54 @@
     document.getElementById("statMarket").textContent = allEntries.length ? allEntries[0].region : "–";
   }
 
+  function parsePct(entry){
+    const tag = (entry.tags || []).find(t => /^[+-]?\d+%$/.test(t));
+    return tag ? parseInt(tag, 10) : null;
+  }
+
+  function renderInsights(){
+    const insightsPanel = document.getElementById("insightsPanel");
+    const showInsights = activeAxis === "filter" && activeFilter === "all";
+    insightsPanel.hidden = !showInsights;
+    if(!showInsights) return;
+
+    const scans = allEntries.filter(e=>e.type === "scan");
+    const signals = allEntries.filter(e=>e.type === "score");
+    const regions = new Set(allEntries.map(e=>e.region));
+
+    document.getElementById("insightScans").textContent = scans.length;
+    document.getElementById("insightSignals").textContent = signals.length;
+    document.getElementById("insightRegions").textContent = regions.size;
+
+    const lead = document.getElementById("insightsLead");
+    if(signals.length === 0){
+      lead.textContent = scans.length
+        ? "הסוכן ביצע סריקות אך עדיין לא זיהה מונחים בעלייה חדה."
+        : "אין עדיין נתוני סריקה. ההרצה הראשונה של הסוכן תופיע כאן.";
+    }else{
+      const ranked = [...signals].sort((a,b)=> (parsePct(b) ?? 0) - (parsePct(a) ?? 0));
+      const top = ranked[0];
+      const cleanTitle = top.title.replace(/^עלייה בביקוש:\s*/, "").replace(/^גילוי:.*?"(.*)".*$/, "$1");
+      lead.innerHTML = `ההזדמנות החזקה ביותר שזוהתה עד כה: <b>"${cleanTitle}"</b> באזור <b>${top.region}</b> — ${top.tags.join(" · ")}.`;
+    }
+
+    const timeline = document.getElementById("runTimeline");
+    timeline.innerHTML = "";
+    const runsAsc = [...scans].sort((a,b)=> (a.date+a.time) < (b.date+b.time) ? -1 : 1).slice(-12);
+    if(runsAsc.length === 0){
+      timeline.innerHTML = '<span style="color:var(--muted); font-size:0.85rem;">עדיין אין הרצות להצגה.</span>';
+    }
+    runsAsc.forEach(run=>{
+      const hasSignalSameRun = signals.some(s=> s.date===run.date && s.time===run.time && s.region===run.region);
+      const marker = document.createElement("div");
+      marker.className = "run-marker" + (hasSignalSameRun ? " has-signal" : "");
+      marker.innerHTML = `<div class="run-dot" title="${run.region} · ${run.time}"></div><div class="run-time">${run.time}</div><div class="run-region">${run.region.split(",")[0]}</div>`;
+      timeline.appendChild(marker);
+    });
+  }
+
   function render(){
+    renderInsights();
     const term = searchInput.value.trim().toLowerCase();
     const filtered = allEntries.filter(e=>{
       let matchesAxis;
