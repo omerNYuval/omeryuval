@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-10T14:38:15.833270+00:00",
+  "generated_at": "2026-09-10T14:44:22.909150+00:00",
   "market": "Boston, MA",
   "keywords": [
     "garage door repair",
@@ -9,6 +9,18 @@
     "garage door off track"
   ],
   "entries": [
+    {
+      "date": "2026-09-10",
+      "time": "14:44",
+      "type": "score",
+      "title": "עלייה בביקוש: garage door repair",
+      "detail": "נפח החיפוש למונח \"garage door repair\" עלה ב-39% לעומת החודש הקודם באזור Indianapolis, IN (נפח נוכחי: כ-880 חיפושים בחודש).",
+      "region": "Indianapolis, IN",
+      "tags": [
+        "+39%",
+        "880 חיפושים לחודש"
+      ]
+    },
     {
       "date": "2026-09-10",
       "time": "14:38",
