@@ -551,7 +551,6 @@
       <button class="side-link" data-region="Indianapolis"><span class="region-dot"></span>אינדיאנפוליס</button>
       <button class="side-link" data-region="Boston"><span class="region-dot"></span>בוסטון</button>
       <button class="side-link" data-region="Miami"><span class="region-dot"></span>מיאמי</button>
-      <button class="side-link" data-region="history">היסטוריה</button>
       <div class="side-label">בקרוב</div>
       <button class="side-link" disabled>עדכון דף</button>
       <button class="side-link" disabled>פרסום דף</button>
@@ -637,7 +636,7 @@
   let allEntries = [];
   let meta = {};
   let activeFilter = "all";
-  let activeRegion = "history";
+  let activeRegion = "Indianapolis";
   let activeAxis = "filter";
 
   function applyTheme(theme){
@@ -782,7 +781,7 @@
       if(activeAxis === "filter"){
         return activeFilter === "all" || e.type === activeFilter;
       }
-      return activeRegion === "history" ? e.type === "scan" : e.region.includes(activeRegion);
+      return e.region.includes(activeRegion);
     });
 
     feed.innerHTML = "";
