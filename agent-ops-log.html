@@ -807,24 +807,24 @@
           <div class="run-rec-label">לפני ההרצה הבאה — כמה תובנות</div>
           <div class="run-rec-grid">
             <div class="run-rec-card">
-              <span class="run-rec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+              <span class="run-rec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
               <div>
-                <div class="run-rec-title">אזור מומלץ לבדיקה</div>
-                <div class="run-rec-text" id="recRegion">–</div>
+                <div class="run-rec-title">תחילת המעקב</div>
+                <div class="run-rec-text" id="recStartDate">–</div>
               </div>
             </div>
             <div class="run-rec-card">
-              <span class="run-rec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></span>
+              <span class="run-rec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></span>
               <div>
-                <div class="run-rec-title">המונח החם ביותר שזוהה</div>
-                <div class="run-rec-text" id="recHotTerm">–</div>
+                <div class="run-rec-title">מונחי מפתח במעקב</div>
+                <div class="run-rec-text" id="recKeywordCount">–</div>
               </div>
             </div>
             <div class="run-rec-card">
-              <span class="run-rec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+              <span class="run-rec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></span>
               <div>
-                <div class="run-rec-title">תזמון</div>
-                <div class="run-rec-text" id="recTiming">–</div>
+                <div class="run-rec-title">עלייה ממוצעת באיתותים</div>
+                <div class="run-rec-text" id="recAvgGrowth">–</div>
               </div>
             </div>
           </div>
@@ -963,54 +963,27 @@
   }
 
   function renderRunRecommendations(){
-    const recRegion = document.getElementById("recRegion");
-    const recHotTerm = document.getElementById("recHotTerm");
-    const recTiming = document.getElementById("recTiming");
-
-    const cities = ["Indianapolis", "Boston"];
-    const lastScanByCity = {};
-    allEntries.forEach(e=>{
-      if(e.type !== "scan") return;
-      cities.forEach(c=>{
-        if(!e.region.includes(c)) return;
-        const key = e.date + e.time;
-        if(!lastScanByCity[c] || key > lastScanByCity[c].key){
-          lastScanByCity[c] = { key, date: e.date };
-        }
-      });
-    });
-    const scanned = cities.filter(c => lastScanByCity[c]);
-    const unscanned = cities.filter(c => !lastScanByCity[c]);
-    if(unscanned.length){
-      recRegion.innerHTML = `<b dir="ltr">${unscanned[0]}</b> — עדיין לא נבדק בכלל`;
-    }else if(scanned.length){
-      const oldest = scanned.reduce((a,b)=> lastScanByCity[a].key < lastScanByCity[b].key ? a : b);
-      recRegion.innerHTML = `<b dir="ltr">${oldest}</b> — לא נבדק מאז ${lastScanByCity[oldest].date}`;
+    const recStartDate = document.getElementById("recStartDate");
+    if(allEntries.length){
+      const firstDate = allEntries.reduce((min,e)=> e.date < min ? e.date : min, allEntries[0].date);
+      const d = new Date(firstDate + "T00:00:00");
+      recStartDate.innerHTML = `המעקב פעיל מאז <b dir="ltr">${d.toLocaleDateString('he-IL', { day:'numeric', month:'numeric', year:'numeric' })}</b>`;
     }else{
-      recRegion.textContent = "אין עדיין מספיק נתונים";
+      recStartDate.textContent = "אין עדיין נתוני מעקב";
     }
 
+    const recKeywordCount = document.getElementById("recKeywordCount");
+    const keywordCount = (meta.keywords || []).length;
+    recKeywordCount.innerHTML = keywordCount
+      ? `<b dir="ltr">${keywordCount}</b> מונחים נסרקים בכל הרצה`
+      : "אין עדיין רשימת מונחים";
+
+    const recAvgGrowth = document.getElementById("recAvgGrowth");
     const signals = allEntries.filter(e=>e.type === "score");
-    let topSignal = null;
-    signals.forEach(s=>{
-      const p = parsePct(s);
-      if(p !== null && (!topSignal || p > parsePct(topSignal))) topSignal = s;
-    });
-    if(topSignal){
-      const cleanTitle = topSignal.title.replace(/^עלייה בביקוש:\s*/, "").replace(/^גילוי:.*?"(.*)".*$/, "$1");
-      recHotTerm.innerHTML = `<b dir="ltr">"${cleanTitle}"</b> (<b dir="ltr">+${parsePct(topSignal)}%</b>) ב-${topSignal.region}`;
-    }else{
-      recHotTerm.textContent = "עדיין לא זוהו איתותים";
-    }
-
-    if(meta.generated_at){
-      const mins = Math.round((Date.now() - new Date(meta.generated_at).getTime()) / 60000);
-      recTiming.textContent = mins < 30
-        ? `יש קירור פעיל — עוד כ-${30 - mins} דקות עד שאפשר להריץ שוב`
-        : `אפשר להריץ עכשיו — עברו ${mins} דקות מהריצה האחרונה`;
-    }else{
-      recTiming.textContent = "טרם בוצעה הרצה";
-    }
+    const pcts = signals.map(parsePct).filter(p => p !== null);
+    recAvgGrowth.innerHTML = pcts.length
+      ? `<b dir="ltr">+${Math.round(pcts.reduce((a,b)=>a+b,0) / pcts.length)}%</b> בממוצע באיתותים שזוהו`
+      : "עדיין אין מספיק איתותים לממוצע";
   }
 
   function renderInsights(){
