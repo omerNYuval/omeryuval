@@ -203,6 +203,11 @@
   .main-col{
     flex:1;
     min-width:0;
+    opacity:1;
+    transition:opacity .15s ease;
+  }
+  .main-col.is-transitioning{
+    opacity:0;
   }
   @media (max-width:760px){
     .layout{flex-direction:column;}
@@ -615,6 +620,7 @@
   const WORKER_URL = "https://REPLACE_WITH_YOUR_WORKER_URL.workers.dev";
 
   const feed = document.getElementById("feed");
+  const mainCol = document.querySelector(".main-col");
   const typeLinks = document.querySelectorAll(".side-link[data-filter]");
   const regionLinks = document.querySelectorAll(".side-link[data-region]");
   const allSideLinks = document.querySelectorAll(".side-link[data-filter], .side-link[data-region]");
@@ -893,25 +899,61 @@
 
   refreshBtn.addEventListener("click", runAgentNow);
 
-  typeLinks.forEach(link=>{
-    link.addEventListener("click", ()=>{
-      allSideLinks.forEach(l=>l.classList.remove("active"));
-      link.classList.add("active");
-      activeFilter = link.dataset.filter;
-      activeAxis = "filter";
+  function activateLink(axis, value){
+    allSideLinks.forEach(l=>l.classList.remove("active"));
+    const selector = axis === "filter" ? `.side-link[data-filter="${value}"]` : `.side-link[data-region="${value}"]`;
+    const link = document.querySelector(selector);
+    if(link) link.classList.add("active");
+    activeAxis = axis;
+    if(axis === "filter") activeFilter = value; else activeRegion = value;
+  }
+
+  function goTo(axis, value, opts){
+    const push = !opts || opts.push !== false;
+    mainCol.classList.add("is-transitioning");
+    window.setTimeout(()=>{
+      activateLink(axis, value);
       render();
-    });
+      window.scrollTo({top:0, behavior:"auto"});
+      requestAnimationFrame(()=>{ mainCol.classList.remove("is-transitioning"); });
+    }, 150);
+    if(push){
+      const hash = `#${axis}/${value}`;
+      if(location.hash !== hash) history.pushState(null, "", hash);
+    }
+  }
+
+  function applyHash(withTransition){
+    const [, axis, value] = (location.hash || "").match(/^#(filter|region)\/(.+)$/) || [];
+    if(!axis || !value) return;
+    if(withTransition){
+      mainCol.classList.add("is-transitioning");
+      window.setTimeout(()=>{
+        activateLink(axis, value);
+        render();
+        window.scrollTo({top:0, behavior:"auto"});
+        requestAnimationFrame(()=>{ mainCol.classList.remove("is-transitioning"); });
+      }, 150);
+    }else{
+      activateLink(axis, value);
+    }
+  }
+
+  typeLinks.forEach(link=>{
+    link.addEventListener("click", ()=> goTo("filter", link.dataset.filter));
   });
 
   regionLinks.forEach(link=>{
-    link.addEventListener("click", ()=>{
-      allSideLinks.forEach(l=>l.classList.remove("active"));
-      link.classList.add("active");
-      activeRegion = link.dataset.region;
-      activeAxis = "region";
-      render();
-    });
+    link.addEventListener("click", ()=> goTo("region", link.dataset.region));
   });
+
+  window.addEventListener("popstate", ()=>applyHash(true));
+
+  if(location.hash){
+    applyHash(false);
+  }else{
+    history.replaceState(null, "", "#filter/all");
+  }
 
   loadData(false).then(refreshLiveBalance);
 </script>
