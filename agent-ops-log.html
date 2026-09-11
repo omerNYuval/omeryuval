@@ -250,36 +250,6 @@
   }
   .side-link:disabled:hover{background:transparent;}
 
-  /* ---- stat strip ---- */
-  .stats{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    border:1px solid var(--steel);
-    border-radius:4px;
-    overflow:hidden;
-    margin-bottom:26px;
-  }
-  .stat{
-    padding:16px 18px;
-    border-inline-start:1px solid var(--steel);
-  }
-  .stat:first-child{border-inline-start:none;}
-  .stat .num{
-    font-size:1.6rem;
-    font-weight:700;
-    color:var(--amber);
-    display:block;
-    direction:ltr;
-  }
-  .stat .label{
-    font-size:0.82rem;
-    color:var(--muted);
-    margin-top:3px;
-  }
-  @media (max-width:520px){
-    .stats{grid-template-columns:repeat(2,1fr);}
-    .stat:nth-child(3){border-inline-start:none;}
-  }
 
   /* ---- insights panel ---- */
   .insights-panel{
@@ -571,13 +541,6 @@
     </aside>
 
     <main class="main-col">
-      <div class="stats">
-        <div class="stat"><span class="num" id="statKeywords">–</span><span class="label">מונחי מפתח במעקב</span></div>
-        <div class="stat"><span class="num" id="statSignals">–</span><span class="label">איתותי עלייה שזוהו בסריקה האחרונה</span></div>
-        <div class="stat"><span class="num" id="statRuns">–</span><span class="label">סריקות שבוצעו בסך הכול</span></div>
-        <div class="stat"><span class="num" id="statMarket">–</span><span class="label">אזור אחרון שנבדק</span></div>
-      </div>
-
       <div class="insights-panel" id="insightsPanel" hidden>
         <div class="insights-header">
           <span class="insights-icon">🧠</span>
@@ -704,18 +667,6 @@
     const formatted = generated.toLocaleString('he-IL', { day:'numeric', month:'numeric', hour:'2-digit', minute:'2-digit' });
     statusPill.classList.toggle("stale", hoursSince > 30);
     statusText.textContent = `עודכן לאחרונה: ${formatted}`;
-  }
-
-  function renderStats(){
-    const keywordCount = (meta.keywords || []).length;
-    const scanCount = allEntries.filter(e=>e.type === "scan").length;
-    const latestDate = allEntries.length ? allEntries.reduce((max,e)=> e.date > max ? e.date : max, allEntries[0].date) : null;
-    const signalsLatest = latestDate ? allEntries.filter(e=>e.type === "score" && e.date === latestDate).length : 0;
-
-    document.getElementById("statKeywords").textContent = keywordCount || "–";
-    document.getElementById("statSignals").textContent = signalsLatest;
-    document.getElementById("statRuns").textContent = scanCount;
-    document.getElementById("statMarket").textContent = allEntries.length ? allEntries[0].region : "–";
   }
 
   function parsePct(entry){
@@ -904,7 +855,6 @@
       allEntries = [];
     }finally{
       updateStatusPill();
-      renderStats();
       render();
       refreshBtn.disabled = false;
       refreshBtn.classList.remove("spinning");
@@ -938,7 +888,6 @@
         const waitMin = Math.max(0, result.cooldown_minutes - result.minutes_since_last_run);
         meta = result.data;
         allEntries = meta.entries || [];
-        renderStats();
         render();
         updateStatusPill();
         statusText.textContent = `הסריקה האחרונה הייתה לפני ${result.minutes_since_last_run} דקות — אפשר להריץ שוב בעוד כ-${waitMin} דקות`;
@@ -947,7 +896,6 @@
 
       meta = result;
       allEntries = result.entries || [];
-      renderStats();
       render();
       updateStatusPill();
     }catch(err){
