@@ -294,13 +294,92 @@
     margin-bottom:26px;
     overflow:hidden;
   }
-  .run-panel-desc{
-    font-size:0.9rem;
-    line-height:1.6;
+  .run-step-label{
+    font-weight:700;
+    font-size:0.85rem;
     color:var(--muted);
-    margin:0 0 20px;
-    max-width:560px;
+    margin-bottom:12px;
   }
+  .run-back{
+    display:inline-block;
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-family:'Heebo', sans-serif;
+    font-weight:600;
+    font-size:0.8rem;
+    cursor:pointer;
+    padding:0;
+    margin-bottom:16px;
+    transition:color .15s ease;
+  }
+  .run-back:hover{color:var(--paper);}
+  .run-choice-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .run-choice{
+    --choice-color:var(--amber);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:12px;
+    padding:12px 16px;
+    color:var(--paper);
+    font-family:'Heebo', sans-serif;
+    font-weight:700;
+    font-size:0.88rem;
+    cursor:pointer;
+    transition:border-color .15s ease, background-color .15s ease, transform .15s ease;
+  }
+  .run-choice:hover{border-color:var(--choice-color);transform:translateY(-1px);}
+  .run-choice:disabled{opacity:0.5;cursor:default;transform:none;}
+  .run-choice small{
+    display:block;
+    font-weight:500;
+    color:var(--muted);
+    font-size:0.72rem;
+  }
+  .run-choice-icon{
+    width:32px;
+    height:32px;
+    border-radius:9px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--choice-color);
+    background:color-mix(in srgb, var(--choice-color) 22%, transparent);
+    border:1px solid color-mix(in srgb, var(--choice-color) 45%, transparent);
+  }
+  .run-choice-icon svg{width:17px;height:17px;}
+  .run-neighborhood-toggle{
+    background:none;
+    border:none;
+    color:var(--wire);
+    font-family:'Heebo', sans-serif;
+    font-weight:700;
+    font-size:0.82rem;
+    cursor:pointer;
+    padding:0;
+  }
+  .run-neighborhood-grid{margin-top:12px;}
+  .run-neighborhood-grid .run-choice{padding:8px 14px;font-size:0.8rem;}
+  .run-summary{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:18px;
+    font-size:0.88rem;
+    color:var(--paper);
+    line-height:1.7;
+  }
+  .run-summary b{color:var(--amber);}
   .run-panel-btn{
     display:inline-flex;
     align-items:center;
@@ -606,14 +685,77 @@
           <span class="insights-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg></span>
           <div>
             <h2>הרצת הבוט</h2>
-            <div class="insights-sub">הרצה ידנית של סריקה חיה מול DataForSEO</div>
           </div>
         </div>
-        <p class="run-panel-desc">לחיצה על הכפתור מפעילה סריקה בזמן אמת עבור מונחי המפתח שבמעקב, ומעדכנת את התוצאות באתר. יש קירור של 30 דקות בין הרצות כדי לחסוך בעלויות.</p>
-        <button class="run-panel-btn" id="runPanelBtn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
-          הרץ סריקה עכשיו
-        </button>
+
+        <div class="run-step" id="runStepFreq">
+          <div class="run-step-label">1. באיזו תדירות תרצה להריץ סריקה?</div>
+          <div class="run-choice-grid">
+            <button class="run-choice" data-freq data-freq-label="הרצה יומית" type="button">
+              <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+              <span>הרצה יומית</span>
+            </button>
+            <button class="run-choice" data-freq data-freq-label="הרצה שבועית" type="button">
+              <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
+              <span>הרצה שבועית</span>
+            </button>
+            <button class="run-choice" data-freq data-freq-label="הרצה חודשית" type="button">
+              <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></span>
+              <span>הרצה חודשית</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="run-step" id="runStepRegion" hidden>
+          <button class="run-back" id="runBackToFreq" type="button">‹ חזרה לבחירת תדירות</button>
+          <div class="run-step-label">2. עבור אילו אזורים?</div>
+          <div class="run-choice-grid">
+            <button class="run-choice" data-region-choice data-region-label="אינדיאנפוליס, IN (כל העיר)" style="--choice-color:#4f8fd1" type="button">
+              <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+              <span>אינדיאנפוליס<small>כל העיר</small></span>
+            </button>
+            <button class="run-choice" data-region-choice data-region-label="בוסטון, MA (כל העיר)" style="--choice-color:#2fa855" type="button">
+              <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+              <span>בוסטון<small>כל העיר</small></span>
+            </button>
+            <button class="run-choice has-soon" disabled style="--choice-color:#20c4b0" type="button">
+              <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+              <span>מיאמי</span>
+              <span class="soon-badge">Soon</span>
+            </button>
+          </div>
+          <button class="run-neighborhood-toggle" id="neighborhoodToggle" type="button">או בחר שכונה ספציפית באינדיאנפוליס ▾</button>
+          <div class="run-choice-grid run-neighborhood-grid" id="neighborhoodGrid" hidden>
+            <button class="run-choice" data-neighborhood="Broad Ripple" type="button"><span>Broad Ripple</span></button>
+            <button class="run-choice" data-neighborhood="Irvington" type="button"><span>Irvington</span></button>
+            <button class="run-choice" data-neighborhood="Meridian-Kessler" type="button"><span>Meridian-Kessler</span></button>
+            <button class="run-choice" data-neighborhood="Butler-Tarkington" type="button"><span>Butler-Tarkington</span></button>
+            <button class="run-choice" data-neighborhood="Near Eastside" type="button"><span>Near Eastside</span></button>
+            <button class="run-choice" data-neighborhood="Near Westside" type="button"><span>Near Westside</span></button>
+            <button class="run-choice" data-neighborhood="Castleton" type="button"><span>Castleton</span></button>
+            <button class="run-choice" data-neighborhood="Eagle Creek" type="button"><span>Eagle Creek</span></button>
+            <button class="run-choice" data-neighborhood="Garfield Park" type="button"><span>Garfield Park</span></button>
+            <button class="run-choice" data-neighborhood="University Heights" type="button"><span>University Heights</span></button>
+            <button class="run-choice" data-neighborhood="Speedway" type="button"><span>Speedway</span></button>
+            <button class="run-choice" data-neighborhood="Crown Hill" type="button"><span>Crown Hill</span></button>
+            <button class="run-choice" data-neighborhood="Christian Park" type="button"><span>Christian Park</span></button>
+            <button class="run-choice" data-neighborhood="Glendale" type="button"><span>Glendale</span></button>
+            <button class="run-choice" data-neighborhood="Devon" type="button"><span>Devon</span></button>
+            <button class="run-choice" data-neighborhood="Keystone at the Crossing" type="button"><span>Keystone at the Crossing</span></button>
+            <button class="run-choice" data-neighborhood="Allisonville" type="button"><span>Allisonville</span></button>
+            <button class="run-choice" data-neighborhood="Homecroft" type="button"><span>Homecroft</span></button>
+          </div>
+        </div>
+
+        <div class="run-step" id="runStepConfirm" hidden>
+          <button class="run-back" id="runBackToRegion" type="button">‹ חזרה לבחירת אזור</button>
+          <div class="run-step-label">3. אישור הרצה</div>
+          <div class="run-summary" id="runSummary"></div>
+          <button class="run-panel-btn" id="runPanelBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+            הרץ סריקה עכשיו
+          </button>
+        </div>
       </div>
 
       <div class="insights-panel" id="insightsPanel" hidden>
@@ -963,9 +1105,55 @@
 
   refreshBtn.addEventListener("click", ()=>{
     goTo("filter", "run");
-    runAgentNow();
   });
   document.getElementById("runPanelBtn").addEventListener("click", runAgentNow);
+
+  (function initRunWizard(){
+    const stepFreq = document.getElementById("runStepFreq");
+    const stepRegion = document.getElementById("runStepRegion");
+    const stepConfirm = document.getElementById("runStepConfirm");
+    const neighborhoodToggle = document.getElementById("neighborhoodToggle");
+    const neighborhoodGrid = document.getElementById("neighborhoodGrid");
+    const runSummary = document.getElementById("runSummary");
+
+    let chosenFreqLabel = "";
+
+    function showStep(step){
+      stepFreq.hidden = step !== "freq";
+      stepRegion.hidden = step !== "region";
+      stepConfirm.hidden = step !== "confirm";
+    }
+
+    document.querySelectorAll(".run-choice[data-freq]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        chosenFreqLabel = btn.dataset.freqLabel;
+        showStep("region");
+      });
+    });
+
+    document.getElementById("runBackToFreq").addEventListener("click", ()=> showStep("freq"));
+    document.getElementById("runBackToRegion").addEventListener("click", ()=> showStep("region"));
+
+    neighborhoodToggle.addEventListener("click", ()=>{
+      neighborhoodGrid.hidden = !neighborhoodGrid.hidden;
+      neighborhoodToggle.textContent = neighborhoodGrid.hidden
+        ? "או בחר שכונה ספציפית באינדיאנפוליס ▾"
+        : "או בחר שכונה ספציפית באינדיאנפוליס ▴";
+    });
+
+    function chooseRegion(label){
+      runSummary.innerHTML = `תריץ <b>${chosenFreqLabel}</b> עבור <b>${label}</b>.`;
+      showStep("confirm");
+    }
+
+    document.querySelectorAll(".run-choice[data-region-choice]").forEach(btn=>{
+      btn.addEventListener("click", ()=> chooseRegion(btn.dataset.regionLabel));
+    });
+
+    document.querySelectorAll(".run-choice[data-neighborhood]").forEach(btn=>{
+      btn.addEventListener("click", ()=> chooseRegion(`${btn.dataset.neighborhood}, Indianapolis, IN`));
+    });
+  })();
 
   function activateLink(axis, value){
     allSideLinks.forEach(l=>l.classList.remove("active"));
