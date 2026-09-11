@@ -76,7 +76,8 @@
     gap:14px;
   }
   @media (max-width:760px){
-    .topbar{grid-template-columns:1fr; justify-items:start;}
+    .topbar{grid-template-columns:1fr auto; justify-items:start; align-items:center;}
+    .brand{grid-column:1 / -1;}
   }
   .brand, .topbar-actions{
     min-width:0;
