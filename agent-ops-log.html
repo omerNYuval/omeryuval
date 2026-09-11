@@ -294,6 +294,31 @@
     margin-bottom:26px;
     overflow:hidden;
   }
+  .run-panel-desc{
+    font-size:0.9rem;
+    line-height:1.6;
+    color:var(--muted);
+    margin:0 0 20px;
+    max-width:560px;
+  }
+  .run-panel-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--amber);
+    color:var(--charcoal);
+    font-family:'Heebo', sans-serif;
+    font-weight:800;
+    font-size:0.95rem;
+    border:none;
+    padding:12px 22px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .run-panel-btn:hover{transform:translateY(-1px);}
+  .run-panel-btn:disabled{opacity:0.6;cursor:default;transform:none;}
+  .run-panel-btn svg{width:18px;height:18px;}
   .insights-header{
     display:flex;
     align-items:center;
@@ -563,6 +588,7 @@
     <aside class="sidebar">
       <div class="side-label">סוג פעולה</div>
       <button class="side-link active" data-filter="all">הכול</button>
+      <button class="side-link" data-filter="run">הרצת הבוט</button>
       <button class="side-link" data-filter="scan">סריקת נתונים</button>
       <button class="side-link" data-filter="score">מונח בעלייה</button>
       <div class="side-label">אזור</div>
@@ -575,6 +601,21 @@
     </aside>
 
     <main class="main-col">
+      <div class="insights-panel" id="runPanel" hidden>
+        <div class="insights-header">
+          <span class="insights-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg></span>
+          <div>
+            <h2>הרצת הבוט</h2>
+            <div class="insights-sub">הרצה ידנית של סריקה חיה מול DataForSEO</div>
+          </div>
+        </div>
+        <p class="run-panel-desc">לחיצה על הכפתור מפעילה סריקה בזמן אמת עבור מונחי המפתח שבמעקב, ומעדכנת את התוצאות באתר. יש קירור של 30 דקות בין הרצות כדי לחסוך בעלויות.</p>
+        <button class="run-panel-btn" id="runPanelBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+          הרץ סריקה עכשיו
+        </button>
+      </div>
+
       <div class="insights-panel" id="insightsPanel" hidden>
         <div class="insights-header">
           <span class="insights-icon">🧠</span>
@@ -787,9 +828,13 @@
   function render(){
     renderInsights();
 
+    const runPanel = document.getElementById("runPanel");
+    const showingRun = activeAxis === "filter" && activeFilter === "run";
+    runPanel.hidden = !showingRun;
+
     const showingAll = activeAxis === "filter" && activeFilter === "all";
-    feed.hidden = showingAll;
-    if(showingAll){
+    feed.hidden = showingAll || showingRun;
+    if(showingAll || showingRun){
       feed.innerHTML = "";
       return;
     }
@@ -916,7 +961,11 @@
     }
   }
 
-  refreshBtn.addEventListener("click", runAgentNow);
+  refreshBtn.addEventListener("click", ()=>{
+    goTo("filter", "run");
+    runAgentNow();
+  });
+  document.getElementById("runPanelBtn").addEventListener("click", runAgentNow);
 
   function activateLink(axis, value){
     allSideLinks.forEach(l=>l.classList.remove("active"));
