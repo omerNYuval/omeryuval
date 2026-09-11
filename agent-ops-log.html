@@ -82,6 +82,9 @@
     min-width:0;
   }
   .balance-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
     font-size:0.85rem;
     font-weight:600;
     color:var(--muted);
@@ -94,6 +97,14 @@
   .balance-badge .value{
     color:var(--amber);
     font-weight:700;
+  }
+  .balance-icon{
+    display:flex;
+    color:var(--amber);
+  }
+  .balance-icon svg{
+    width:15px;
+    height:15px;
   }
   .brand{
     display:flex;
@@ -525,7 +536,7 @@
     <div class="brand">
       <h1>דשבורד הסוכן</h1>
     </div>
-    <div class="balance-badge">💰 יתרה: <span class="value" id="balanceValue">–</span></div>
+    <div class="balance-badge"><span class="balance-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></span> יתרה: <span class="value" id="balanceValue">–</span></div>
     <div class="topbar-actions">
       <div class="status-pill" id="statusPill"><span class="dot"></span><span id="statusText">טוען נתוני סריקה…</span></div>
       <button id="refreshBtn" class="icon-button" type="button" aria-label="הרץ סריקה עכשיו" title="הרץ סריקה עכשיו">🤖</button>
