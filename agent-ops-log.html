@@ -214,19 +214,6 @@
     }
   }
 
-  .search{
-    background:var(--panel);
-    border:1px solid var(--steel);
-    border-radius:4px;
-    padding:8px 12px;
-    color:var(--paper);
-    font-family:'Heebo', sans-serif;
-    font-weight:600;
-    font-size:0.85rem;
-    width:100%;
-    margin-bottom:8px;
-  }
-  .search::placeholder{color:var(--muted);}
 
   .side-label{
     font-size:0.75rem;
@@ -548,7 +535,6 @@
 
   <div class="layout">
     <aside class="sidebar">
-      <input class="search" id="search" type="text" placeholder="חיפוש לפי מונח חיפוש…">
       <div class="side-label">סוג פעולה</div>
       <button class="side-link active" data-filter="all">הכול</button>
       <button class="side-link" data-filter="scan">סריקת נתונים</button>
@@ -632,7 +618,6 @@
   const typeLinks = document.querySelectorAll(".side-link[data-filter]");
   const regionLinks = document.querySelectorAll(".side-link[data-region]");
   const allSideLinks = document.querySelectorAll(".side-link[data-filter], .side-link[data-region]");
-  const searchInput = document.getElementById("search");
   const themeToggle = document.getElementById("themeToggle");
   const refreshBtn = document.getElementById("refreshBtn");
   const statusPill = document.getElementById("statusPill");
@@ -784,17 +769,11 @@
       return;
     }
 
-    const term = searchInput.value.trim().toLowerCase();
     const filtered = allEntries.filter(e=>{
-      let matchesAxis;
       if(activeAxis === "filter"){
-        matchesAxis = activeFilter === "all" || e.type === activeFilter;
-      }else{
-        matchesAxis = activeRegion === "history" ? e.type === "scan" : e.region.includes(activeRegion);
+        return activeFilter === "all" || e.type === activeFilter;
       }
-      const haystack = (e.title + " " + e.detail + " " + e.region + " " + e.tags.join(" ")).toLowerCase();
-      const matchesTerm = term === "" || haystack.includes(term);
-      return matchesAxis && matchesTerm;
+      return activeRegion === "history" ? e.type === "scan" : e.region.includes(activeRegion);
     });
 
     feed.innerHTML = "";
@@ -933,8 +912,6 @@
       render();
     });
   });
-
-  searchInput.addEventListener("input", render);
 
   loadData(false).then(refreshLiveBalance);
 </script>
