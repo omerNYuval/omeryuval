@@ -370,6 +370,59 @@
     line-height:1.7;
   }
   .run-summary b{color:var(--amber);}
+  .run-recommendations{
+    margin-top:26px;
+    padding-top:22px;
+    border-top:1px solid rgba(255,255,255,0.08);
+  }
+  .run-rec-label{
+    font-weight:800;
+    font-size:0.85rem;
+    color:var(--paper);
+    margin-bottom:14px;
+  }
+  .run-rec-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+  }
+  @media (max-width:1100px){
+    .run-rec-grid{grid-template-columns:1fr;}
+  }
+  .run-rec-card{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    padding:14px 16px;
+  }
+  .run-rec-icon{
+    width:36px;
+    height:36px;
+    flex-shrink:0;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--amber);
+    background:color-mix(in srgb, var(--amber) 22%, transparent);
+    border:1px solid color-mix(in srgb, var(--amber) 45%, transparent);
+  }
+  .run-rec-icon svg{width:18px;height:18px;}
+  .run-rec-title{
+    font-weight:800;
+    font-size:0.82rem;
+    color:var(--paper);
+    margin-bottom:4px;
+  }
+  .run-rec-text{
+    font-size:0.82rem;
+    color:var(--muted);
+    line-height:1.5;
+  }
+  .run-rec-text b{color:var(--amber);direction:ltr;display:inline-block;}
   .run-panel-btn{
     display:inline-flex;
     align-items:center;
@@ -749,6 +802,33 @@
             הרץ סריקה עכשיו
           </button>
         </div>
+
+        <div class="run-recommendations">
+          <div class="run-rec-label">לפני ההרצה הבאה — כמה תובנות</div>
+          <div class="run-rec-grid">
+            <div class="run-rec-card">
+              <span class="run-rec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+              <div>
+                <div class="run-rec-title">אזור מומלץ לבדיקה</div>
+                <div class="run-rec-text" id="recRegion">–</div>
+              </div>
+            </div>
+            <div class="run-rec-card">
+              <span class="run-rec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></span>
+              <div>
+                <div class="run-rec-title">המונח החם ביותר שזוהה</div>
+                <div class="run-rec-text" id="recHotTerm">–</div>
+              </div>
+            </div>
+            <div class="run-rec-card">
+              <span class="run-rec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+              <div>
+                <div class="run-rec-title">תזמון</div>
+                <div class="run-rec-text" id="recTiming">–</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="insights-panel" id="insightsPanel" hidden>
@@ -882,6 +962,57 @@
     return tag ? parseInt(tag, 10) : null;
   }
 
+  function renderRunRecommendations(){
+    const recRegion = document.getElementById("recRegion");
+    const recHotTerm = document.getElementById("recHotTerm");
+    const recTiming = document.getElementById("recTiming");
+
+    const cities = ["Indianapolis", "Boston"];
+    const lastScanByCity = {};
+    allEntries.forEach(e=>{
+      if(e.type !== "scan") return;
+      cities.forEach(c=>{
+        if(!e.region.includes(c)) return;
+        const key = e.date + e.time;
+        if(!lastScanByCity[c] || key > lastScanByCity[c].key){
+          lastScanByCity[c] = { key, date: e.date };
+        }
+      });
+    });
+    const scanned = cities.filter(c => lastScanByCity[c]);
+    const unscanned = cities.filter(c => !lastScanByCity[c]);
+    if(unscanned.length){
+      recRegion.innerHTML = `<b dir="ltr">${unscanned[0]}</b> — עדיין לא נבדק בכלל`;
+    }else if(scanned.length){
+      const oldest = scanned.reduce((a,b)=> lastScanByCity[a].key < lastScanByCity[b].key ? a : b);
+      recRegion.innerHTML = `<b dir="ltr">${oldest}</b> — לא נבדק מאז ${lastScanByCity[oldest].date}`;
+    }else{
+      recRegion.textContent = "אין עדיין מספיק נתונים";
+    }
+
+    const signals = allEntries.filter(e=>e.type === "score");
+    let topSignal = null;
+    signals.forEach(s=>{
+      const p = parsePct(s);
+      if(p !== null && (!topSignal || p > parsePct(topSignal))) topSignal = s;
+    });
+    if(topSignal){
+      const cleanTitle = topSignal.title.replace(/^עלייה בביקוש:\s*/, "").replace(/^גילוי:.*?"(.*)".*$/, "$1");
+      recHotTerm.innerHTML = `<b dir="ltr">"${cleanTitle}"</b> (<b dir="ltr">+${parsePct(topSignal)}%</b>) ב-${topSignal.region}`;
+    }else{
+      recHotTerm.textContent = "עדיין לא זוהו איתותים";
+    }
+
+    if(meta.generated_at){
+      const mins = Math.round((Date.now() - new Date(meta.generated_at).getTime()) / 60000);
+      recTiming.textContent = mins < 30
+        ? `יש קירור פעיל — עוד כ-${30 - mins} דקות עד שאפשר להריץ שוב`
+        : `אפשר להריץ עכשיו — עברו ${mins} דקות מהריצה האחרונה`;
+    }else{
+      recTiming.textContent = "טרם בוצעה הרצה";
+    }
+  }
+
   function renderInsights(){
     const insightsPanel = document.getElementById("insightsPanel");
     const showInsights = activeAxis === "filter" && activeFilter === "all";
@@ -966,6 +1097,7 @@
     const runPanel = document.getElementById("runPanel");
     const showingRun = activeAxis === "filter" && activeFilter === "run";
     runPanel.hidden = !showingRun;
+    if(showingRun) renderRunRecommendations();
 
     const showingAll = activeAxis === "filter" && activeFilter === "all";
     feed.hidden = showingAll || showingRun;
