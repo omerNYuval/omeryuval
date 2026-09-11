@@ -325,20 +325,21 @@
   .insight-stat.tone-moss{--tone-color:var(--moss);}
   .insight-stat.tone-muted{--tone-color:var(--muted);}
   .insight-icon{
-    width:36px;
-    height:36px;
+    width:42px;
+    height:42px;
     flex-shrink:0;
-    border-radius:10px;
+    border-radius:11px;
     display:flex;
     align-items:center;
     justify-content:center;
     color:var(--tone-color);
-    background:color-mix(in srgb, var(--tone-color) 18%, transparent);
-    border:1px solid color-mix(in srgb, var(--tone-color) 35%, transparent);
+    background:color-mix(in srgb, var(--tone-color) 28%, transparent);
+    border:1.5px solid color-mix(in srgb, var(--tone-color) 55%, transparent);
   }
   .insight-icon svg{
-    width:18px;
-    height:18px;
+    width:21px;
+    height:21px;
+    stroke-width:2.5;
   }
   .insight-content{
     display:flex;
@@ -348,14 +349,16 @@
     min-width:0;
   }
   .insight-stat .value{
-    font-size:1.3rem;
-    font-weight:800;
+    font-size:1.4rem;
+    font-weight:900;
     color:var(--tone-color);
     direction:ltr;
     line-height:1.2;
+    letter-spacing:-0.01em;
   }
   .insight-stat .label{
-    font-size:0.74rem;
+    font-size:0.76rem;
+    font-weight:700;
     color:var(--muted);
     line-height:1.3;
   }
