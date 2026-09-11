@@ -357,16 +357,6 @@
     border:1px solid color-mix(in srgb, var(--choice-color) 45%, transparent);
   }
   .run-choice-icon svg{width:17px;height:17px;}
-  .run-neighborhood-toggle{
-    background:none;
-    border:none;
-    color:var(--wire);
-    font-family:'Heebo', sans-serif;
-    font-weight:700;
-    font-size:0.82rem;
-    cursor:pointer;
-    padding:0;
-  }
   .run-neighborhood-grid{margin-top:12px;}
   .run-neighborhood-grid .run-choice{padding:8px 14px;font-size:0.8rem;}
   .run-summary{
@@ -708,42 +698,45 @@
 
         <div class="run-step" id="runStepRegion" hidden>
           <button class="run-back" id="runBackToFreq" type="button">‹ חזרה לבחירת תדירות</button>
-          <div class="run-step-label">2. עבור אילו אזורים?</div>
-          <div class="run-choice-grid">
-            <button class="run-choice" data-region-choice data-region-label="אינדיאנפוליס, IN (כל העיר)" style="--choice-color:#4f8fd1" type="button">
-              <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
-              <span>אינדיאנפוליס<small>כל העיר</small></span>
-            </button>
-            <button class="run-choice" data-region-choice data-region-label="בוסטון, MA (כל העיר)" style="--choice-color:#2fa855" type="button">
-              <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
-              <span>בוסטון<small>כל העיר</small></span>
-            </button>
-            <button class="run-choice has-soon" disabled style="--choice-color:#20c4b0" type="button">
-              <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
-              <span>מיאמי</span>
-              <span class="soon-badge">Soon</span>
-            </button>
+
+          <div id="regionSubCity">
+            <div class="run-step-label">2. עבור איזה אזור?</div>
+            <div class="run-choice-grid">
+              <button class="run-choice" data-city="Indianapolis" data-city-label="אינדיאנפוליס" data-city-full="Indianapolis, IN" style="--choice-color:#4f8fd1" type="button">
+                <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+                <span>אינדיאנפוליס</span>
+              </button>
+              <button class="run-choice" data-city="Boston" data-city-label="בוסטון" data-city-full="Boston, MA" style="--choice-color:#2fa855" type="button">
+                <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+                <span>בוסטון</span>
+              </button>
+              <button class="run-choice has-soon" disabled style="--choice-color:#20c4b0" type="button">
+                <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+                <span>מיאמי</span>
+                <span class="soon-badge">Soon</span>
+              </button>
+            </div>
           </div>
-          <button class="run-neighborhood-toggle" id="neighborhoodToggle" type="button">או בחר שכונה ספציפית באינדיאנפוליס ▾</button>
-          <div class="run-choice-grid run-neighborhood-grid" id="neighborhoodGrid" hidden>
-            <button class="run-choice" data-neighborhood="Broad Ripple" type="button"><span>Broad Ripple</span></button>
-            <button class="run-choice" data-neighborhood="Irvington" type="button"><span>Irvington</span></button>
-            <button class="run-choice" data-neighborhood="Meridian-Kessler" type="button"><span>Meridian-Kessler</span></button>
-            <button class="run-choice" data-neighborhood="Butler-Tarkington" type="button"><span>Butler-Tarkington</span></button>
-            <button class="run-choice" data-neighborhood="Near Eastside" type="button"><span>Near Eastside</span></button>
-            <button class="run-choice" data-neighborhood="Near Westside" type="button"><span>Near Westside</span></button>
-            <button class="run-choice" data-neighborhood="Castleton" type="button"><span>Castleton</span></button>
-            <button class="run-choice" data-neighborhood="Eagle Creek" type="button"><span>Eagle Creek</span></button>
-            <button class="run-choice" data-neighborhood="Garfield Park" type="button"><span>Garfield Park</span></button>
-            <button class="run-choice" data-neighborhood="University Heights" type="button"><span>University Heights</span></button>
-            <button class="run-choice" data-neighborhood="Speedway" type="button"><span>Speedway</span></button>
-            <button class="run-choice" data-neighborhood="Crown Hill" type="button"><span>Crown Hill</span></button>
-            <button class="run-choice" data-neighborhood="Christian Park" type="button"><span>Christian Park</span></button>
-            <button class="run-choice" data-neighborhood="Glendale" type="button"><span>Glendale</span></button>
-            <button class="run-choice" data-neighborhood="Devon" type="button"><span>Devon</span></button>
-            <button class="run-choice" data-neighborhood="Keystone at the Crossing" type="button"><span>Keystone at the Crossing</span></button>
-            <button class="run-choice" data-neighborhood="Allisonville" type="button"><span>Allisonville</span></button>
-            <button class="run-choice" data-neighborhood="Homecroft" type="button"><span>Homecroft</span></button>
+
+          <div id="regionSubScope" hidden>
+            <button class="run-back" id="runBackToCity" type="button">‹ חזרה לבחירת עיר</button>
+            <div class="run-step-label" id="scopeLabel">כל העיר או שכונות מסוימות?</div>
+            <div class="run-choice-grid">
+              <button class="run-choice" id="scopeWholeCity" type="button">
+                <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></span>
+                <span>כל העיר</span>
+              </button>
+              <button class="run-choice" id="scopeNeighborhoods" type="button">
+                <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></span>
+                <span>שכונות מסוימות</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="regionSubNeighborhoods" hidden>
+            <button class="run-back" id="runBackToScope" type="button">‹ חזרה</button>
+            <div class="run-step-label" id="neighborhoodsLabel">בחר שכונה</div>
+            <div class="run-choice-grid run-neighborhood-grid" id="neighborhoodGrid"></div>
           </div>
         </div>
 
@@ -1109,14 +1102,26 @@
   document.getElementById("runPanelBtn").addEventListener("click", runAgentNow);
 
   (function initRunWizard(){
+    const NEIGHBORHOODS = {
+      Indianapolis: ["Broad Ripple","Irvington","Meridian-Kessler","Butler-Tarkington","Near Eastside","Near Westside","Castleton","Eagle Creek","Garfield Park","University Heights","Speedway","Crown Hill","Christian Park","Glendale","Devon","Keystone at the Crossing","Allisonville","Homecroft"],
+      Boston: ["Allston","Back Bay","Brighton","Charlestown","Dorchester","East Boston","Hyde Park","Jamaica Plain","Mattapan","Mission Hill","Roslindale","Roxbury","South Boston","South End","West Roxbury","West End"]
+    };
+
     const stepFreq = document.getElementById("runStepFreq");
     const stepRegion = document.getElementById("runStepRegion");
     const stepConfirm = document.getElementById("runStepConfirm");
-    const neighborhoodToggle = document.getElementById("neighborhoodToggle");
+    const subCity = document.getElementById("regionSubCity");
+    const subScope = document.getElementById("regionSubScope");
+    const subNeighborhoods = document.getElementById("regionSubNeighborhoods");
+    const scopeLabel = document.getElementById("scopeLabel");
+    const neighborhoodsLabel = document.getElementById("neighborhoodsLabel");
     const neighborhoodGrid = document.getElementById("neighborhoodGrid");
     const runSummary = document.getElementById("runSummary");
 
     let chosenFreqLabel = "";
+    let chosenCity = "";
+    let chosenCityLabel = "";
+    let chosenCityFull = "";
 
     function showStep(step){
       stepFreq.hidden = step !== "freq";
@@ -1124,34 +1129,62 @@
       stepConfirm.hidden = step !== "confirm";
     }
 
+    function showRegionSub(sub){
+      subCity.hidden = sub !== "city";
+      subScope.hidden = sub !== "scope";
+      subNeighborhoods.hidden = sub !== "neighborhoods";
+    }
+
     document.querySelectorAll(".run-choice[data-freq]").forEach(btn=>{
       btn.addEventListener("click", ()=>{
         chosenFreqLabel = btn.dataset.freqLabel;
         showStep("region");
+        showRegionSub("city");
       });
     });
 
     document.getElementById("runBackToFreq").addEventListener("click", ()=> showStep("freq"));
-    document.getElementById("runBackToRegion").addEventListener("click", ()=> showStep("region"));
 
-    neighborhoodToggle.addEventListener("click", ()=>{
-      neighborhoodGrid.hidden = !neighborhoodGrid.hidden;
-      neighborhoodToggle.textContent = neighborhoodGrid.hidden
-        ? "או בחר שכונה ספציפית באינדיאנפוליס ▾"
-        : "או בחר שכונה ספציפית באינדיאנפוליס ▴";
+    document.querySelectorAll(".run-choice[data-city]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        chosenCity = btn.dataset.city;
+        chosenCityLabel = btn.dataset.cityLabel;
+        chosenCityFull = btn.dataset.cityFull;
+        scopeLabel.textContent = `${chosenCityLabel} — כל העיר או שכונות מסוימות?`;
+        showRegionSub("scope");
+      });
     });
+
+    document.getElementById("runBackToCity").addEventListener("click", ()=> showRegionSub("city"));
 
     function chooseRegion(label){
       runSummary.innerHTML = `תריץ <b>${chosenFreqLabel}</b> עבור <b>${label}</b>.`;
       showStep("confirm");
     }
 
-    document.querySelectorAll(".run-choice[data-region-choice]").forEach(btn=>{
-      btn.addEventListener("click", ()=> chooseRegion(btn.dataset.regionLabel));
+    document.getElementById("scopeWholeCity").addEventListener("click", ()=>{
+      chooseRegion(`${chosenCityLabel} (${chosenCityFull}) — כל העיר`);
     });
 
-    document.querySelectorAll(".run-choice[data-neighborhood]").forEach(btn=>{
-      btn.addEventListener("click", ()=> chooseRegion(`${btn.dataset.neighborhood}, Indianapolis, IN`));
+    document.getElementById("scopeNeighborhoods").addEventListener("click", ()=>{
+      neighborhoodsLabel.textContent = `בחר שכונה ב${chosenCityLabel}`;
+      neighborhoodGrid.innerHTML = "";
+      (NEIGHBORHOODS[chosenCity] || []).forEach(name=>{
+        const btn = document.createElement("button");
+        btn.className = "run-choice";
+        btn.type = "button";
+        btn.innerHTML = `<span>${name}</span>`;
+        btn.addEventListener("click", ()=> chooseRegion(`${name}, ${chosenCityFull}`));
+        neighborhoodGrid.appendChild(btn);
+      });
+      showRegionSub("neighborhoods");
+    });
+
+    document.getElementById("runBackToScope").addEventListener("click", ()=> showRegionSub("scope"));
+
+    document.getElementById("runBackToRegion").addEventListener("click", ()=>{
+      showStep("region");
+      showRegionSub("scope");
     });
   })();
 
