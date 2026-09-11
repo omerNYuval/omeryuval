@@ -424,6 +424,64 @@
     text-overflow:ellipsis;
     direction:ltr;
   }
+
+  /* ---- neighborhood map ---- */
+  .map-panel{
+    position:relative;
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    padding:26px 28px;
+    margin-bottom:26px;
+  }
+  .map-svg-wrap{
+    max-width:480px;
+    margin:18px auto 10px;
+  }
+  .map-svg-wrap svg{
+    width:100%;
+    height:auto;
+    display:block;
+  }
+  .map-bg{fill:var(--panel);}
+  .map-loop{
+    fill:none;
+    stroke:rgba(255,255,255,0.5);
+    stroke-width:2;
+  }
+  .map-street{
+    stroke:rgba(255,255,255,0.28);
+    stroke-width:1;
+  }
+  .map-dot{
+    fill:#4f8fd1;
+    stroke:var(--panel);
+    stroke-width:1.5;
+  }
+  .map-label{
+    font-family:'Heebo', sans-serif;
+    font-size:11px;
+    font-weight:600;
+    fill:var(--muted);
+  }
+  .map-downtown-dot{
+    fill:var(--paper);
+    stroke:var(--panel);
+    stroke-width:1.5;
+  }
+  .map-downtown-label{
+    font-family:'Heebo', sans-serif;
+    font-size:11px;
+    font-weight:700;
+    fill:var(--paper);
+    direction:rtl;
+  }
+  .map-footnote{
+    font-size:0.78rem;
+    color:var(--muted);
+    line-height:1.6;
+    text-align:center;
+  }
   @media (max-width:1100px){
     .insights-stats{grid-template-columns:repeat(3,1fr);}
   }
@@ -615,6 +673,65 @@
         </div>
         <div class="insights-timeline-label">מתי הסוכן יצא לפעולה</div>
         <div class="run-timeline" id="runTimeline"></div>
+      </div>
+
+      <div class="map-panel">
+        <div class="insights-header">
+          <span class="insights-icon" style="color:#4f8fd1;background:color-mix(in srgb, #4f8fd1 18%, transparent);border-color:color-mix(in srgb, #4f8fd1 35%, transparent);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+          <div>
+            <h2>מפת שכונות — אינדיאנפוליס</h2>
+            <div class="insights-sub">כל נקודה היא שכונה עם גישה לסריקה אצל DataForSEO, במיקום הגיאוגרפי האמיתי שלה</div>
+          </div>
+        </div>
+        <div class="map-svg-wrap">
+          <svg viewBox="0 0 640 820" direction="ltr">
+            <rect class="map-bg" x="0" y="0" width="640" height="820"></rect>
+            <circle class="map-loop" cx="368.9" cy="580.6" r="380"></circle>
+            <line class="map-street" x1="368.9" y1="0" x2="368.9" y2="820"></line>
+            <line class="map-street" x1="0" y1="580.6" x2="640" y2="580.6"></line>
+
+            <circle class="map-dot" cx="409.1" cy="255.8" r="5"><title>Broad Ripple</title></circle>
+            <text class="map-label" x="399.1" y="247.8" text-anchor="end">Broad Ripple</text>
+            <circle class="map-dot" cx="599.8" cy="587.1" r="5"><title>Irvington</title></circle>
+            <text class="map-label" x="589.8" y="591.1" text-anchor="end">Irvington</text>
+            <circle class="map-dot" cx="389.0" cy="301.8" r="5"><title>Meridian-Kessler</title></circle>
+            <text class="map-label" x="379.0" y="305.8" text-anchor="end">Meridian-Kessler</text>
+            <circle class="map-dot" cx="343.8" cy="318.2" r="5"><title>Butler-Tarkington</title></circle>
+            <text class="map-label" x="333.8" y="336.2" text-anchor="end">Butler-Tarkington</text>
+            <circle class="map-dot" cx="439.2" cy="557.6" r="5"><title>Near Eastside</title></circle>
+            <text class="map-label" x="449.2" y="561.6" text-anchor="start">Near Eastside</text>
+            <circle class="map-dot" cx="288.6" cy="574.0" r="5"><title>Near Westside</title></circle>
+            <text class="map-label" x="278.6" y="578.0" text-anchor="end">Near Westside</text>
+            <circle class="map-dot" cx="627.5" cy="82.0" r="5"><title>Castleton</title></circle>
+            <text class="map-label" x="617.5" y="86.0" text-anchor="end">Castleton</text>
+            <circle class="map-dot" cx="37.6" cy="278.8" r="5"><title>Eagle Creek</title></circle>
+            <text class="map-label" x="47.6" y="282.8" text-anchor="start">Eagle Creek</text>
+            <circle class="map-dot" cx="414.1" cy="705.2" r="5"><title>Garfield Park</title></circle>
+            <text class="map-label" x="424.1" y="709.2" text-anchor="start">Garfield Park</text>
+            <circle class="map-dot" cx="439.2" cy="787.2" r="5"><title>University Heights</title></circle>
+            <text class="map-label" x="449.2" y="803.2" text-anchor="start">University Heights</text>
+            <circle class="map-dot" cx="128.0" cy="492.0" r="5"><title>Speedway</title></circle>
+            <text class="map-label" x="138.0" y="496.0" text-anchor="start">Speedway</text>
+            <circle class="map-dot" cx="353.9" cy="377.2" r="5"><title>Crown Hill</title></circle>
+            <text class="map-label" x="343.9" y="393.2" text-anchor="end">Crown Hill</text>
+            <circle class="map-dot" cx="514.5" cy="606.8" r="5"><title>Christian Park</title></circle>
+            <text class="map-label" x="524.5" y="610.8" text-anchor="start">Christian Park</text>
+            <circle class="map-dot" cx="426.7" cy="246.0" r="5"><title>Glendale</title></circle>
+            <text class="map-label" x="436.7" y="238.0" text-anchor="start">Glendale</text>
+            <circle class="map-dot" cx="532.1" cy="311.6" r="5"><title>Devon</title></circle>
+            <text class="map-label" x="542.1" y="315.6" text-anchor="start">Devon</text>
+            <circle class="map-dot" cx="414.1" cy="82.0" r="5"><title>Keystone at the Crossing</title></circle>
+            <text class="map-label" x="424.1" y="74.0" text-anchor="start">Keystone at the Crossing</text>
+            <circle class="map-dot" cx="494.4" cy="196.8" r="5"><title>Allisonville</title></circle>
+            <text class="map-label" x="504.4" y="200.8" text-anchor="start">Allisonville</text>
+            <circle class="map-dot" cx="389.0" cy="770.8" r="5"><title>Homecroft</title></circle>
+            <text class="map-label" x="379.0" y="762.8" text-anchor="end">Homecroft</text>
+
+            <circle class="map-downtown-dot" cx="368.9" cy="580.6" r="4"></circle>
+            <text class="map-downtown-label" x="368.9" y="600.6" text-anchor="middle">מרכז העיר</text>
+          </svg>
+        </div>
+        <div class="map-footnote">מבוסס על קואורדינטות אמיתיות ורשימת השכונות שאושרו כזמינות לסריקה מול DataForSEO. הטבעת הלבנה מייצגת את כביש הטבעת I-465, והצירים הם רחוב Meridian (צפון–דרום) ורחוב Washington (מזרח–מערב).</div>
       </div>
 
       <div id="feed"></div>
