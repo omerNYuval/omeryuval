@@ -253,6 +253,24 @@
     cursor:default;
   }
   .side-link:disabled:hover{background:transparent;}
+  .side-link.has-soon{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .soon-badge{
+    font-size:0.65rem;
+    font-weight:700;
+    color:var(--muted);
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--steel);
+    padding:2px 8px;
+    border-radius:999px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    flex-shrink:0;
+  }
   .region-dot{
     display:inline-block;
     width:9px;
@@ -550,7 +568,7 @@
       <div class="side-label">אזור</div>
       <button class="side-link" data-region="Indianapolis"><span class="region-dot"></span>אינדיאנפוליס</button>
       <button class="side-link" data-region="Boston"><span class="region-dot"></span>בוסטון</button>
-      <button class="side-link" data-region="Miami"><span class="region-dot"></span>מיאמי</button>
+      <button class="side-link has-soon" data-region="Miami" disabled><span><span class="region-dot"></span>מיאמי</span><span class="soon-badge">Soon</span></button>
       <div class="side-label">בקרוב</div>
       <button class="side-link" disabled>עדכון דף</button>
       <button class="side-link" disabled>פרסום דף</button>
