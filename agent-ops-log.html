@@ -1238,11 +1238,7 @@
 
   window.addEventListener("popstate", ()=>applyHash(true));
 
-  if(location.hash){
-    applyHash(false);
-  }else{
-    history.replaceState(null, "", "#filter/all");
-  }
+  history.replaceState(null, "", "#filter/all");
 
   loadData(false).then(refreshLiveBalance);
 </script>
