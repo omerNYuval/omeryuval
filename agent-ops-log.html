@@ -204,7 +204,10 @@
     flex:1;
     min-width:0;
     opacity:1;
-    transition:opacity .15s ease;
+    transition:opacity .15s ease-out;
+    will-change:opacity;
+    transform:translateZ(0);
+    backface-visibility:hidden;
   }
   .main-col.is-transitioning{
     opacity:0;
@@ -1302,15 +1305,27 @@
     if(axis === "filter") activeFilter = value; else activeRegion = value;
   }
 
-  function goTo(axis, value, opts){
-    const push = !opts || opts.push !== false;
-    mainCol.classList.add("is-transitioning");
-    window.setTimeout(()=>{
-      activateLink(axis, value);
-      render();
+  function fadeSwap(applyFn){
+    let done = false;
+    function finish(){
+      if(done) return;
+      done = true;
+      mainCol.removeEventListener("transitionend", onEnd);
+      applyFn();
       window.scrollTo({top:0, behavior:"auto"});
       requestAnimationFrame(()=>{ mainCol.classList.remove("is-transitioning"); });
-    }, 150);
+    }
+    function onEnd(e){
+      if(e.target === mainCol && e.propertyName === "opacity") finish();
+    }
+    mainCol.addEventListener("transitionend", onEnd);
+    window.setTimeout(finish, 220); // fallback if transitionend doesn't fire
+    requestAnimationFrame(()=>{ mainCol.classList.add("is-transitioning"); });
+  }
+
+  function goTo(axis, value, opts){
+    const push = !opts || opts.push !== false;
+    fadeSwap(()=>{ activateLink(axis, value); render(); });
     if(push){
       const hash = `#${axis}/${value}`;
       if(location.hash !== hash) history.pushState(null, "", hash);
@@ -1321,13 +1336,7 @@
     const [, axis, value] = (location.hash || "").match(/^#(filter|region)\/(.+)$/) || [];
     if(!axis || !value) return;
     if(withTransition){
-      mainCol.classList.add("is-transitioning");
-      window.setTimeout(()=>{
-        activateLink(axis, value);
-        render();
-        window.scrollTo({top:0, behavior:"auto"});
-        requestAnimationFrame(()=>{ mainCol.classList.remove("is-transitioning"); });
-      }, 150);
+      fadeSwap(()=>{ activateLink(axis, value); render(); });
     }else{
       activateLink(axis, value);
     }
