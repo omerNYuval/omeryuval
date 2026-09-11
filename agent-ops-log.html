@@ -322,28 +322,60 @@
   .insights-lead b{color:var(--amber);}
   .insights-stats{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-    gap:14px;
+    grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:12px;
     margin-bottom:22px;
     position:relative;
   }
   .insight-stat{
-    background:rgba(255,255,255,0.04);
+    --tone-color:var(--amber);
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
     border:1px solid rgba(255,255,255,0.08);
+    border-inline-start:3px solid var(--tone-color);
     border-radius:12px;
-    padding:14px 16px;
-    text-align:center;
+    padding:12px 14px;
+    text-align:start;
+    transition:transform .15s ease, background-color .15s ease;
+  }
+  .insight-stat:hover{
+    transform:translateY(-2px);
+    background:linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025));
+  }
+  .insight-stat.tone-wire{--tone-color:var(--wire);}
+  .insight-stat.tone-moss{--tone-color:var(--moss);}
+  .insight-stat.tone-muted{--tone-color:var(--muted);}
+  .insight-icon{
+    width:36px;
+    height:36px;
+    flex-shrink:0;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.05rem;
+    background:color-mix(in srgb, var(--tone-color) 18%, transparent);
+    border:1px solid color-mix(in srgb, var(--tone-color) 35%, transparent);
+  }
+  .insight-content{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width:0;
   }
   .insight-stat .value{
-    display:block;
-    font-size:1.5rem;
+    font-size:1.3rem;
     font-weight:800;
-    color:var(--amber);
+    color:var(--tone-color);
     direction:ltr;
+    line-height:1.2;
   }
   .insight-stat .label{
-    font-size:0.78rem;
+    font-size:0.74rem;
     color:var(--muted);
+    line-height:1.3;
   }
   .insights-timeline-label{
     font-size:0.78rem;
@@ -556,16 +588,46 @@
         </div>
         <p class="insights-lead" id="insightsLead">אין עדיין מספיק נתונים למסקנות.</p>
         <div class="insights-stats">
-          <div class="insight-stat"><span class="value" id="insightScans">0</span><span class="label">סריקות שבוצעו</span></div>
-          <div class="insight-stat"><span class="value" id="insightSignals">0</span><span class="label">איתותי עלייה</span></div>
-          <div class="insight-stat"><span class="value" id="insightRegions">0</span><span class="label">אזורים במעקב</span></div>
-          <div class="insight-stat"><span class="value" id="insightDiscoveries">0</span><span class="label">גילויי מילות מפתח</span></div>
-          <div class="insight-stat"><span class="value" id="insightAvgGrowth">–</span><span class="label">עלייה ממוצעת באיתותים</span></div>
-          <div class="insight-stat"><span class="value" id="insightTopGrowth">–</span><span class="label">העלייה החדה ביותר שנמדדה</span></div>
-          <div class="insight-stat"><span class="value" id="insightTopVolume">–</span><span class="label">נפח החיפוש הגבוה ביותר</span></div>
-          <div class="insight-stat"><span class="value" id="insightTopRegion">–</span><span class="label">האזור הפעיל ביותר</span></div>
-          <div class="insight-stat"><span class="value" id="insightFirstDate">–</span><span class="label">תחילת המעקב</span></div>
-          <div class="insight-stat"><span class="value" id="insightDaysTracked">0</span><span class="label">ימים במעקב</span></div>
+          <div class="insight-stat tone-wire">
+            <span class="insight-icon">📡</span>
+            <div class="insight-content"><span class="value" id="insightScans">0</span><span class="label">סריקות שבוצעו</span></div>
+          </div>
+          <div class="insight-stat">
+            <span class="insight-icon">📈</span>
+            <div class="insight-content"><span class="value" id="insightSignals">0</span><span class="label">איתותי עלייה</span></div>
+          </div>
+          <div class="insight-stat tone-wire">
+            <span class="insight-icon">📍</span>
+            <div class="insight-content"><span class="value" id="insightRegions">0</span><span class="label">אזורים במעקב</span></div>
+          </div>
+          <div class="insight-stat">
+            <span class="insight-icon">🔑</span>
+            <div class="insight-content"><span class="value" id="insightDiscoveries">0</span><span class="label">גילויי מילות מפתח</span></div>
+          </div>
+          <div class="insight-stat tone-moss">
+            <span class="insight-icon">📊</span>
+            <div class="insight-content"><span class="value" id="insightAvgGrowth">–</span><span class="label">עלייה ממוצעת באיתותים</span></div>
+          </div>
+          <div class="insight-stat tone-moss">
+            <span class="insight-icon">🚀</span>
+            <div class="insight-content"><span class="value" id="insightTopGrowth">–</span><span class="label">העלייה החדה ביותר שנמדדה</span></div>
+          </div>
+          <div class="insight-stat tone-wire">
+            <span class="insight-icon">🔎</span>
+            <div class="insight-content"><span class="value" id="insightTopVolume">–</span><span class="label">נפח החיפוש הגבוה ביותר</span></div>
+          </div>
+          <div class="insight-stat tone-muted">
+            <span class="insight-icon">🏆</span>
+            <div class="insight-content"><span class="value" id="insightTopRegion">–</span><span class="label">האזור הפעיל ביותר</span></div>
+          </div>
+          <div class="insight-stat tone-muted">
+            <span class="insight-icon">🗓️</span>
+            <div class="insight-content"><span class="value" id="insightFirstDate">–</span><span class="label">תחילת המעקב</span></div>
+          </div>
+          <div class="insight-stat tone-muted">
+            <span class="insight-icon">⏱️</span>
+            <div class="insight-content"><span class="value" id="insightDaysTracked">0</span><span class="label">ימים במעקב</span></div>
+          </div>
         </div>
         <div class="insights-timeline-label">מתי הסוכן יצא לפעולה</div>
         <div class="run-timeline" id="runTimeline"></div>
