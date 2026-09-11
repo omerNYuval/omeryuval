@@ -317,9 +317,13 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:1.05rem;
+    color:var(--tone-color);
     background:color-mix(in srgb, var(--tone-color) 18%, transparent);
     border:1px solid color-mix(in srgb, var(--tone-color) 35%, transparent);
+  }
+  .insight-icon svg{
+    width:18px;
+    height:18px;
   }
   .insight-content{
     display:flex;
@@ -544,43 +548,43 @@
         </div>
         <div class="insights-stats">
           <div class="insight-stat tone-wire">
-            <span class="insight-icon">📡</span>
+            <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></span>
             <div class="insight-content"><span class="value" id="insightScans">0</span><span class="label">סריקות שבוצעו</span></div>
           </div>
           <div class="insight-stat">
-            <span class="insight-icon">📈</span>
+            <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></span>
             <div class="insight-content"><span class="value" id="insightSignals">0</span><span class="label">איתותי עלייה</span></div>
           </div>
           <div class="insight-stat tone-wire">
-            <span class="insight-icon">📍</span>
+            <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
             <div class="insight-content"><span class="value" id="insightRegions">0</span><span class="label">אזורים במעקב</span></div>
           </div>
           <div class="insight-stat">
-            <span class="insight-icon">🔑</span>
+            <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></span>
             <div class="insight-content"><span class="value" id="insightDiscoveries">0</span><span class="label">גילויי מילות מפתח</span></div>
           </div>
           <div class="insight-stat tone-moss">
-            <span class="insight-icon">📊</span>
+            <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></span>
             <div class="insight-content"><span class="value" id="insightAvgGrowth">–</span><span class="label">עלייה ממוצעת באיתותים</span></div>
           </div>
           <div class="insight-stat tone-moss">
-            <span class="insight-icon">🚀</span>
+            <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></span>
             <div class="insight-content"><span class="value" id="insightTopGrowth">–</span><span class="label">העלייה החדה ביותר שנמדדה</span></div>
           </div>
           <div class="insight-stat tone-wire">
-            <span class="insight-icon">🔎</span>
+            <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
             <div class="insight-content"><span class="value" id="insightTopVolume">–</span><span class="label">נפח החיפוש הגבוה ביותר</span></div>
           </div>
           <div class="insight-stat tone-muted">
-            <span class="insight-icon">🏆</span>
+            <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></span>
             <div class="insight-content"><span class="value" id="insightTopRegion">–</span><span class="label">האזור הפעיל ביותר</span></div>
           </div>
           <div class="insight-stat tone-muted">
-            <span class="insight-icon">🗓️</span>
+            <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
             <div class="insight-content"><span class="value" id="insightFirstDate">–</span><span class="label">תחילת המעקב</span></div>
           </div>
           <div class="insight-stat tone-muted">
-            <span class="insight-icon">⏱️</span>
+            <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
             <div class="insight-content"><span class="value" id="insightDaysTracked">0</span><span class="label">ימים במעקב</span></div>
           </div>
         </div>
