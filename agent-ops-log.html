@@ -282,14 +282,6 @@
     color:var(--muted);
     margin-top:2px;
   }
-  .insights-lead{
-    font-size:1rem;
-    line-height:1.7;
-    color:var(--paper);
-    margin:0 0 20px;
-    position:relative;
-  }
-  .insights-lead b{color:var(--amber);}
   .insights-stats{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
@@ -304,7 +296,6 @@
     gap:12px;
     background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
     border:1px solid rgba(255,255,255,0.08);
-    border-inline-start:3px solid var(--tone-color);
     border-radius:12px;
     padding:12px 14px;
     text-align:start;
@@ -549,7 +540,6 @@
             <div class="insights-sub">מבוסס על כל הסריקות שבוצעו עד כה</div>
           </div>
         </div>
-        <p class="insights-lead" id="insightsLead">אין עדיין מספיק נתונים למסקנות.</p>
         <div class="insights-stats">
           <div class="insight-stat tone-wire">
             <span class="insight-icon">📡</span>
@@ -674,10 +664,6 @@
     return tag ? parseInt(tag, 10) : null;
   }
 
-  function bdi(text){
-    return `<bdi dir="ltr">${text}</bdi>`;
-  }
-
   function renderInsights(){
     const insightsPanel = document.getElementById("insightsPanel");
     const showInsights = activeAxis === "filter" && activeFilter === "all";
@@ -740,18 +726,6 @@
       document.getElementById("insightDaysTracked").textContent = "0";
     }
 
-    const lead = document.getElementById("insightsLead");
-    if(signals.length === 0){
-      lead.textContent = scans.length
-        ? "הסוכן ביצע סריקות אך עדיין לא זיהה מונחים בעלייה חדה."
-        : "אין עדיין נתוני סריקה. ההרצה הראשונה של הסוכן תופיע כאן.";
-    }else{
-      const ranked = [...signals].sort((a,b)=> (parsePct(b) ?? 0) - (parsePct(a) ?? 0));
-      const top = ranked[0];
-      const cleanTitle = top.title.replace(/^עלייה בביקוש:\s*/, "").replace(/^גילוי:.*?"(.*)".*$/, "$1");
-      const tagsHtml = top.tags.map(t => bdi(t)).join(" · ");
-      lead.innerHTML = `ההזדמנות החזקה ביותר שזוהתה עד כה: <b>${bdi(`"${cleanTitle}"`)}</b> באזור <b>${bdi(top.region)}</b> — ${tagsHtml}.`;
-    }
 
     const timeline = document.getElementById("runTimeline");
     timeline.innerHTML = "";
