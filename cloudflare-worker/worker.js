@@ -128,11 +128,17 @@ async function runMonthly(env, selection) {
   const { date, time } = nowInMarket();
 
   const newEntries = [];
+  const breakdown = [];
   let signalsFound = 0;
 
   for (const row of results) {
     if (!row.keyword || row.search_volume == null) continue;
     const pct = trendPctChange(row.monthly_searches);
+    breakdown.push({
+      keyword: row.keyword,
+      valueLabel: `${row.search_volume} חיפושים לחודש`,
+      pctLabel: pct !== null ? `${pct >= 0 ? "+" : ""}${pct}%` : "אין נתון להשוואה",
+    });
     if (pct !== null && pct >= RISE_THRESHOLD_PCT) {
       newEntries.push({
         date,
@@ -152,12 +158,23 @@ async function runMonthly(env, selection) {
     time,
     type: "scan",
     title: "סריקת ביקוש הושלמה",
-    detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור ${bdi(label)} (הרצה חודשית). נמצאו ${signalsFound} מונחים בעלייה.`,
+    detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור ${bdi(label)} (הרצה חודשית). נמצאו ${signalsFound} מונחים בעלייה.${buildBreakdownHtml(breakdown)}`,
     region: label,
     tags: ["נתונים אמיתיים", "חודשי"],
   });
 
   return { newEntries, market: label };
+}
+
+// Renders every checked keyword's actual figure (not just the ones that
+// crossed the rise threshold) so a "0 rising" scan still shows real data
+// instead of reading as an empty/failed run.
+function buildBreakdownHtml(rows) {
+  if (!rows.length) return "";
+  const items = rows
+    .map((r) => `<li>${bdi(r.keyword)}: ${bdi(r.valueLabel)} (${bdi(r.pctLabel)})</li>`)
+    .join("");
+  return `<div class="scan-breakdown-label">פירוט מלא לפי מונח:</div><ul class="scan-breakdown">${items}</ul>`;
 }
 
 function monthlyLocation(selection) {
@@ -245,11 +262,18 @@ async function runTrends(env, selection) {
   const newEntries = [];
   let signalsFound = 0;
 
+  const breakdown = [];
+
   if (isDaily) {
     const curr = dataPoints[dataPoints.length - 1];
     const prev = dataPoints[dataPoints.length - 2];
     KEYWORDS.forEach((keyword, i) => {
       const pct = pctChange(valueAt(prev, i), valueAt(curr, i));
+      breakdown.push({
+        keyword,
+        valueLabel: `מדד ${valueAt(curr, i) ?? "–"}/100`,
+        pctLabel: pct !== null ? `${pct >= 0 ? "+" : ""}${pct}%` : "אין נתון להשוואה",
+      });
       if (pct !== null && pct >= RISE_THRESHOLD_PCT) {
         const tags = [`+${pct}%`, "יומי", precisionNote];
         if (verifiedTag) tags.push(verifiedTag);
@@ -272,7 +296,7 @@ async function runTrends(env, selection) {
       time,
       type: "scan",
       title: "סריקת מגמה יומית הושלמה",
-      detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, ${bdi(precisionNote)}. נמצאו ${signalsFound} מונחים בעלייה.`,
+      detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, ${bdi(precisionNote)}. נמצאו ${signalsFound} מונחים בעלייה.${buildBreakdownHtml(breakdown)}`,
       region: label,
       tags: scanTags,
     });
@@ -283,6 +307,11 @@ async function runTrends(env, selection) {
       const currAvg = avgValue(thisWeek, i);
       const prevAvg = avgValue(prevWeek, i);
       const pct = pctChange(prevAvg, currAvg);
+      breakdown.push({
+        keyword,
+        valueLabel: `מדד ממוצע ${currAvg != null ? Math.round(currAvg) : "–"}/100`,
+        pctLabel: pct !== null ? `${pct >= 0 ? "+" : ""}${pct}%` : "אין נתון להשוואה",
+      });
       if (pct !== null && pct >= RISE_THRESHOLD_PCT) {
         const tags = [`+${pct}%`, "שבועי", precisionNote];
         if (verifiedTag) tags.push(verifiedTag);
@@ -305,7 +334,7 @@ async function runTrends(env, selection) {
       time,
       type: "scan",
       title: "סריקת מגמה שבועית הושלמה",
-      detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מול מגמת החיפוש של השבוע האחרון, ${bdi(precisionNote)}. נמצאו ${signalsFound} מונחים בעלייה.`,
+      detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מול מגמת החיפוש של השבוע האחרון, ${bdi(precisionNote)}. נמצאו ${signalsFound} מונחים בעלייה.${buildBreakdownHtml(breakdown)}`,
       region: label,
       tags: scanTags,
     });
