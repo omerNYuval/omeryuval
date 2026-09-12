@@ -451,6 +451,65 @@
   .run-panel-btn:hover{transform:translateY(-1px);}
   .run-panel-btn:disabled{opacity:0.6;cursor:default;transform:none;}
   .run-panel-btn svg{width:18px;height:18px;}
+  .run-panel-btn[hidden]{display:none;}
+  .run-loading{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:16px;
+    color:var(--muted);
+    font-size:0.88rem;
+  }
+  .run-spinner{
+    width:18px;
+    height:18px;
+    flex-shrink:0;
+    border:2.5px solid color-mix(in srgb, var(--amber) 30%, transparent);
+    border-top-color:var(--amber);
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+  }
+  .run-result{
+    margin-top:16px;
+    padding:12px 16px;
+    border-radius:10px;
+    font-size:0.88rem;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    line-height:1.6;
+  }
+  .run-result.success{
+    background:color-mix(in srgb, var(--moss) 18%, transparent);
+    border:1px solid color-mix(in srgb, var(--moss) 45%, transparent);
+    color:var(--moss);
+  }
+  .run-result.skipped{
+    background:color-mix(in srgb, var(--wire) 18%, transparent);
+    border:1px solid color-mix(in srgb, var(--wire) 45%, transparent);
+    color:var(--wire);
+  }
+  .run-result.error{
+    background:color-mix(in srgb, var(--amber) 18%, transparent);
+    border:1px solid color-mix(in srgb, var(--amber) 45%, transparent);
+    color:var(--amber);
+  }
+  .run-result-link{
+    border:none;
+    padding:6px 14px;
+    border-radius:999px;
+    font-weight:800;
+    font-size:0.85rem;
+    font-family:'Heebo', sans-serif;
+    cursor:pointer;
+    white-space:nowrap;
+    flex-shrink:0;
+    color:var(--panel);
+  }
+  .run-result.success .run-result-link{background:var(--moss);}
+  .run-result.skipped .run-result-link{background:var(--wire);}
   .insights-header{
     display:flex;
     align-items:center;
@@ -817,6 +876,11 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
             הרץ סריקה עכשיו
           </button>
+          <div class="run-loading" id="runLoading" hidden>
+            <span class="run-spinner"></span>
+            <span>מריץ סריקה חיה מול DataForSEO… (עד כ-20 שניות)</span>
+          </div>
+          <div class="run-result" id="runResult" hidden></div>
         </div>
 
         <div class="run-recommendations">
@@ -920,6 +984,9 @@
   const statusPill = document.getElementById("statusPill");
   const statusText = document.getElementById("statusText");
   const balanceValue = document.getElementById("balanceValue");
+  const runPanelBtn = document.getElementById("runPanelBtn");
+  const runLoading = document.getElementById("runLoading");
+  const runResult = document.getElementById("runResult");
   const THEME_KEY = "agent-ops-theme";
   const runSelection = { frequency: "monthly", city: "Indianapolis", scope: "city", neighborhood: "" };
 
@@ -1192,6 +1259,9 @@
   async function runAgentNow(){
     refreshBtn.disabled = true;
     refreshBtn.classList.add("spinning");
+    runPanelBtn.hidden = true;
+    runResult.hidden = true;
+    runLoading.hidden = false;
     statusPill.classList.remove("stale");
     statusText.textContent = "מריץ סריקה חיה… (עד כ-20 שניות)";
     try{
@@ -1210,6 +1280,7 @@
         render();
         updateStatusPill();
         statusText.textContent = `הסריקה האחרונה הייתה לפני ${result.minutes_since_last_run} דקות — אפשר להריץ שוב בעוד כ-${waitMin} דקות`;
+        showRunResult("skipped", `הסריקה האחרונה הייתה לפני ${result.minutes_since_last_run} דקות — אפשר להריץ שוב בעוד כ-${waitMin} דקות. אפשר לצפות בנתונים הקיימים.`);
         return;
       }
 
@@ -1217,18 +1288,36 @@
       allEntries = result.entries || [];
       render();
       updateStatusPill();
+      showRunResult("success", "הסריקה הושלמה בהצלחה! התוצאות נוספו לפיד.");
     }catch(err){
       statusText.textContent = "הריצה נכשלה — נסה שוב בעוד רגע";
+      showRunResult("error", "הריצה נכשלה — נסה שוב בעוד רגע.");
     }finally{
       refreshBtn.disabled = false;
       refreshBtn.classList.remove("spinning");
+      runLoading.hidden = true;
+      runPanelBtn.hidden = false;
     }
+  }
+
+  function showRunResult(kind, message){
+    runResult.className = `run-result ${kind}`;
+    runResult.innerHTML = `<span>${message}</span>`;
+    if(kind !== "error"){
+      const link = document.createElement("button");
+      link.className = "run-result-link";
+      link.type = "button";
+      link.textContent = "מעבר לסריקת נתונים ‹";
+      link.addEventListener("click", ()=> goTo("filter", "scan"));
+      runResult.appendChild(link);
+    }
+    runResult.hidden = false;
   }
 
   refreshBtn.addEventListener("click", ()=>{
     goTo("filter", "run");
   });
-  document.getElementById("runPanelBtn").addEventListener("click", runAgentNow);
+  runPanelBtn.addEventListener("click", runAgentNow);
 
   (function initRunWizard(){
     const NEIGHBORHOODS = {
