@@ -679,6 +679,11 @@
     gap:8px;
     flex-wrap:wrap;
   }
+  .meta .badge.badge-indianapolis{
+    color:#4f8fd1;
+    background:color-mix(in srgb, #4f8fd1 18%, transparent);
+    border-color:color-mix(in srgb, #4f8fd1 45%, transparent);
+  }
   .meta .badge{
     font-size:0.75rem;
     font-weight:600;
@@ -1139,8 +1144,8 @@
           </div>
           <div class="detail">${e.detail}</div>
           <div class="meta">
-            <span class="badge">${e.region}</span>
-            ${e.tags.map(t=>`<span class="badge">${t}</span>`).join("")}
+            <span class="badge${e.region.includes("Indianapolis") ? " badge-indianapolis" : ""}">${e.region}</span>
+            ${e.tags.map(t=>`<span class="badge${t.includes("אומת: אינדיאנפוליס") ? " badge-indianapolis" : ""}">${t}</span>`).join("")}
           </div>
         `;
         groupDiv.appendChild(entry);

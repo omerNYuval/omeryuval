@@ -221,7 +221,25 @@ async function runTrends(env, selection) {
   const { dateFrom, dateTo } = trendsDateRange(lookbackDays);
 
   const candidates = trendsLocationCandidates(selection);
-  const { dataPoints, label, precisionNote } = await fetchTrendsWithFallback(env, candidates, dateFrom, dateTo);
+  const resolved = await fetchTrendsWithFallback(env, candidates, dateFrom, dateTo);
+  const { dataPoints, isCityLevel, locationName } = resolved;
+  let { label, precisionNote } = resolved;
+
+  // City-level isn't supported by Trends at all (confirmed live, not just
+  // documented), so this fires on essentially every run — it's the only
+  // way to tell whether a state/country-level signal is actually
+  // Indianapolis-driven before we'd otherwise have to label it generic.
+  let verifiedTag = null;
+  if (!isCityLevel && selection.city === "Indianapolis") {
+    const dominant = await fetchDominantSubregion(env, locationName, dateFrom, dateTo);
+    if (dominant && dominant.toLowerCase().includes("indianapolis")) {
+      label = CITY_LABEL.Indianapolis;
+      precisionNote = `${precisionNote} — זוהה כמגיע בעיקר מאזור אינדיאנפוליס`;
+      verifiedTag = "אומת: אינדיאנפוליס";
+    } else if (dominant) {
+      precisionNote = `${precisionNote}, אזור מוביל בפועל: ${dominant}`;
+    }
+  }
 
   const { date, time } = nowInMarket();
   const newEntries = [];
@@ -233,6 +251,8 @@ async function runTrends(env, selection) {
     KEYWORDS.forEach((keyword, i) => {
       const pct = pctChange(valueAt(prev, i), valueAt(curr, i));
       if (pct !== null && pct >= RISE_THRESHOLD_PCT) {
+        const tags = [`+${pct}%`, "יומי", precisionNote];
+        if (verifiedTag) tags.push(verifiedTag);
         newEntries.push({
           date,
           time,
@@ -240,11 +260,13 @@ async function runTrends(env, selection) {
           title: `עלייה במגמת חיפוש: ${bdi(keyword)}`,
           detail: `מדד העניין במונח ${bdi(`"${keyword}"`)} עלה ב-${bdi(pct + "%")} מהיום שלפני, ${bdi(precisionNote)} (מדד יחסי, לא נפח חיפושים מוחלט: ${bdi(valueAt(curr, i))}/100).`,
           region: label,
-          tags: [`+${pct}%`, "יומי", precisionNote],
+          tags,
         });
         signalsFound++;
       }
     });
+    const scanTags = ["הרצה יומית", precisionNote];
+    if (verifiedTag) scanTags.push(verifiedTag);
     newEntries.push({
       date,
       time,
@@ -252,7 +274,7 @@ async function runTrends(env, selection) {
       title: "סריקת מגמה יומית הושלמה",
       detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, ${bdi(precisionNote)}. נמצאו ${signalsFound} מונחים בעלייה.`,
       region: label,
-      tags: ["הרצה יומית", precisionNote],
+      tags: scanTags,
     });
   } else {
     const thisWeek = dataPoints.slice(-7);
@@ -262,6 +284,8 @@ async function runTrends(env, selection) {
       const prevAvg = avgValue(prevWeek, i);
       const pct = pctChange(prevAvg, currAvg);
       if (pct !== null && pct >= RISE_THRESHOLD_PCT) {
+        const tags = [`+${pct}%`, "שבועי", precisionNote];
+        if (verifiedTag) tags.push(verifiedTag);
         newEntries.push({
           date,
           time,
@@ -269,11 +293,13 @@ async function runTrends(env, selection) {
           title: `עלייה במגמת חיפוש: ${bdi(keyword)}`,
           detail: `מדד העניין הממוצע במונח ${bdi(`"${keyword}"`)} עלה ב-${bdi(pct + "%")} לעומת השבוע הקודם, ${bdi(precisionNote)} (מדד יחסי ממוצע: ${bdi(Math.round(currAvg))}/100).`,
           region: label,
-          tags: [`+${pct}%`, "שבועי", precisionNote],
+          tags,
         });
         signalsFound++;
       }
     });
+    const scanTags = ["הרצה שבועית", precisionNote];
+    if (verifiedTag) scanTags.push(verifiedTag);
     newEntries.push({
       date,
       time,
@@ -281,7 +307,7 @@ async function runTrends(env, selection) {
       title: "סריקת מגמה שבועית הושלמה",
       detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מול מגמת החיפוש של השבוע האחרון, ${bdi(precisionNote)}. נמצאו ${signalsFound} מונחים בעלייה.`,
       region: label,
-      tags: ["הרצה שבועית", precisionNote],
+      tags: scanTags,
     });
   }
 
@@ -324,7 +350,13 @@ async function fetchTrendsWithFallback(env, candidates, dateFrom, dateTo) {
     try {
       const dataPoints = await fetchTrends(env, candidate.locationName, dateFrom, dateTo);
       if (dataPoints && dataPoints.length >= 2) {
-        return { dataPoints, label: candidate.label, precisionNote: candidate.precisionNote };
+        return {
+          dataPoints,
+          label: candidate.label,
+          precisionNote: candidate.precisionNote,
+          locationName: candidate.locationName,
+          isCityLevel: candidate.precisionNote === "ברמת עיר" || candidate.precisionNote === "ברמת שכונה",
+        };
       }
       lastError = new Error(`DataForSEO Trends: not enough data points for ${candidate.locationName}`);
     } catch (err) {
@@ -332,6 +364,59 @@ async function fetchTrendsWithFallback(env, candidates, dateFrom, dateTo) {
     }
   }
   throw lastError || new Error("DataForSEO Trends: no location candidate succeeded");
+}
+
+// When Trends only resolved at state/country level (its city-level ceiling
+// means this happens on every real run), this asks a separate, cheap
+// endpoint which subregion of that broader area is actually driving the
+// interest — so we can honestly upgrade the entry to "Indianapolis" only
+// when the data itself points there, instead of always guessing broad.
+async function fetchDominantSubregion(env, locationName, dateFrom, dateTo) {
+  try {
+    const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
+    const res = await fetch("https://api.dataforseo.com/v3/keywords_data/google_trends/subregion_interests/live", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([{
+        keywords: KEYWORDS,
+        location_name: locationName,
+        date_from: dateFrom,
+        date_to: dateTo,
+        type: "web",
+      }]),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.status_code !== 20000) return null;
+    const task = data.tasks && data.tasks[0];
+    if (!task || task.status_code !== 20000) return null;
+    const result = task.result && task.result[0];
+    const items = (result && result.items) || [];
+    // The exact response field names for this endpoint aren't published,
+    // so this scans defensively for the first ranked subregion's name
+    // rather than assuming a specific field/shape.
+    for (const item of items) {
+      const list = item.data || item.subregions || item.values || [];
+      if (Array.isArray(list) && list.length) {
+        const name = subregionName(list[0]);
+        if (name) return name;
+      }
+    }
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function subregionName(entry) {
+  if (!entry || typeof entry !== "object") return null;
+  for (const key of ["geo_name", "location_name", "region_name", "name"]) {
+    if (typeof entry[key] === "string" && entry[key]) return entry[key];
+  }
+  return null;
 }
 
 async function fetchTrends(env, locationName, dateFrom, dateTo) {
