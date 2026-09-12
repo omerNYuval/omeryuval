@@ -568,6 +568,7 @@
     display:flex;
     gap:10px;
   }
+  .modal-actions[hidden]{display:none;}
   .modal-btn{
     flex:1;
     padding:11px 16px;
@@ -604,6 +605,31 @@
     box-shadow:0 4px 14px color-mix(in srgb, var(--wire) 45%, transparent);
   }
   .modal-btn-schedule svg{width:18px;height:18px;flex-shrink:0;}
+  .modal-schedule-date{
+    margin-top:18px;
+    padding-top:18px;
+    border-top:1px solid var(--steel);
+    text-align:start;
+  }
+  .modal-schedule-date[hidden]{display:none;}
+  .modal-schedule-date label{
+    display:block;
+    font-size:0.82rem;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .schedule-date-input{
+    width:100%;
+    box-sizing:border-box;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid var(--steel);
+    background:var(--charcoal);
+    color:var(--paper);
+    font-family:'Heebo', sans-serif;
+    font-size:0.9rem;
+    margin-bottom:14px;
+  }
 
   .scheduled-empty{
     color:var(--muted);
@@ -1129,15 +1155,26 @@
     <div class="modal-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
     </div>
-    <div class="modal-title">מתי הכי כדאי להריץ בדיקה יומית?</div>
+    <div class="modal-title" id="timingModalTitle">מתי הכי כדאי להריץ בדיקה יומית?</div>
     <div class="modal-text" id="timingModalText"></div>
-    <div class="modal-actions three">
+    <div class="modal-actions three" id="timingModalActions">
       <button class="modal-btn modal-btn-schedule" id="timingModalSchedule" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-        <span>תזמן הרצה לשעה הטובה</span>
+        <span id="timingModalScheduleLabel">תזמן הרצה לשעה הטובה</span>
       </button>
       <button class="modal-btn modal-btn-secondary" id="timingModalCancel" type="button">ביטול</button>
       <button class="modal-btn modal-btn-primary" id="timingModalProceed" type="button">הרץ בכל זאת</button>
+    </div>
+    <div class="modal-schedule-date" id="modalScheduleDate" hidden>
+      <label for="scheduleDateInput">בחר תאריך להרצה החודשית:</label>
+      <input type="date" id="scheduleDateInput" class="schedule-date-input">
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" id="scheduleDateCancel" type="button">ביטול</button>
+        <button class="modal-btn modal-btn-schedule" id="scheduleDateConfirm" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span>אשר תזמון</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -1459,6 +1496,29 @@
     return `${String(h).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
   }
 
+  const MONTHLY_RECOMMENDED_DAY = 5;
+  const timingModalTitle = document.getElementById("timingModalTitle");
+  const timingModalScheduleLabel = document.getElementById("timingModalScheduleLabel");
+  const timingModalActions = document.getElementById("timingModalActions");
+  const modalScheduleDate = document.getElementById("modalScheduleDate");
+  const scheduleDateInput = document.getElementById("scheduleDateInput");
+  let modalMode = null;
+
+  function indyDayOfMonth(){
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: MARKET_TIMEZONE, year:"numeric", month:"2-digit", day:"2-digit",
+    }).formatToParts(new Date());
+    const map = Object.fromEntries(parts.map(p=>[p.type, p.value]));
+    return { year:+map.year, month:+map.month, day:+map.day };
+  }
+
+  function openModal(mode){
+    modalMode = mode;
+    timingModalActions.hidden = false;
+    modalScheduleDate.hidden = true;
+    timingModalOverlay.hidden = false;
+  }
+
   function handleRunClick(){
     if(runSelection.frequency === "daily"){
       const indy = currentTimeInZone(MARKET_TIMEZONE);
@@ -1472,8 +1532,21 @@
         const indyTimeLabel = formatHM(indy.hour*60 + indy.minute);
         const windowStartIL = formatHM(RECOMMENDED_HOUR_START*60 + offsetMinutes);
         const windowEndIL = formatHM(RECOMMENDED_HOUR_END*60 + offsetMinutes);
+        timingModalTitle.textContent = "מתי הכי כדאי להריץ בדיקה יומית?";
+        timingModalScheduleLabel.textContent = "תזמן הרצה לשעה הטובה";
         timingModalText.innerHTML = `נתוני מגמה יומית מתייצבים יותר בשעות הערב בשעון אינדיאנפוליס (<b dir="ltr">${RECOMMENDED_HOUR_START}:00–${RECOMMENDED_HOUR_END}:00</b>), אחרי שגוגל משלימים לעבד את הנתונים של היום שלפני. זה יוצא בערך <b dir="ltr">${windowStartIL}–${windowEndIL}</b> בשעון ישראל. עכשיו זה <b dir="ltr">${indyTimeLabel}</b> באינדיאנפוליס (<b dir="ltr">${israelTimeLabel}</b> בישראל). אפשר להריץ עכשיו בכל זאת, אבל התוצאה עשויה להיות פחות יציבה.`;
-        timingModalOverlay.hidden = false;
+        openModal("daily");
+        return;
+      }
+    }
+    if(runSelection.frequency === "monthly"){
+      const indy = indyDayOfMonth();
+      if(indy.day < MONTHLY_RECOMMENDED_DAY){
+        timingModalTitle.textContent = "מתי הכי כדאי להריץ בדיקה חודשית?";
+        timingModalScheduleLabel.textContent = "תזמן הרצה לתאריך אחר";
+        const dayLabel = String(MONTHLY_RECOMMENDED_DAY).padStart(2,"0");
+        timingModalText.innerHTML = `בתחילת החודש, נתוני Google Ads לגבי החודש הקודם לא תמיד סופיים עדיין. מומלץ להמתין לפחות עד ה-<b dir="ltr">${dayLabel}</b> בחודש (בשעון אינדיאנפוליס) לפני הרצה חודשית, כדי לקבל נפח חיפושים יציב. אפשר להריץ עכשיו בכל זאת, לתזמן לתאריך מדויק, או לבטל.`;
+        openModal("monthly");
         return;
       }
     }
@@ -1491,8 +1564,25 @@
     runAgentNow();
   });
   document.getElementById("timingModalSchedule").addEventListener("click", ()=>{
+    if(modalMode === "monthly"){
+      const indy = indyDayOfMonth();
+      const targetDay = indy.day < MONTHLY_RECOMMENDED_DAY ? MONTHLY_RECOMMENDED_DAY : indy.day;
+      scheduleDateInput.value = `${indy.year}-${String(indy.month).padStart(2,"0")}-${String(targetDay).padStart(2,"0")}`;
+      scheduleDateInput.min = `${indy.year}-${String(indy.month).padStart(2,"0")}-${String(indy.day).padStart(2,"0")}`;
+      timingModalActions.hidden = true;
+      modalScheduleDate.hidden = false;
+      return;
+    }
     timingModalOverlay.hidden = true;
     scheduleRun();
+  });
+  document.getElementById("scheduleDateCancel").addEventListener("click", ()=>{
+    timingModalOverlay.hidden = true;
+  });
+  document.getElementById("scheduleDateConfirm").addEventListener("click", ()=>{
+    if(!scheduleDateInput.value) return;
+    timingModalOverlay.hidden = true;
+    scheduleRunForDate(scheduleDateInput.value);
   });
 
   // ---- scheduled runs: wait for the recommended time instead of running now ----
@@ -1517,6 +1607,21 @@
     return new Date(Date.now() + deltaMinutes*60000);
   }
 
+  // Converts a wall-clock date+time in a given IANA zone to the correct
+  // UTC instant, via the standard guess-then-correct trick (needed since
+  // JS has no native "construct a Date from zoned wall-clock time" API).
+  // One correction pass is enough — offsets only ever land on whole
+  // minutes, so the error in the first guess is a fixed amount to undo.
+  function zonedTimeToUtc(dateStr, hour, minute, timeZone){
+    const guess = new Date(`${dateStr}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}:00Z`);
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone, year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", hour12:false,
+    }).formatToParts(guess);
+    const map = Object.fromEntries(parts.map(p=>[p.type, p.value]));
+    const renderedAsUtc = Date.UTC(+map.year, +map.month-1, +map.day, map.hour==="24"?0:+map.hour, +map.minute);
+    return new Date(guess.getTime() + (guess.getTime() - renderedAsUtc));
+  }
+
   function scheduleRun(){
     const entry = {
       id: `sched-${Date.now()}`,
@@ -1533,13 +1638,34 @@
     goTo("filter", "scheduled");
   }
 
+  function scheduleRunForDate(dateStr){
+    const entry = {
+      id: `sched-${Date.now()}`,
+      frequency: runSelection.frequency,
+      city: runSelection.city,
+      scope: runSelection.scope,
+      neighborhood: runSelection.neighborhood,
+      scheduledFor: zonedTimeToUtc(dateStr, RECOMMENDED_HOUR_START, 0, MARKET_TIMEZONE).toISOString(),
+    };
+    const list = loadScheduledRuns();
+    list.push(entry);
+    saveScheduledRuns(list);
+    armScheduledTimer(entry);
+    goTo("filter", "scheduled");
+  }
+
+  const MAX_TIMEOUT_MS = 2147483000; // setTimeout delays beyond ~24.8 days (32-bit signed ms) overflow and fire early
   function armScheduledTimer(entry){
     const delay = new Date(entry.scheduledFor).getTime() - Date.now();
     if(delay <= 0){
       fireScheduledRun(entry.id);
       return;
     }
-    scheduledTimers[entry.id] = setTimeout(()=> fireScheduledRun(entry.id), delay);
+    const chunk = Math.min(delay, MAX_TIMEOUT_MS);
+    scheduledTimers[entry.id] = setTimeout(()=>{
+      delete scheduledTimers[entry.id];
+      armScheduledTimer(entry); // re-check remaining time; chains until due
+    }, chunk);
   }
 
   async function fireScheduledRun(id){
@@ -1571,10 +1697,11 @@
       return;
     }
     const freqLabels = { daily: "יומית", weekly: "שבועית", monthly: "חודשית" };
+    const dateOpts = { day:"numeric", month:"numeric", hour:"2-digit", minute:"2-digit", hour12:false };
     container.innerHTML = list.map(e=>{
       const dt = new Date(e.scheduledFor);
-      const indyLabel = new Intl.DateTimeFormat("en-GB", { timeZone: MARKET_TIMEZONE, hour:"2-digit", minute:"2-digit", hour12:false }).format(dt);
-      const ilLabel = new Intl.DateTimeFormat("en-GB", { timeZone: ISRAEL_TIMEZONE, hour:"2-digit", minute:"2-digit", hour12:false }).format(dt);
+      const indyLabel = new Intl.DateTimeFormat("en-GB", { timeZone: MARKET_TIMEZONE, ...dateOpts }).format(dt);
+      const ilLabel = new Intl.DateTimeFormat("en-GB", { timeZone: ISRAEL_TIMEZONE, ...dateOpts }).format(dt);
       const cityFull = CITY_FULL_LABELS[e.city] || e.city;
       const regionLabel = e.scope === "neighborhood" && e.neighborhood ? `${e.neighborhood}, ${cityFull}` : cityFull;
       return `
