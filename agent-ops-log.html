@@ -1356,32 +1356,41 @@
     }
   }
 
-  function indianapolisHour(){
-    const parts = new Intl.DateTimeFormat("en-US", {
-      timeZone: MARKET_TIMEZONE,
-      hour: "2-digit",
-      hour12: false,
-    }).formatToParts(new Date());
-    const hourPart = parts.find(p=>p.type === "hour").value;
-    return hourPart === "24" ? 0 : parseInt(hourPart, 10);
-  }
+  const ISRAEL_TIMEZONE = "Asia/Jerusalem";
 
-  function indianapolisTimeLabel(){
-    return new Intl.DateTimeFormat("en-US", {
-      timeZone: MARKET_TIMEZONE,
+  function currentTimeInZone(timeZone){
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone,
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
-    }).format(new Date());
+    }).formatToParts(new Date());
+    const map = Object.fromEntries(parts.map(p=>[p.type, p.value]));
+    const hour = map.hour === "24" ? 0 : parseInt(map.hour, 10);
+    return { hour, minute: parseInt(map.minute, 10) };
+  }
+
+  function formatHM(totalMinutes){
+    const m = ((totalMinutes % 1440) + 1440) % 1440;
+    const h = Math.floor(m / 60);
+    const mm = m % 60;
+    return `${String(h).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
   }
 
   function handleRunClick(){
     if(runSelection.frequency === "daily"){
-      const hour = indianapolisHour();
-      const inWindow = hour >= RECOMMENDED_HOUR_START && hour < RECOMMENDED_HOUR_END;
+      const indy = currentTimeInZone(MARKET_TIMEZONE);
+      const inWindow = indy.hour >= RECOMMENDED_HOUR_START && indy.hour < RECOMMENDED_HOUR_END;
       if(!inWindow){
-        const timeLabel = indianapolisTimeLabel();
-        timingModalText.innerHTML = `נתוני מגמה יומית מתייצבים יותר בשעות הערב בשעון אינדיאנפוליס (<b dir="ltr">${RECOMMENDED_HOUR_START}:00–${RECOMMENDED_HOUR_END}:00</b>), אחרי שגוגל משלימים לעבד את הנתונים של היום שלפני. השעה שם כרגע: <b dir="ltr">${timeLabel}</b>. אפשר להריץ עכשיו בכל זאת, אבל התוצאה עשויה להיות פחות יציבה.`;
+        const israel = currentTimeInZone(ISRAEL_TIMEZONE);
+        // Same-day offset between the two zones — safe to reuse for
+        // converting the recommended window since DST doesn't shift mid-day.
+        const offsetMinutes = (israel.hour*60 + israel.minute) - (indy.hour*60 + indy.minute);
+        const israelTimeLabel = formatHM(israel.hour*60 + israel.minute);
+        const indyTimeLabel = formatHM(indy.hour*60 + indy.minute);
+        const windowStartIL = formatHM(RECOMMENDED_HOUR_START*60 + offsetMinutes);
+        const windowEndIL = formatHM(RECOMMENDED_HOUR_END*60 + offsetMinutes);
+        timingModalText.innerHTML = `נתוני מגמה יומית מתייצבים יותר בשעות הערב בשעון אינדיאנפוליס (<b dir="ltr">${RECOMMENDED_HOUR_START}:00–${RECOMMENDED_HOUR_END}:00</b>), אחרי שגוגל משלימים לעבד את הנתונים של היום שלפני. זה יוצא בערך <b dir="ltr">${windowStartIL}–${windowEndIL}</b> בשעון ישראל. עכשיו זה <b dir="ltr">${indyTimeLabel}</b> באינדיאנפוליס (<b dir="ltr">${israelTimeLabel}</b> בישראל). אפשר להריץ עכשיו בכל זאת, אבל התוצאה עשויה להיות פחות יציבה.`;
         timingModalOverlay.hidden = false;
         return;
       }
