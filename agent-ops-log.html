@@ -593,11 +593,17 @@
     flex-wrap:wrap;
   }
   .modal-btn-schedule{
-    background:color-mix(in srgb, var(--wire) 22%, transparent);
-    color:var(--wire);
-    border:1px solid color-mix(in srgb, var(--wire) 45%, transparent);
+    background:var(--wire);
+    color:var(--paper);
     flex-basis:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-size:0.95rem;
+    box-shadow:0 4px 14px color-mix(in srgb, var(--wire) 45%, transparent);
   }
+  .modal-btn-schedule svg{width:18px;height:18px;flex-shrink:0;}
 
   .scheduled-empty{
     color:var(--muted);
@@ -1125,7 +1131,10 @@
     <div class="modal-title">מתי הכי כדאי להריץ בדיקה יומית?</div>
     <div class="modal-text" id="timingModalText"></div>
     <div class="modal-actions three">
-      <button class="modal-btn modal-btn-schedule" id="timingModalSchedule" type="button">תזמן הרצה לשעה הטובה</button>
+      <button class="modal-btn modal-btn-schedule" id="timingModalSchedule" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span>תזמן הרצה לשעה הטובה</span>
+      </button>
       <button class="modal-btn modal-btn-secondary" id="timingModalCancel" type="button">ביטול</button>
       <button class="modal-btn modal-btn-primary" id="timingModalProceed" type="button">הרץ בכל זאת</button>
     </div>
