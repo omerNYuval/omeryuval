@@ -512,6 +512,83 @@
   }
   .run-result.success .run-result-link{background:var(--moss);}
   .run-result.skipped .run-result-link{background:var(--wire);}
+
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:20px;
+  }
+  .modal-overlay[hidden]{display:none;}
+  .modal-card{
+    background:var(--panel);
+    border:1px solid var(--steel);
+    border-radius:16px;
+    padding:28px 26px;
+    max-width:420px;
+    width:100%;
+    text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,0.45);
+    animation:modal-pop 0.18s ease-out;
+  }
+  @keyframes modal-pop{
+    from{ transform:scale(0.94); opacity:0; }
+    to{ transform:scale(1); opacity:1; }
+  }
+  .modal-icon{
+    width:52px;
+    height:52px;
+    margin:0 auto 14px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:color-mix(in srgb, var(--amber) 20%, transparent);
+    color:var(--amber);
+  }
+  .modal-icon svg{width:26px;height:26px;}
+  .modal-title{
+    font-weight:800;
+    font-size:1.05rem;
+    color:var(--paper);
+    margin-bottom:10px;
+  }
+  .modal-text{
+    font-size:0.9rem;
+    color:var(--muted);
+    line-height:1.7;
+    margin-bottom:22px;
+  }
+  .modal-text b{color:var(--paper);}
+  .modal-actions{
+    display:flex;
+    gap:10px;
+  }
+  .modal-btn{
+    flex:1;
+    padding:11px 16px;
+    border-radius:999px;
+    font-family:'Heebo', sans-serif;
+    font-weight:800;
+    font-size:0.9rem;
+    cursor:pointer;
+    border:none;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .modal-btn:hover{transform:translateY(-1px);}
+  .modal-btn-primary{
+    background:var(--amber);
+    color:var(--charcoal);
+  }
+  .modal-btn-secondary{
+    background:transparent;
+    color:var(--muted);
+    border:1px solid var(--steel);
+  }
   .insights-header{
     display:flex;
     align-items:center;
@@ -974,6 +1051,20 @@
 
 </div>
 
+<div class="modal-overlay" id="timingModalOverlay" hidden>
+  <div class="modal-card">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+    </div>
+    <div class="modal-title">מתי הכי כדאי להריץ בדיקה יומית?</div>
+    <div class="modal-text" id="timingModalText"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-secondary" id="timingModalCancel" type="button">ביטול</button>
+      <button class="modal-btn modal-btn-primary" id="timingModalProceed" type="button">הרץ בכל זאת</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const DATA_URL = "data/trends.json";
   const WORKER_URL = "https://garage-signal-agent.omeryuval21.workers.dev";
@@ -991,7 +1082,12 @@
   const runPanelBtn = document.getElementById("runPanelBtn");
   const runLoading = document.getElementById("runLoading");
   const runResult = document.getElementById("runResult");
+  const timingModalOverlay = document.getElementById("timingModalOverlay");
+  const timingModalText = document.getElementById("timingModalText");
   const THEME_KEY = "agent-ops-theme";
+  const MARKET_TIMEZONE = "America/Indiana/Indianapolis";
+  const RECOMMENDED_HOUR_START = 18;
+  const RECOMMENDED_HOUR_END = 20;
   const runSelection = { frequency: "monthly", city: "Indianapolis", scope: "city", neighborhood: "" };
 
   let allEntries = [];
@@ -1260,6 +1356,50 @@
     }
   }
 
+  function indianapolisHour(){
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: MARKET_TIMEZONE,
+      hour: "2-digit",
+      hour12: false,
+    }).formatToParts(new Date());
+    const hourPart = parts.find(p=>p.type === "hour").value;
+    return hourPart === "24" ? 0 : parseInt(hourPart, 10);
+  }
+
+  function indianapolisTimeLabel(){
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: MARKET_TIMEZONE,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(new Date());
+  }
+
+  function handleRunClick(){
+    if(runSelection.frequency === "daily"){
+      const hour = indianapolisHour();
+      const inWindow = hour >= RECOMMENDED_HOUR_START && hour < RECOMMENDED_HOUR_END;
+      if(!inWindow){
+        const timeLabel = indianapolisTimeLabel();
+        timingModalText.innerHTML = `נתוני מגמה יומית מתייצבים יותר בשעות הערב בשעון אינדיאנפוליס (<b dir="ltr">${RECOMMENDED_HOUR_START}:00–${RECOMMENDED_HOUR_END}:00</b>), אחרי שגוגל משלימים לעבד את הנתונים של היום שלפני. השעה שם כרגע: <b dir="ltr">${timeLabel}</b>. אפשר להריץ עכשיו בכל זאת, אבל התוצאה עשויה להיות פחות יציבה.`;
+        timingModalOverlay.hidden = false;
+        return;
+      }
+    }
+    runAgentNow();
+  }
+
+  timingModalOverlay.addEventListener("click", (e)=>{
+    if(e.target === timingModalOverlay) timingModalOverlay.hidden = true;
+  });
+  document.getElementById("timingModalCancel").addEventListener("click", ()=>{
+    timingModalOverlay.hidden = true;
+  });
+  document.getElementById("timingModalProceed").addEventListener("click", ()=>{
+    timingModalOverlay.hidden = true;
+    runAgentNow();
+  });
+
   async function runAgentNow(){
     refreshBtn.disabled = true;
     refreshBtn.classList.add("spinning");
@@ -1321,7 +1461,7 @@
   refreshBtn.addEventListener("click", ()=>{
     goTo("filter", "run");
   });
-  runPanelBtn.addEventListener("click", runAgentNow);
+  runPanelBtn.addEventListener("click", handleRunClick);
 
   (function initRunWizard(){
     const NEIGHBORHOODS = {
