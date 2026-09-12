@@ -589,6 +589,58 @@
     color:var(--muted);
     border:1px solid var(--steel);
   }
+  .modal-actions.three{
+    flex-wrap:wrap;
+  }
+  .modal-btn-schedule{
+    background:color-mix(in srgb, var(--wire) 22%, transparent);
+    color:var(--wire);
+    border:1px solid color-mix(in srgb, var(--wire) 45%, transparent);
+    flex-basis:100%;
+  }
+
+  .scheduled-empty{
+    color:var(--muted);
+    font-size:0.9rem;
+    padding:10px 2px;
+  }
+  .scheduled-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:10px;
+  }
+  .scheduled-title{
+    font-weight:700;
+    color:var(--paper);
+    font-size:0.9rem;
+    margin-bottom:4px;
+  }
+  .scheduled-time{
+    font-size:0.82rem;
+    color:var(--muted);
+    line-height:1.6;
+  }
+  .scheduled-cancel{
+    background:transparent;
+    color:var(--muted);
+    border:1px solid var(--steel);
+    padding:8px 16px;
+    border-radius:999px;
+    font-family:'Heebo', sans-serif;
+    font-weight:700;
+    font-size:0.82rem;
+    cursor:pointer;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .scheduled-cancel:hover{border-color:var(--amber); color:var(--amber);}
   .insights-header{
     display:flex;
     align-items:center;
@@ -866,6 +918,7 @@
       <div class="side-label">סוג פעולה</div>
       <button class="side-link active" data-filter="all">הכול</button>
       <button class="side-link" data-filter="run">הרצת הבוט</button>
+      <button class="side-link" data-filter="scheduled">הרצות מתוזמנות</button>
       <button class="side-link" data-filter="scan">סריקת נתונים</button>
       <button class="side-link" data-filter="score">מונח בעלייה</button>
       <div class="side-label">אזור</div>
@@ -992,6 +1045,19 @@
         </div>
       </div>
 
+      <div class="insights-panel" id="scheduledPanel" hidden>
+        <div class="insights-header">
+          <span class="insights-icon" style="color:var(--amber);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </span>
+          <div>
+            <h2>הרצות מתוזמנות</h2>
+            <div class="insights-sub">בקשות הרצה שממתינות לשעה הטובה</div>
+          </div>
+        </div>
+        <div id="scheduledList"></div>
+      </div>
+
       <div class="insights-panel" id="insightsPanel" hidden>
         <div class="insights-header">
           <span class="insights-icon">🧠</span>
@@ -1058,7 +1124,8 @@
     </div>
     <div class="modal-title">מתי הכי כדאי להריץ בדיקה יומית?</div>
     <div class="modal-text" id="timingModalText"></div>
-    <div class="modal-actions">
+    <div class="modal-actions three">
+      <button class="modal-btn modal-btn-schedule" id="timingModalSchedule" type="button">תזמן הרצה לשעה הטובה</button>
       <button class="modal-btn modal-btn-secondary" id="timingModalCancel" type="button">ביטול</button>
       <button class="modal-btn modal-btn-primary" id="timingModalProceed" type="button">הרץ בכל זאת</button>
     </div>
@@ -1259,9 +1326,14 @@
     runPanel.hidden = !showingRun;
     if(showingRun) renderRunRecommendations();
 
+    const scheduledPanel = document.getElementById("scheduledPanel");
+    const showingScheduled = activeAxis === "filter" && activeFilter === "scheduled";
+    scheduledPanel.hidden = !showingScheduled;
+    if(showingScheduled) renderScheduledPanel();
+
     const showingAll = activeAxis === "filter" && activeFilter === "all";
-    feed.hidden = showingAll || showingRun;
-    if(showingAll || showingRun){
+    feed.hidden = showingAll || showingRun || showingScheduled;
+    if(showingAll || showingRun || showingScheduled){
       feed.innerHTML = "";
       return;
     }
@@ -1408,6 +1480,111 @@
     timingModalOverlay.hidden = true;
     runAgentNow();
   });
+  document.getElementById("timingModalSchedule").addEventListener("click", ()=>{
+    timingModalOverlay.hidden = true;
+    scheduleRun();
+  });
+
+  // ---- scheduled runs: wait for the recommended time instead of running now ----
+
+  const SCHEDULED_KEY = "agent-ops-scheduled-runs";
+  const CITY_FULL_LABELS = { Indianapolis: "Indianapolis, IN", Boston: "Boston, MA" };
+  const scheduledTimers = {};
+
+  function loadScheduledRuns(){
+    try{ return JSON.parse(localStorage.getItem(SCHEDULED_KEY) || "[]"); }catch(e){ return []; }
+  }
+  function saveScheduledRuns(list){
+    try{ localStorage.setItem(SCHEDULED_KEY, JSON.stringify(list)); }catch(e){}
+  }
+
+  function nextRecommendedTime(){
+    const indy = currentTimeInZone(MARKET_TIMEZONE);
+    const nowMinutes = indy.hour*60 + indy.minute;
+    const targetMinutes = RECOMMENDED_HOUR_START*60;
+    let deltaMinutes = targetMinutes - nowMinutes;
+    if(deltaMinutes <= 0) deltaMinutes += 1440; // already past today's window — aim for tomorrow
+    return new Date(Date.now() + deltaMinutes*60000);
+  }
+
+  function scheduleRun(){
+    const entry = {
+      id: `sched-${Date.now()}`,
+      frequency: runSelection.frequency,
+      city: runSelection.city,
+      scope: runSelection.scope,
+      neighborhood: runSelection.neighborhood,
+      scheduledFor: nextRecommendedTime().toISOString(),
+    };
+    const list = loadScheduledRuns();
+    list.push(entry);
+    saveScheduledRuns(list);
+    armScheduledTimer(entry);
+    goTo("filter", "scheduled");
+  }
+
+  function armScheduledTimer(entry){
+    const delay = new Date(entry.scheduledFor).getTime() - Date.now();
+    if(delay <= 0){
+      fireScheduledRun(entry.id);
+      return;
+    }
+    scheduledTimers[entry.id] = setTimeout(()=> fireScheduledRun(entry.id), delay);
+  }
+
+  async function fireScheduledRun(id){
+    const list = loadScheduledRuns();
+    const entry = list.find(e=>e.id === id);
+    if(!entry) return; // cancelled in the meantime
+    removeScheduledRun(id);
+    runSelection.frequency = entry.frequency;
+    runSelection.city = entry.city;
+    runSelection.scope = entry.scope;
+    runSelection.neighborhood = entry.neighborhood;
+    await runAgentNow();
+  }
+
+  function removeScheduledRun(id){
+    if(scheduledTimers[id]){
+      clearTimeout(scheduledTimers[id]);
+      delete scheduledTimers[id];
+    }
+    saveScheduledRuns(loadScheduledRuns().filter(e=>e.id !== id));
+    if(activeAxis === "filter" && activeFilter === "scheduled") renderScheduledPanel();
+  }
+
+  function renderScheduledPanel(){
+    const container = document.getElementById("scheduledList");
+    const list = loadScheduledRuns();
+    if(!list.length){
+      container.innerHTML = '<div class="scheduled-empty">אין הרצות מתוזמנות כרגע.</div>';
+      return;
+    }
+    const freqLabels = { daily: "יומית", weekly: "שבועית", monthly: "חודשית" };
+    container.innerHTML = list.map(e=>{
+      const dt = new Date(e.scheduledFor);
+      const indyLabel = new Intl.DateTimeFormat("en-GB", { timeZone: MARKET_TIMEZONE, hour:"2-digit", minute:"2-digit", hour12:false }).format(dt);
+      const ilLabel = new Intl.DateTimeFormat("en-GB", { timeZone: ISRAEL_TIMEZONE, hour:"2-digit", minute:"2-digit", hour12:false }).format(dt);
+      const cityFull = CITY_FULL_LABELS[e.city] || e.city;
+      const regionLabel = e.scope === "neighborhood" && e.neighborhood ? `${e.neighborhood}, ${cityFull}` : cityFull;
+      return `
+        <div class="scheduled-item">
+          <div>
+            <div class="scheduled-title">הרצה ${freqLabels[e.frequency] || e.frequency} — ${regionLabel}</div>
+            <div class="scheduled-time">מתוזמן ל-<b dir="ltr">${indyLabel}</b> באינדיאנפוליס (<b dir="ltr">${ilLabel}</b> בישראל)</div>
+          </div>
+          <button class="scheduled-cancel" type="button" data-cancel="${e.id}">בטל הרצה</button>
+        </div>
+      `;
+    }).join("");
+    container.querySelectorAll("[data-cancel]").forEach(btn=>{
+      btn.addEventListener("click", ()=> removeScheduledRun(btn.dataset.cancel));
+    });
+  }
+
+  // Re-arm any schedule that survived a page reload/close; if its time
+  // already passed while the tab was closed, this fires it immediately.
+  loadScheduledRuns().forEach(armScheduledTimer);
 
   async function runAgentNow(){
     refreshBtn.disabled = true;
