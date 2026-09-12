@@ -2,8 +2,6 @@ const REPO = "omerNYuval/omeryuval";
 const FILE_PATH = "data/trends.json";
 const BRANCH = "main";
 
-const MARKET_NAME = "Boston, MA";
-const LOCATION_NAME = "Boston,Massachusetts,United States";
 const LANGUAGE_NAME = "English";
 const KEYWORDS = [
   "garage door repair",
@@ -16,6 +14,27 @@ const RISE_THRESHOLD_PCT = 15;
 const COOLDOWN_MINUTES = 30;
 const MAX_ENTRIES = 300;
 const ALLOWED_ORIGIN = "https://omernyuval.github.io";
+
+// All "day" boundaries (what counts as "yesterday", the run's date/time
+// stamp, the Trends request window) are computed in the target market's
+// own local time, not UTC/server time — otherwise a US day boundary can
+// be off by a day depending on when the bot happens to run.
+const MARKET_TIMEZONE = "America/Indiana/Indianapolis";
+
+// Google Trends only buckets data into one-point-per-day once the
+// requested date range exceeds ~7 days; shorter ranges come back hourly.
+// These lookbacks stay safely past that boundary.
+const DAILY_LOOKBACK_DAYS = 10;
+const WEEKLY_LOOKBACK_DAYS = 16;
+
+const STATE_BY_CITY = {
+  Indianapolis: { name: "Indiana", label: "אינדיאנה" },
+  Boston: { name: "Massachusetts", label: "מסצ'וסטס" },
+};
+const CITY_LABEL = {
+  Indianapolis: "Indianapolis, IN",
+  Boston: "Boston, MA",
+};
 
 // Wraps embedded Latin/numeric text in a bidi-isolate so it doesn't
 // scramble the surrounding Hebrew sentence's punctuation/word order.
@@ -60,47 +79,17 @@ export default {
         }
       }
 
-      const results = await fetchSearchVolume(env);
-      const now = new Date();
-      const runDate = now.toISOString().slice(0, 10);
-      const runTime = now.toISOString().slice(11, 16);
-
-      const newEntries = [];
-      let signalsFound = 0;
-
-      for (const row of results) {
-        if (!row.keyword || row.search_volume == null) continue;
-        const pct = trendPctChange(row.monthly_searches);
-        if (pct !== null && pct >= RISE_THRESHOLD_PCT) {
-          newEntries.push({
-            date: runDate,
-            time: runTime,
-            type: "score",
-            title: `עלייה בביקוש: ${bdi(row.keyword)}`,
-            detail: `נפח החיפוש למונח ${bdi(`"${row.keyword}"`)} עלה ב-${bdi(pct + "%")} לעומת החודש הקודם באזור ${bdi(MARKET_NAME)} (נפח נוכחי: כ-${bdi(row.search_volume)} חיפושים בחודש).`,
-            region: MARKET_NAME,
-            tags: [`+${pct}%`, `${row.search_volume} חיפושים לחודש`],
-          });
-          signalsFound++;
-        }
-      }
-
-      newEntries.push({
-        date: runDate,
-        time: runTime,
-        type: "scan",
-        title: "סריקת ביקוש הושלמה",
-        detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור ${bdi(MARKET_NAME)}. נמצאו ${signalsFound} מונחים בעלייה.`,
-        region: MARKET_NAME,
-        tags: ["נתונים אמיתיים"],
-      });
+      const selection = await parseSelection(request);
+      const { newEntries, market } = selection.frequency === "monthly"
+        ? await runMonthly(env, selection)
+        : await runTrends(env, selection);
 
       const merged = dedupeAndSort([...newEntries, ...(current.json.entries || [])]).slice(0, MAX_ENTRIES);
       const balance = await fetchBalance(env).catch(() => current.json.balance ?? null);
 
       const output = {
-        generated_at: now.toISOString(),
-        market: MARKET_NAME,
+        generated_at: new Date().toISOString(),
+        market,
         keywords: KEYWORDS,
         balance,
         entries: merged,
@@ -114,6 +103,323 @@ export default {
     }
   },
 };
+
+async function parseSelection(request) {
+  let body = {};
+  try {
+    body = await request.json();
+  } catch (err) {
+    body = {};
+  }
+  const frequency = ["daily", "weekly", "monthly"].includes(body.frequency) ? body.frequency : "monthly";
+  // Only Indianapolis is reachable from the wizard right now (Boston is
+  // blocked there like Miami) — default anything else back to it.
+  const city = body.city === "Boston" ? "Boston" : "Indianapolis";
+  const scope = body.scope === "neighborhood" ? "neighborhood" : "city";
+  const neighborhood = scope === "neighborhood" && typeof body.neighborhood === "string" ? body.neighborhood.trim() : "";
+  return { frequency, city, scope: neighborhood ? scope : "city", neighborhood };
+}
+
+// ---- monthly run: real absolute search volume, city/neighborhood-accurate ----
+
+async function runMonthly(env, selection) {
+  const { locationName, label } = monthlyLocation(selection);
+  const results = await fetchSearchVolume(env, locationName);
+  const { date, time } = nowInMarket();
+
+  const newEntries = [];
+  let signalsFound = 0;
+
+  for (const row of results) {
+    if (!row.keyword || row.search_volume == null) continue;
+    const pct = trendPctChange(row.monthly_searches);
+    if (pct !== null && pct >= RISE_THRESHOLD_PCT) {
+      newEntries.push({
+        date,
+        time,
+        type: "score",
+        title: `עלייה בביקוש: ${bdi(row.keyword)}`,
+        detail: `נפח החיפוש למונח ${bdi(`"${row.keyword}"`)} עלה ב-${bdi(pct + "%")} לעומת החודש הקודם באזור ${bdi(label)} (נפח נוכחי: כ-${bdi(row.search_volume)} חיפושים בחודש).`,
+        region: label,
+        tags: [`+${pct}%`, `${row.search_volume} חיפושים לחודש`],
+      });
+      signalsFound++;
+    }
+  }
+
+  newEntries.push({
+    date,
+    time,
+    type: "scan",
+    title: "סריקת ביקוש הושלמה",
+    detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור ${bdi(label)} (הרצה חודשית). נמצאו ${signalsFound} מונחים בעלייה.`,
+    region: label,
+    tags: ["נתונים אמיתיים", "חודשי"],
+  });
+
+  return { newEntries, market: label };
+}
+
+function monthlyLocation(selection) {
+  const state = STATE_BY_CITY[selection.city].name;
+  if (selection.scope === "neighborhood" && selection.neighborhood) {
+    return {
+      locationName: `${selection.neighborhood},${state},United States`,
+      label: `${selection.neighborhood}, ${CITY_LABEL[selection.city]}`,
+    };
+  }
+  return {
+    locationName: `${selection.city},${state},United States`,
+    label: CITY_LABEL[selection.city],
+  };
+}
+
+async function fetchSearchVolume(env, locationName) {
+  const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
+  const res = await fetch("https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live", {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify([{ keywords: KEYWORDS, location_name: locationName, language_name: LANGUAGE_NAME }]),
+  });
+  if (!res.ok) throw new Error(`DataForSEO HTTP error: ${res.status}`);
+  const data = await res.json();
+  if (data.status_code !== 20000) throw new Error(`DataForSEO error: ${data.status_message}`);
+  const task = data.tasks && data.tasks[0];
+  if (!task || task.status_code !== 20000) {
+    throw new Error(`DataForSEO task error: ${task ? task.status_message : "no task"}`);
+  }
+  return task.result || [];
+}
+
+function trendPctChange(monthlySearches) {
+  if (!monthlySearches) return null;
+  const points = monthlySearches
+    .filter((m) => m.search_volume != null)
+    .sort((a, b) => a.year - b.year || a.month - b.month);
+  if (points.length < 2) return null;
+  const prev = points[points.length - 2];
+  const curr = points[points.length - 1];
+  if (!prev.search_volume) return null;
+  return Math.round(((curr.search_volume - prev.search_volume) / prev.search_volume) * 100);
+}
+
+// ---- daily/weekly run: real recent trend, via DataForSEO/Google Trends ----
+//
+// Google Trends has no city-level option for its interest-over-time series
+// (only "interest by subregion", a single snapshot, not a day-by-day
+// series) — the finest it supports here is Country. So we try the most
+// specific location DataForSEO will accept for this endpoint, and fall
+// back to broader geography only if it's rejected, always being honest in
+// the resulting entry about which precision level actually got used.
+
+async function runTrends(env, selection) {
+  const isDaily = selection.frequency === "daily";
+  const lookbackDays = isDaily ? DAILY_LOOKBACK_DAYS : WEEKLY_LOOKBACK_DAYS;
+  const { dateFrom, dateTo } = trendsDateRange(lookbackDays);
+
+  const candidates = trendsLocationCandidates(selection);
+  const { dataPoints, label, precisionNote } = await fetchTrendsWithFallback(env, candidates, dateFrom, dateTo);
+
+  const { date, time } = nowInMarket();
+  const newEntries = [];
+  let signalsFound = 0;
+
+  if (isDaily) {
+    const curr = dataPoints[dataPoints.length - 1];
+    const prev = dataPoints[dataPoints.length - 2];
+    KEYWORDS.forEach((keyword, i) => {
+      const pct = pctChange(valueAt(prev, i), valueAt(curr, i));
+      if (pct !== null && pct >= RISE_THRESHOLD_PCT) {
+        newEntries.push({
+          date,
+          time,
+          type: "score",
+          title: `עלייה במגמת חיפוש: ${bdi(keyword)}`,
+          detail: `מדד העניין במונח ${bdi(`"${keyword}"`)} עלה ב-${bdi(pct + "%")} מהיום שלפני, ${bdi(precisionNote)} (מדד יחסי, לא נפח חיפושים מוחלט: ${bdi(valueAt(curr, i))}/100).`,
+          region: label,
+          tags: [`+${pct}%`, "יומי", precisionNote],
+        });
+        signalsFound++;
+      }
+    });
+    newEntries.push({
+      date,
+      time,
+      type: "scan",
+      title: "סריקת מגמה יומית הושלמה",
+      detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, ${bdi(precisionNote)}. נמצאו ${signalsFound} מונחים בעלייה.`,
+      region: label,
+      tags: ["הרצה יומית", precisionNote],
+    });
+  } else {
+    const thisWeek = dataPoints.slice(-7);
+    const prevWeek = dataPoints.slice(-14, -7);
+    KEYWORDS.forEach((keyword, i) => {
+      const currAvg = avgValue(thisWeek, i);
+      const prevAvg = avgValue(prevWeek, i);
+      const pct = pctChange(prevAvg, currAvg);
+      if (pct !== null && pct >= RISE_THRESHOLD_PCT) {
+        newEntries.push({
+          date,
+          time,
+          type: "score",
+          title: `עלייה במגמת חיפוש: ${bdi(keyword)}`,
+          detail: `מדד העניין הממוצע במונח ${bdi(`"${keyword}"`)} עלה ב-${bdi(pct + "%")} לעומת השבוע הקודם, ${bdi(precisionNote)} (מדד יחסי ממוצע: ${bdi(Math.round(currAvg))}/100).`,
+          region: label,
+          tags: [`+${pct}%`, "שבועי", precisionNote],
+        });
+        signalsFound++;
+      }
+    });
+    newEntries.push({
+      date,
+      time,
+      type: "scan",
+      title: "סריקת מגמה שבועית הושלמה",
+      detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מול מגמת החיפוש של השבוע האחרון, ${bdi(precisionNote)}. נמצאו ${signalsFound} מונחים בעלייה.`,
+      region: label,
+      tags: ["הרצה שבועית", precisionNote],
+    });
+  }
+
+  return { newEntries, market: label };
+}
+
+function trendsLocationCandidates(selection) {
+  const state = STATE_BY_CITY[selection.city];
+  const cityLabel = CITY_LABEL[selection.city];
+  const candidates = [];
+
+  if (selection.scope === "neighborhood" && selection.neighborhood) {
+    candidates.push({
+      locationName: `${selection.neighborhood},${state.name},United States`,
+      label: `${selection.neighborhood}, ${cityLabel}`,
+      precisionNote: "ברמת שכונה",
+    });
+  }
+  candidates.push({
+    locationName: `${selection.city},${state.name},United States`,
+    label: cityLabel,
+    precisionNote: "ברמת עיר",
+  });
+  candidates.push({
+    locationName: `${state.name},United States`,
+    label: `מדינת ${state.label}`,
+    precisionNote: "ברמת מדינה (לא ספציפי לעיר)",
+  });
+  candidates.push({
+    locationName: "United States",
+    label: 'ארה"ב (ארצי)',
+    precisionNote: "ברמה ארצית (לא ספציפי לעיר/מדינה)",
+  });
+  return candidates;
+}
+
+async function fetchTrendsWithFallback(env, candidates, dateFrom, dateTo) {
+  let lastError = null;
+  for (const candidate of candidates) {
+    try {
+      const dataPoints = await fetchTrends(env, candidate.locationName, dateFrom, dateTo);
+      if (dataPoints && dataPoints.length >= 2) {
+        return { dataPoints, label: candidate.label, precisionNote: candidate.precisionNote };
+      }
+      lastError = new Error(`DataForSEO Trends: not enough data points for ${candidate.locationName}`);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error("DataForSEO Trends: no location candidate succeeded");
+}
+
+async function fetchTrends(env, locationName, dateFrom, dateTo) {
+  const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
+  const res = await fetch("https://api.dataforseo.com/v3/keywords_data/google_trends/explore/live", {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify([{
+      keywords: KEYWORDS,
+      location_name: locationName,
+      language_code: "en",
+      date_from: dateFrom,
+      date_to: dateTo,
+      type: "web",
+      item_types: ["google_trends_graph"],
+    }]),
+  });
+  if (!res.ok) throw new Error(`DataForSEO Trends HTTP error: ${res.status}`);
+  const data = await res.json();
+  if (data.status_code !== 20000) throw new Error(`DataForSEO Trends error: ${data.status_message}`);
+  const task = data.tasks && data.tasks[0];
+  if (!task || task.status_code !== 20000) {
+    throw new Error(`DataForSEO Trends task error: ${task ? task.status_message : "no task"} (location: ${locationName})`);
+  }
+  const result = task.result && task.result[0];
+  const items = (result && result.items) || [];
+  const graph = items.find((it) => it.type === "google_trends_graph");
+  return (graph && graph.data) || [];
+}
+
+function valueAt(point, index) {
+  return point && Array.isArray(point.values) ? point.values[index] : null;
+}
+
+function avgValue(points, index) {
+  const vals = points.map((p) => valueAt(p, index)).filter((v) => v != null);
+  if (!vals.length) return null;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+function pctChange(prev, curr) {
+  if (prev == null || curr == null || !prev) return null;
+  return Math.round(((curr - prev) / prev) * 100);
+}
+
+// ---- market-local date/time helpers ----
+
+function marketDateString(date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: MARKET_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const map = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+  return `${map.year}-${map.month}-${map.day}`;
+}
+
+function nowInMarket() {
+  const now = new Date();
+  const date = marketDateString(now);
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: MARKET_TIMEZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const map = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+  const hour = map.hour === "24" ? "00" : map.hour;
+  return { date, time: `${hour}:${map.minute}` };
+}
+
+function shiftDate(yyyyMmDd, deltaDays) {
+  const d = new Date(`${yyyyMmDd}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  return d.toISOString().slice(0, 10);
+}
+
+function trendsDateRange(totalDays) {
+  const yesterday = shiftDate(marketDateString(new Date()), -1);
+  const dateFrom = shiftDate(yesterday, -(totalDays - 1));
+  return { dateFrom, dateTo: yesterday };
+}
+
+// ---- shared plumbing (CORS, GitHub commit, balance, dedupe) ----
 
 function corsHeaders() {
   return {
@@ -171,26 +477,6 @@ async function commitToGitHub(env, sha, output) {
   }
 }
 
-async function fetchSearchVolume(env) {
-  const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
-  const res = await fetch("https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live", {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${auth}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify([{ keywords: KEYWORDS, location_name: LOCATION_NAME, language_name: LANGUAGE_NAME }]),
-  });
-  if (!res.ok) throw new Error(`DataForSEO HTTP error: ${res.status}`);
-  const data = await res.json();
-  if (data.status_code !== 20000) throw new Error(`DataForSEO error: ${data.status_message}`);
-  const task = data.tasks && data.tasks[0];
-  if (!task || task.status_code !== 20000) {
-    throw new Error(`DataForSEO task error: ${task ? task.status_message : "no task"}`);
-  }
-  return task.result || [];
-}
-
 async function fetchBalance(env) {
   const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
   const res = await fetch("https://api.dataforseo.com/v3/appendix/user_data", {
@@ -201,18 +487,6 @@ async function fetchBalance(env) {
   const task = data.tasks && data.tasks[0];
   const result = task && task.result && task.result[0];
   return result && result.money ? result.money.balance : null;
-}
-
-function trendPctChange(monthlySearches) {
-  if (!monthlySearches) return null;
-  const points = monthlySearches
-    .filter((m) => m.search_volume != null)
-    .sort((a, b) => a.year - b.year || a.month - b.month);
-  if (points.length < 2) return null;
-  const prev = points[points.length - 2];
-  const curr = points[points.length - 1];
-  if (!prev.search_volume) return null;
-  return Math.round(((curr.search_volume - prev.search_volume) / prev.search_volume) * 100);
 }
 
 function dedupeAndSort(entries) {

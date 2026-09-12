@@ -744,15 +744,15 @@
         <div class="run-step" id="runStepFreq">
           <div class="run-step-label">1. איזה טווח זמן תרצה לבדוק הפעם?</div>
           <div class="run-choice-grid">
-            <button class="run-choice" data-freq data-freq-label="הרצה יומית" type="button">
+            <button class="run-choice" data-freq="daily" data-freq-label="הרצה יומית" type="button">
               <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
               <span>הרצה יומית</span>
             </button>
-            <button class="run-choice" data-freq data-freq-label="הרצה שבועית" type="button">
+            <button class="run-choice" data-freq="weekly" data-freq-label="הרצה שבועית" type="button">
               <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
               <span>הרצה שבועית</span>
             </button>
-            <button class="run-choice" data-freq data-freq-label="הרצה חודשית" type="button">
+            <button class="run-choice" data-freq="monthly" data-freq-label="הרצה חודשית" type="button">
               <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></span>
               <span>הרצה חודשית</span>
             </button>
@@ -769,9 +769,10 @@
                 <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
                 <span>אינדיאנפוליס</span>
               </button>
-              <button class="run-choice" data-city="Boston" data-city-label="בוסטון" data-city-full="Boston, MA" style="--choice-color:#2fa855" type="button">
+              <button class="run-choice has-soon" disabled style="--choice-color:#2fa855" type="button">
                 <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
                 <span>בוסטון</span>
+                <span class="soon-badge">Soon</span>
               </button>
               <button class="run-choice has-soon" disabled style="--choice-color:#20c4b0" type="button">
                 <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
@@ -915,6 +916,7 @@
   const statusText = document.getElementById("statusText");
   const balanceValue = document.getElementById("balanceValue");
   const THEME_KEY = "agent-ops-theme";
+  const runSelection = { frequency: "monthly", city: "Indianapolis", scope: "city", neighborhood: "" };
 
   let allEntries = [];
   let meta = {};
@@ -1188,7 +1190,11 @@
     statusPill.classList.remove("stale");
     statusText.textContent = "מריץ סריקה חיה… (עד כ-20 שניות)";
     try{
-      const res = await fetch(WORKER_URL, { method: "POST" });
+      const res = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(runSelection),
+      });
       if(!res.ok) throw new Error("worker request failed");
       const result = await res.json();
 
@@ -1255,6 +1261,7 @@
 
     document.querySelectorAll(".run-choice[data-freq]").forEach(btn=>{
       btn.addEventListener("click", ()=>{
+        runSelection.frequency = btn.dataset.freq;
         chosenFreqLabel = btn.dataset.freqLabel;
         showStep("region");
         showRegionSub("city");
@@ -1266,6 +1273,7 @@
     document.querySelectorAll(".run-choice[data-city]").forEach(btn=>{
       btn.addEventListener("click", ()=>{
         chosenCity = btn.dataset.city;
+        runSelection.city = chosenCity;
         chosenCityLabel = btn.dataset.cityLabel;
         chosenCityFull = btn.dataset.cityFull;
         scopeLabel.textContent = `${chosenCityLabel} — כל העיר או שכונות מסוימות?`;
@@ -1281,6 +1289,8 @@
     }
 
     document.getElementById("scopeWholeCity").addEventListener("click", ()=>{
+      runSelection.scope = "city";
+      runSelection.neighborhood = "";
       chooseRegion(`${chosenCityLabel} (${chosenCityFull}) — כל העיר`);
     });
 
@@ -1292,7 +1302,11 @@
         btn.className = "run-choice";
         btn.type = "button";
         btn.innerHTML = `<span>${name}</span>`;
-        btn.addEventListener("click", ()=> chooseRegion(`${name}, ${chosenCityFull}`));
+        btn.addEventListener("click", ()=>{
+          runSelection.scope = "neighborhood";
+          runSelection.neighborhood = name;
+          chooseRegion(`${name}, ${chosenCityFull}`);
+        });
         neighborhoodGrid.appendChild(btn);
       });
       showRegionSub("neighborhoods");
