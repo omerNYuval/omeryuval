@@ -1553,6 +1553,16 @@
       }
     }
     if(runSelection.frequency === "monthly"){
+      const regionLabel = regionLabelForSelection(runSelection);
+      const priorRun = findMonthlyRunThisMonth(regionLabel);
+      if(priorRun){
+        const [, mm, dd] = priorRun.date.split("-");
+        timingModalTitle.textContent = "כבר הרצת בדיקה חודשית החודש";
+        timingModalScheduleLabel.textContent = "תזמן לתחילת החודש הבא";
+        timingModalText.innerHTML = `כבר הרצת בדיקה חודשית ב-<b dir="ltr">${dd}/${mm}</b> עבור <b dir="ltr">${regionLabel}</b>. ההשוואה נשארת בין אותם שני חודשים עד שהחודש הבא יתחיל, כך שהרצה נוספת עכשיו תיתן בדיוק את אותה תוצאה ורק תבזבז יתרה. אפשר להריץ בכל זאת, לתזמן לתחילת החודש הבא, או לבטל.`;
+        openModal("monthly-repeat");
+        return;
+      }
       const indy = indyDayOfMonth();
       if(indy.day < MONTHLY_RECOMMENDED_DAY){
         timingModalTitle.textContent = "מתי הכי כדאי להריץ בדיקה חודשית?";
@@ -1566,6 +1576,22 @@
     runAgentNow();
   }
 
+  function regionLabelForSelection(sel){
+    const cityFull = CITY_FULL_LABELS[sel.city] || sel.city;
+    return sel.scope === "neighborhood" && sel.neighborhood ? `${sel.neighborhood}, ${cityFull}` : cityFull;
+  }
+
+  function findMonthlyRunThisMonth(regionLabel){
+    const indy = indyDayOfMonth();
+    return allEntries.find(e=>{
+      if(e.type !== "scan") return false;
+      if(!(e.tags||[]).includes("חודשי")) return false;
+      if(e.region !== regionLabel) return false;
+      const [y, m] = e.date.split("-").map(Number);
+      return y === indy.year && m === indy.month;
+    });
+  }
+
   timingModalOverlay.addEventListener("click", (e)=>{
     if(e.target === timingModalOverlay) timingModalOverlay.hidden = true;
   });
@@ -1577,10 +1603,15 @@
     runAgentNow();
   });
   document.getElementById("timingModalSchedule").addEventListener("click", ()=>{
-    if(modalMode === "monthly"){
+    if(modalMode === "monthly" || modalMode === "monthly-repeat"){
       const indy = indyDayOfMonth();
-      const targetDay = indy.day < MONTHLY_RECOMMENDED_DAY ? MONTHLY_RECOMMENDED_DAY : indy.day;
-      scheduleDateInput.value = `${indy.year}-${String(indy.month).padStart(2,"0")}-${String(targetDay).padStart(2,"0")}`;
+      let year = indy.year, month = indy.month;
+      if(modalMode === "monthly-repeat"){
+        // Already ran this calendar month — the next useful moment is next month's recommended day.
+        month += 1;
+        if(month > 12){ month = 1; year += 1; }
+      }
+      scheduleDateInput.value = `${year}-${String(month).padStart(2,"0")}-${String(MONTHLY_RECOMMENDED_DAY).padStart(2,"0")}`;
       scheduleDateInput.min = `${indy.year}-${String(indy.month).padStart(2,"0")}-${String(indy.day).padStart(2,"0")}`;
       timingModalActions.hidden = true;
       modalScheduleDate.hidden = false;
@@ -1715,8 +1746,7 @@
       const dt = new Date(e.scheduledFor);
       const indyLabel = new Intl.DateTimeFormat("en-GB", { timeZone: MARKET_TIMEZONE, ...dateOpts }).format(dt);
       const ilLabel = new Intl.DateTimeFormat("en-GB", { timeZone: ISRAEL_TIMEZONE, ...dateOpts }).format(dt);
-      const cityFull = CITY_FULL_LABELS[e.city] || e.city;
-      const regionLabel = e.scope === "neighborhood" && e.neighborhood ? `${e.neighborhood}, ${cityFull}` : cityFull;
+      const regionLabel = regionLabelForSelection(e);
       return `
         <div class="scheduled-item">
           <div>
