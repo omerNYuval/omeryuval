@@ -1509,7 +1509,7 @@
     return `${String(h).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
   }
 
-  const MONTHLY_RECOMMENDED_DAY = 5;
+  const MONTHLY_RECOMMENDED_DAY = 12;
   const timingModalTitle = document.getElementById("timingModalTitle");
   const timingModalScheduleLabel = document.getElementById("timingModalScheduleLabel");
   const timingModalActions = document.getElementById("timingModalActions");
@@ -1558,7 +1558,7 @@
         timingModalTitle.textContent = "מתי הכי כדאי להריץ בדיקה חודשית?";
         timingModalScheduleLabel.textContent = "תזמן הרצה לתאריך אחר";
         const dayLabel = String(MONTHLY_RECOMMENDED_DAY).padStart(2,"0");
-        timingModalText.innerHTML = `בתחילת החודש, נתוני Google Ads לגבי החודש הקודם לא תמיד סופיים עדיין. מומלץ להמתין לפחות עד ה-<b dir="ltr">${dayLabel}</b> בחודש (בשעון אינדיאנפוליס) לפני הרצה חודשית, כדי לקבל נפח חיפושים יציב. אפשר להריץ עכשיו בכל זאת, לתזמן לתאריך מדויק, או לבטל.`;
+        timingModalText.innerHTML = `נתוני Google Ads לגבי החודש הקודם ממשיכים להתעדכן בתחילת החודש החדש. התאריך הכי מומלץ להרצה חודשית הוא סביב ה-<b dir="ltr">${dayLabel}</b> בחודש (בשעון אינדיאנפוליס), כשהנתונים כבר מיוצבים. אפשר להריץ עכשיו בכל זאת, לתזמן לתאריך המומלץ (או לתאריך אחר לבחירתך), או לבטל.`;
         openModal("monthly");
         return;
       }
