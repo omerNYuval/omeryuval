@@ -1297,6 +1297,7 @@
             <h2>גיבוי ושחזור</h2>
             <div class="insights-sub">פריטים שהוסרו מהתצוגה הראשית. אפשר לשחזר אותם או למחוק לצמיתות.</div>
           </div>
+          <button type="button" class="keywords-select-all" id="restoreAllBtn">שחזר הכל</button>
         </div>
         <div id="archiveList"></div>
       </div>
@@ -2106,6 +2107,8 @@
 
   function renderArchivePanel(){
     const container = document.getElementById("archiveList");
+    const restoreAllBtn = document.getElementById("restoreAllBtn");
+    restoreAllBtn.hidden = archivedEntries.length === 0;
     if(!archivedEntries.length){
       container.innerHTML = '<div class="empty archive-empty">אין פריטים בגיבוי כרגע.</div>';
       return;
@@ -2134,6 +2137,12 @@
     });
   }
 
+  document.getElementById("restoreAllBtn").addEventListener("click", restoreAllArchived);
+
+  // Fires the request in the background and reconciles local state with
+  // the server's real response once it lands. Callers apply their own
+  // optimistic update *before* calling this, so the round-trip to GitHub
+  // (read + commit, a second or more) never blocks the visible UI change.
   async function sendArchiveAction(body){
     const res = await fetch(WORKER_URL, {
       method: "POST",
@@ -2161,36 +2170,96 @@
     updateStatusPill();
   }
 
+  function snapshotEntries(){
+    return { allEntries: allEntries.slice(), archivedEntries: archivedEntries.slice() };
+  }
+
+  function restoreSnapshot(snapshot){
+    allEntries = snapshot.allEntries;
+    archivedEntries = snapshot.archivedEntries;
+    render();
+  }
+
   async function archiveEntry(key){
+    const snapshot = snapshotEntries();
+    const idx = allEntries.findIndex(e=> entryKeyOf(e) === key);
+    if(idx !== -1){
+      const [entry] = allEntries.splice(idx, 1);
+      archivedEntries.unshift({ ...entry, archived_at: new Date().toISOString() });
+      render();
+    }
     try{
       await sendArchiveAction({ action: "archive", entryKey: key });
     }catch(err){
+      restoreSnapshot(snapshot);
       statusText.textContent = err.message || "העברה לגיבוי נכשלה — נסה שוב";
     }
   }
 
   async function archiveBulk(keys){
     if(!keys.length) return;
+    const snapshot = snapshotEntries();
+    const keySet = new Set(keys);
+    const now = new Date().toISOString();
+    const remaining = [];
+    allEntries.forEach(e=>{
+      if(keySet.has(entryKeyOf(e))) archivedEntries.unshift({ ...e, archived_at: now });
+      else remaining.push(e);
+    });
+    allEntries = remaining;
+    render();
     try{
       await sendArchiveAction({ action: "archive_bulk", entryKeys: keys });
     }catch(err){
+      restoreSnapshot(snapshot);
       statusText.textContent = err.message || "ניקוי הנתונים נכשל — נסה שוב";
     }
   }
 
   async function restoreArchivedEntry(key){
+    const snapshot = snapshotEntries();
+    const idx = archivedEntries.findIndex(e=> entryKeyOf(e) === key);
+    if(idx !== -1){
+      const [entry] = archivedEntries.splice(idx, 1);
+      delete entry.archived_at;
+      allEntries.push(entry);
+      render();
+    }
     try{
       await sendArchiveAction({ action: "restore", entryKey: key });
     }catch(err){
+      restoreSnapshot(snapshot);
       statusText.textContent = err.message || "השחזור נכשל — נסה שוב";
+    }
+  }
+
+  async function restoreAllArchived(){
+    if(!archivedEntries.length) return;
+    const snapshot = snapshotEntries();
+    const keys = archivedEntries.map(entryKeyOf);
+    archivedEntries.forEach(e=>{
+      const { archived_at, ...rest } = e;
+      allEntries.push(rest);
+    });
+    archivedEntries = [];
+    render();
+    try{
+      await sendArchiveAction({ action: "restore_bulk", entryKeys: keys });
+    }catch(err){
+      restoreSnapshot(snapshot);
+      statusText.textContent = err.message || "שחזור הכל נכשל — נסה שוב";
     }
   }
 
   async function deleteArchivedForever(key){
     if(!confirm("למחוק את הפריט הזה לצמיתות? לא ניתן יהיה לשחזר אותו.")) return;
+    const snapshot = snapshotEntries();
+    archivedEntries = archivedEntries.filter(e=> entryKeyOf(e) !== key);
+    render();
     try{
       await sendArchiveAction({ action: "delete", entryKey: key });
     }catch(err){
+      restoreSnapshot(snapshot);
       statusText.textContent = err.message || "המחיקה נכשלה — נסה שוב";
     }
   }

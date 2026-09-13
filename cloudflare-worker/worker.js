@@ -18,7 +18,7 @@ const ALLOWED_ORIGIN = "https://omernyuval.github.io";
 // Data-management actions (archive/restore/permanently delete an entry) are
 // lightweight GitHub-only writes — they never call DataForSEO, so they skip
 // the cooldown/billing path entirely rather than being folded into a "run".
-const ARCHIVE_ACTIONS = ["archive", "archive_bulk", "restore", "delete"];
+const ARCHIVE_ACTIONS = ["archive", "archive_bulk", "restore", "restore_bulk", "delete"];
 
 // All "day" boundaries (what counts as "yesterday", the run's date/time
 // stamp, the Trends request window) are computed in the target market's
@@ -155,13 +155,25 @@ function applyArchiveAction(data, body) {
     return { ...data, entries: remaining, archived_entries: archived };
   }
 
-  if (body.action === "restore") {
-    const idx = archived.findIndex((e) => entryKey(e) === body.entryKey);
-    if (idx === -1) throw new Error("Archived entry not found");
-    const [entry] = archived.splice(idx, 1);
-    delete entry.archived_at;
-    entries.push(entry);
-    return { ...data, entries: dedupeAndSort(entries), archived_entries: archived };
+  if (body.action === "restore" || body.action === "restore_bulk") {
+    const keys = new Set(
+      body.action === "restore_bulk"
+        ? (Array.isArray(body.entryKeys) ? body.entryKeys : [])
+        : [body.entryKey]
+    );
+    const remainingArchived = [];
+    for (const e of archived) {
+      if (keys.has(entryKey(e))) {
+        const { archived_at, ...rest } = e;
+        entries.push(rest);
+      } else {
+        remainingArchived.push(e);
+      }
+    }
+    if (body.action === "restore" && remainingArchived.length === archived.length) {
+      throw new Error("Archived entry not found");
+    }
+    return { ...data, entries: dedupeAndSort(entries), archived_entries: remainingArchived };
   }
 
   if (body.action === "delete") {
