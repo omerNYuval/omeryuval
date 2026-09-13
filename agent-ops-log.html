@@ -76,6 +76,29 @@
     flex-direction:column;
   }
 
+  /* Phone access is blocked for now -- swap the whole dashboard for a
+     plain notice below this width instead of shipping the reflowed
+     mobile layout. */
+  .mobile-block{
+    display:none;
+  }
+  @media (max-width:760px){
+    .frame{display:none;}
+    .mobile-block{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+      height:100vh;
+      padding:32px;
+      text-align:center;
+    }
+    .mobile-block-icon{font-size:2.4rem;}
+    .mobile-block h2{margin:0; font-size:1.1rem;}
+    .mobile-block p{margin:0; color:var(--muted); font-size:0.9rem; line-height:1.6; max-width:320px;}
+  }
+
   /* ---- top bar ---- */
   .topbar{
     display:grid;
@@ -1255,6 +1278,11 @@
 </style>
 </head>
 <body>
+<div class="mobile-block">
+  <span class="mobile-block-icon">💻</span>
+  <h2>הדשבורד לא זמין בטלפון כרגע</h2>
+  <p>הדשבורד מיועד לצפייה במחשב בלבד בשלב הזה. אנא היכנס דרך מחשב.</p>
+</div>
 <div class="frame">
 
   <div class="topbar">
