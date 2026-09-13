@@ -1598,6 +1598,7 @@
     allEntries.forEach(e=>{ regionCounts[e.region] = (regionCounts[e.region]||0) + 1; });
     const topRegion = Object.keys(regionCounts).sort((a,b)=> regionCounts[b]-regionCounts[a])[0];
     document.getElementById("insightTopRegion").textContent = topRegion || "–";
+    document.getElementById("topRegionStatCard").dataset.regionKey = regionKeyFromLabel(topRegion) || "";
 
     const firstDate = allEntries.length ? allEntries.reduce((min,e)=> e.date < min ? e.date : min, allEntries[0].date) : null;
     if(firstDate){
@@ -1737,6 +1738,17 @@
 
   function entryKeyOf(e){
     return `${e.date}|${e.time}|${e.title}|${e.region}`;
+  }
+
+  // A region label on an entry can be city, neighborhood, or state-level
+  // text (e.g. "Meridian-Kessler, Indianapolis, IN" or "מדינת אינדיאנה"),
+  // not just the plain sidebar key — so map it back to the tracked city
+  // this session actually supports before jumping straight to its tab.
+  function regionKeyFromLabel(label){
+    if(!label) return null;
+    if(label.includes("Indianapolis") || label.includes("אינדיאנ")) return "Indianapolis";
+    if(label.includes("Boston") || label.includes("בוסטון")) return "Boston";
+    return null;
   }
 
   async function loadData(forceRefresh){
@@ -2355,7 +2367,9 @@
   document.getElementById("avgGrowthStatCard").addEventListener("click", ()=> goTo("filter", "score"));
   document.getElementById("topGrowthStatCard").addEventListener("click", ()=> goTo("filter", "score"));
   document.getElementById("topRegionStatCard").addEventListener("click", ()=>{
-    regionPickerOverlay.hidden = false;
+    const key = document.getElementById("topRegionStatCard").dataset.regionKey;
+    if(key) goTo("region", key);
+    else regionPickerOverlay.hidden = false;
   });
   document.getElementById("firstDateStatCard").addEventListener("click", ()=> goTo("filter", "all"));
   document.getElementById("daysTrackedStatCard").addEventListener("click", ()=> goTo("filter", "all"));
