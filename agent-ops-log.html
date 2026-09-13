@@ -2351,7 +2351,7 @@
   // revisiting the לוגים tab doesn't re-fetch it every time.
   let totalSpendCache = null;
 
-  function renderTotalSpendLine(state){
+  function renderTotalSpendLine(state, message){
     const el = document.getElementById("logsTotalSpend");
     if(!el) return;
     if(state === "loading"){
@@ -2359,7 +2359,7 @@
       return;
     }
     if(state === "error"){
-      el.innerHTML = `<span>לא הצלחנו לטעון את סך ההוצאה הכוללת כרגע.</span><button type="button" id="logsRefreshSpendBtn" class="log-refresh-btn">נסה שוב</button>`;
+      el.innerHTML = `<span>לא הצלחנו לטעון את סך ההוצאה הכוללת: <bdi dir="ltr">${message || "שגיאה לא ידועה"}</bdi></span><button type="button" id="logsRefreshSpendBtn" class="log-refresh-btn">נסה שוב</button>`;
     }else{
       el.innerHTML = `<span>סך הכול הוצא אי פעם על החשבון (לפי DataForSEO): $${totalSpendCache.toFixed(4)}</span><button type="button" id="logsRefreshSpendBtn" class="log-refresh-btn">רענן</button>`;
     }
@@ -2375,11 +2375,11 @@
         body: JSON.stringify({ action: "total_spend" }),
       });
       const result = await res.json();
-      if(!res.ok || result.error || typeof result.totalSpend !== "number") throw new Error(result.error || "bad response");
+      if(!res.ok || result.error || typeof result.totalSpend !== "number") throw new Error(result.error || `HTTP ${res.status}`);
       totalSpendCache = result.totalSpend;
       renderTotalSpendLine("ok");
     }catch(err){
-      renderTotalSpendLine("error");
+      renderTotalSpendLine("error", err.message);
     }
   }
 
