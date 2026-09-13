@@ -41,10 +41,11 @@
   }
 
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0;height:100%;}
   html{
     scrollbar-width:none;
     -ms-overflow-style:none;
+    overflow:hidden;
   }
   html::-webkit-scrollbar{
     display:none;
@@ -54,17 +55,25 @@
     color:var(--paper);
     font-family:'Heebo', sans-serif;
     font-weight:600;
-    min-height:100vh;
+    height:100%;
+    overflow:hidden;
     background-image:
       linear-gradient(var(--charcoal), var(--charcoal)),
       repeating-linear-gradient(180deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
     transition:background-color .2s ease, color .2s ease;
   }
 
+  /* The page itself never scrolls -- the sidebar and the main column each
+     scroll independently inside their own fixed-height column instead, so
+     dragging/scrolling one never drags the whole page (and the sidebar can
+     always reach its bottom items without a page-level scroll). */
   .frame{
     max-width:1900px;
     margin:0 auto;
-    padding:28px 24px 80px;
+    padding:28px 24px 0;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
   }
 
   /* ---- top bar ---- */
@@ -76,6 +85,7 @@
     padding-bottom:18px;
     margin-bottom:22px;
     gap:14px;
+    flex:none;
   }
   @media (max-width:760px){
     .topbar{grid-template-columns:1fr auto; justify-items:start; align-items:center;}
@@ -200,7 +210,9 @@
   .layout{
     display:flex;
     gap:24px;
-    align-items:flex-start;
+    align-items:stretch;
+    flex:1;
+    min-height:0;
   }
   .sidebar{
     width:210px;
@@ -208,28 +220,47 @@
     display:flex;
     flex-direction:column;
     gap:6px;
-    position:sticky;
-    top:20px;
+    overflow-y:auto;
+    padding-bottom:20px;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+  }
+  .sidebar::-webkit-scrollbar{
+    display:none;
   }
   .main-col{
     flex:1;
     min-width:0;
+    overflow-y:auto;
+    padding-bottom:80px;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
     opacity:1;
     transition:opacity .15s ease-out;
     will-change:opacity;
     transform:translateZ(0);
     backface-visibility:hidden;
   }
+  .main-col::-webkit-scrollbar{
+    display:none;
+  }
   .main-col.is-transitioning{
     opacity:0;
   }
   @media (max-width:760px){
-    .layout{flex-direction:column;}
+    html,body{height:auto;overflow:auto;}
+    .frame{height:auto;}
+    .layout{flex-direction:column;height:auto;}
     .sidebar{
       width:100%;
       flex-direction:row;
       flex-wrap:wrap;
-      position:static;
+      overflow-y:visible;
+      height:auto;
+    }
+    .main-col{
+      overflow-y:visible;
+      height:auto;
     }
   }
 
@@ -1241,7 +1272,7 @@
   <div class="layout">
     <aside class="sidebar">
       <div class="side-label">סוג פעולה</div>
-      <button class="side-link active" data-filter="all">הכול</button>
+      <button class="side-link active" data-filter="all">ראשי</button>
       <button class="side-link" data-filter="run">הרצת הבוט</button>
       <button class="side-link" data-filter="keywords">מילות מפתח</button>
       <button class="side-link" data-filter="scheduled">הרצות מתוזמנות</button>
@@ -2790,7 +2821,7 @@
       done = true;
       mainCol.removeEventListener("transitionend", onEnd);
       applyFn();
-      window.scrollTo({top:0, behavior:"auto"});
+      mainCol.scrollTop = 0;
       requestAnimationFrame(()=>{ mainCol.classList.remove("is-transitioning"); });
     }
     function onEnd(e){
