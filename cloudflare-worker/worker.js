@@ -76,17 +76,6 @@ export default {
       body = {};
     }
 
-    // Read-only and free (no DataForSEO cost, no GitHub involvement at all)
-    // so it's handled before touching GitHub, unlike every other action.
-    if (body.action === "total_spend") {
-      try {
-        const totalSpend = await fetchTotalSpend(env);
-        return json({ totalSpend }, 200);
-      } catch (err) {
-        return json({ error: String(err && err.message ? err.message : err) }, 500);
-      }
-    }
-
     try {
       const current = await getCurrentData(env);
 
@@ -94,6 +83,21 @@ export default {
         const output = applyArchiveAction(current.json, body);
         await commitToGitHub(env, current.sha, output);
         return json(output, 200);
+      }
+
+      // Free and DataForSEO-only for the read (id_list doesn't touch the
+      // balance) -- matches each of DataForSEO's own billed tasks back to
+      // the specific scan entry it belongs to by timestamp, so cost stops
+      // being a single lump sum and shows up per row too.
+      if (body.action === "backfill_costs") {
+        const tasks = await fetchAllTasks(env);
+        const output = backfillEntryCosts(current.json, tasks);
+        const changed = JSON.stringify(output.entries) !== JSON.stringify(current.json.entries || []);
+        if (changed) {
+          await commitToGitHub(env, current.sha, output);
+        }
+        const totalSpend = Math.round(tasks.reduce((sum, t) => sum + t.cost, 0) * 10000) / 10000;
+        return json({ ...(changed ? output : current.json), totalSpend }, 200);
       }
 
       if (current.json.generated_at) {
@@ -161,6 +165,52 @@ function attachRunCost(newEntries, balanceBefore, balanceAfter) {
   if (!scanEntry) return;
   scanEntry.costUsd = Math.round(cost * 10000) / 10000;
   scanEntry.tags = [...scanEntry.tags, `עלות: $${scanEntry.costUsd.toFixed(4)}`];
+}
+
+// Matches DataForSEO's own billed tasks (from id_list) back to the scan
+// entry that caused them, for entries created before attachRunCost existed.
+// Each entry only stores a market-local date+time at minute granularity
+// (not the task's own id), so matching is by proximity: a task counts as
+// belonging to an entry if it was posted on the same market-local date and
+// within a few minutes of the entry's recorded time -- safe here because
+// runs are always well over the 30-minute cooldown apart. A run can involve
+// more than one billed call (location-fallback attempts, the subregion
+// check), so every task within the window is claimed and summed, not just
+// the single closest one.
+const COST_MATCH_WINDOW_MINUTES = 5;
+
+function backfillEntryCosts(data, tasks) {
+  const entries = Array.isArray(data.entries) ? data.entries.map((e) => ({ ...e })) : [];
+  if (!tasks.length) return { ...data, entries };
+
+  const claimed = new Set();
+  for (const entry of entries) {
+    if (entry.type !== "scan" || typeof entry.costUsd === "number") continue;
+    const entryMinutes = timeStringToMinutes(entry.time);
+    const matches = [];
+    tasks.forEach((t, i) => {
+      if (claimed.has(i) || !t.postedAt) return;
+      if (marketDateString(t.postedAt) !== entry.date) return;
+      const diff = Math.abs(timeStringToMinutes(marketTimeString(t.postedAt)) - entryMinutes);
+      if (diff <= COST_MATCH_WINDOW_MINUTES) matches.push({ index: i, diff });
+    });
+    if (!matches.length) continue;
+    let cost = 0;
+    for (const m of matches) {
+      claimed.add(m.index);
+      cost += tasks[m.index].cost;
+    }
+    entry.costUsd = Math.round(cost * 10000) / 10000;
+    if (!entry.tags.some((t) => t.startsWith("עלות:"))) {
+      entry.tags = [...entry.tags, `עלות: $${entry.costUsd.toFixed(4)}`];
+    }
+  }
+  return { ...data, entries };
+}
+
+function timeStringToMinutes(hhmm) {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
 }
 
 function applyArchiveAction(data, body) {
@@ -617,18 +667,21 @@ function marketDateString(date) {
   return `${map.year}-${map.month}-${map.day}`;
 }
 
-function nowInMarket() {
-  const now = new Date();
-  const date = marketDateString(now);
+function marketTimeString(date) {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: MARKET_TIMEZONE,
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-  }).formatToParts(now);
+  }).formatToParts(date);
   const map = Object.fromEntries(parts.map((p) => [p.type, p.value]));
   const hour = map.hour === "24" ? "00" : map.hour;
-  return { date, time: `${hour}:${map.minute}` };
+  return `${hour}:${map.minute}`;
+}
+
+function nowInMarket() {
+  const now = new Date();
+  return { date: marketDateString(now), time: marketTimeString(now) };
 }
 
 function shiftDate(yyyyMmDd, deltaDays) {
@@ -721,7 +774,7 @@ async function fetchBalance(env) {
 // attachRunCost). Defensive about the exact per-item shape: any item
 // without a numeric cost field is just skipped rather than failing the
 // whole request.
-async function fetchTotalSpend(env) {
+async function fetchAllTasks(env) {
   const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
   // id_list only accepts a datetime_from/datetime_to range within the last
   // 6 months (confirmed live: an older datetime_from is rejected as an
@@ -736,7 +789,7 @@ async function fetchTotalSpend(env) {
   const datetimeTo = formatDatetime(now);
   const limit = 1000;
   let offset = 0;
-  let total = 0;
+  const tasks = [];
 
   for (let page = 0; page < 20; page++) {
     const res = await fetch("https://api.dataforseo.com/v3/keywords_data/id_list", {
@@ -756,13 +809,24 @@ async function fetchTotalSpend(env) {
     }
     const items = task.result || [];
     for (const item of items) {
-      if (typeof item.cost === "number") total += item.cost;
+      if (typeof item.cost !== "number") continue;
+      tasks.push({ cost: item.cost, postedAt: parseDataForSeoDatetime(item.datetime_posted) });
     }
     if (items.length < limit) break;
     offset += limit;
   }
 
-  return Math.round(total * 10000) / 10000;
+  return tasks;
+}
+
+// DataForSEO's own datetime format ("2026-09-13 09:00:12 +00:00") isn't
+// directly ISO-8601 (space instead of "T", another space before the
+// offset) -- this turns it into something Date can parse.
+function parseDataForSeoDatetime(str) {
+  if (typeof str !== "string") return null;
+  const iso = str.replace(" ", "T").replace(" ", "");
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? null : d;
 }
 
 function dedupeAndSort(entries) {

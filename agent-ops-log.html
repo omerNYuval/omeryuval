@@ -2366,18 +2366,27 @@
     document.getElementById("logsRefreshSpendBtn").addEventListener("click", loadTotalSpend);
   }
 
+  // "backfill_costs" both sums DataForSEO's own record of every task ever
+  // run (the authoritative total for the banner) AND matches individual
+  // tasks back to the specific scan entry that caused them by timestamp,
+  // so older entries that predate attachRunCost pick up a real per-row
+  // cost too instead of staying "לא זמינה" forever.
   async function loadTotalSpend(){
     renderTotalSpendLine("loading");
     try{
       const res = await fetch(WORKER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "total_spend" }),
+        body: JSON.stringify({ action: "backfill_costs" }),
       });
       const result = await res.json();
       if(!res.ok || result.error || typeof result.totalSpend !== "number") throw new Error(result.error || `HTTP ${res.status}`);
       totalSpendCache = result.totalSpend;
-      renderTotalSpendLine("ok");
+      meta = result;
+      allEntries = result.entries || [];
+      archivedEntries = result.archived_entries || [];
+      updateStatusPill();
+      renderLogsPanel();
     }catch(err){
       renderTotalSpendLine("error", err.message);
     }
