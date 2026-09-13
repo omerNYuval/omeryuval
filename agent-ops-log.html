@@ -454,23 +454,76 @@
   .run-panel-btn:disabled{opacity:0.6;cursor:default;transform:none;}
   .run-panel-btn svg{width:18px;height:18px;}
   .run-panel-btn[hidden]{display:none;}
-  .run-loading{
+  .run-progress-card{
     display:flex;
+    flex-direction:column;
     align-items:center;
-    gap:10px;
-    margin-top:16px;
-    color:var(--muted);
-    font-size:0.88rem;
+    gap:20px;
   }
-  .run-loading[hidden]{display:none;}
-  .run-spinner{
-    width:18px;
-    height:18px;
+  .scan-stage{
+    position:relative;
+    width:150px;
+    height:150px;
     flex-shrink:0;
-    border:2.5px solid color-mix(in srgb, var(--amber) 30%, transparent);
-    border-top-color:var(--amber);
+  }
+  .scan-sweep{
+    position:absolute;
+    inset:0;
     border-radius:50%;
-    animation:spin 0.8s linear infinite;
+    background:conic-gradient(from 0deg, color-mix(in srgb, var(--amber) 55%, transparent), transparent 32%);
+    animation:scan-rotate 2.4s linear infinite;
+  }
+  @keyframes scan-rotate{ to{ transform:rotate(360deg); } }
+  .scan-globe-lines{
+    position:absolute;
+    inset:10px;
+    width:calc(100% - 20px);
+    height:calc(100% - 20px);
+    fill:none;
+    stroke:var(--steel);
+    stroke-width:1.4;
+  }
+  .scan-pin{
+    position:absolute;
+    top:var(--pin-top);
+    left:var(--pin-left);
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--amber);
+    transform:translate(-50%,-50%);
+    animation:scan-pin-pulse 2s ease-in-out infinite;
+    animation-delay:var(--delay);
+  }
+  @keyframes scan-pin-pulse{
+    0%,100%{ opacity:0.25; box-shadow:0 0 0 0 color-mix(in srgb, var(--amber) 0%, transparent); }
+    50%{ opacity:1; box-shadow:0 0 0 6px color-mix(in srgb, var(--amber) 25%, transparent); }
+  }
+  .scan-bot-orbit{
+    position:absolute;
+    inset:0;
+    animation:scan-orbit 3.2s linear infinite;
+  }
+  @keyframes scan-orbit{ to{ transform:rotate(360deg); } }
+  .scan-bot-position{
+    position:absolute;
+    top:-6px;
+    left:50%;
+    transform:translateX(-50%);
+  }
+  .scan-bot{
+    display:inline-block;
+    font-size:1.35rem;
+    animation:scan-bot-counter 3.2s linear infinite;
+  }
+  @keyframes scan-bot-counter{ to{ transform:rotate(-360deg); } }
+  .run-progress-text{
+    color:var(--muted);
+    font-size:0.92rem;
+    line-height:1.6;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .scan-sweep, .scan-pin, .scan-bot-orbit, .scan-bot{ animation:none; }
   }
   .run-result{
     margin-top:16px;
@@ -514,6 +567,7 @@
   }
   .run-result.success .run-result-link{background:var(--moss);}
   .run-result.skipped .run-result-link{background:var(--wire);}
+  .run-progress-card .run-result{margin-top:0; width:100%;}
 
   .modal-overlay{
     position:fixed;
@@ -1226,11 +1280,6 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
             הרץ סריקה עכשיו
           </button>
-          <div class="run-loading" id="runLoading" hidden>
-            <span class="run-spinner"></span>
-            <span>מריץ סריקה חיה מול DataForSEO… (עד כ-20 שניות)</span>
-          </div>
-          <div class="run-result" id="runResult" hidden></div>
         </div>
 
         <div class="run-recommendations">
@@ -1418,6 +1467,29 @@
   </div>
 </div>
 
+<div class="modal-overlay run-progress-overlay" id="runProgressOverlay" hidden>
+  <div class="modal-card run-progress-card">
+    <div class="scan-stage" id="scanStage">
+      <div class="scan-sweep"></div>
+      <svg class="scan-globe-lines" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42"></circle>
+        <ellipse cx="50" cy="50" rx="42" ry="16"></ellipse>
+        <ellipse cx="50" cy="50" rx="16" ry="42"></ellipse>
+        <line x1="8" y1="50" x2="92" y2="50"></line>
+      </svg>
+      <span class="scan-pin" style="--pin-top:22%; --pin-left:30%; --delay:0s;"></span>
+      <span class="scan-pin" style="--pin-top:66%; --pin-left:24%; --delay:.5s;"></span>
+      <span class="scan-pin" style="--pin-top:32%; --pin-left:72%; --delay:1s;"></span>
+      <span class="scan-pin" style="--pin-top:72%; --pin-left:68%; --delay:1.5s;"></span>
+      <div class="scan-bot-orbit">
+        <div class="scan-bot-position"><span class="scan-bot">🤖</span></div>
+      </div>
+    </div>
+    <div class="run-progress-text" id="runProgressText">מריץ סריקה חיה מול DataForSEO… (עד כ-20 שניות)</div>
+    <div class="run-result" id="runProgressResult" hidden></div>
+  </div>
+</div>
+
 <script>
   const DATA_URL = "data/trends.json";
   const WORKER_URL = "https://garage-signal-agent.omeryuval21.workers.dev";
@@ -1433,8 +1505,10 @@
   const statusText = document.getElementById("statusText");
   const balanceValue = document.getElementById("balanceValue");
   const runPanelBtn = document.getElementById("runPanelBtn");
-  const runLoading = document.getElementById("runLoading");
-  const runResult = document.getElementById("runResult");
+  const runProgressOverlay = document.getElementById("runProgressOverlay");
+  const scanStage = document.getElementById("scanStage");
+  const runProgressText = document.getElementById("runProgressText");
+  const runProgressResult = document.getElementById("runProgressResult");
   const timingModalOverlay = document.getElementById("timingModalOverlay");
   const timingModalText = document.getElementById("timingModalText");
   const THEME_KEY = "agent-ops-theme";
@@ -2284,8 +2358,7 @@
     refreshBtn.disabled = true;
     refreshBtn.classList.add("spinning");
     runPanelBtn.hidden = true;
-    runResult.hidden = true;
-    runLoading.hidden = false;
+    openRunProgress();
     statusPill.classList.remove("stale");
     statusText.textContent = "מריץ סריקה חיה… (עד כ-20 שניות)";
     try{
@@ -2321,24 +2394,44 @@
     }finally{
       refreshBtn.disabled = false;
       refreshBtn.classList.remove("spinning");
-      runLoading.hidden = true;
       runPanelBtn.hidden = false;
     }
   }
 
+  // The scanning animation and its result live in a one-shot overlay, not
+  // in the run panel itself — so once it's dismissed (link click or
+  // clicking outside it) it's gone for good, and simply returning to the
+  // "הרצת הבוט" room later never resurrects a stale result banner.
+  function openRunProgress(){
+    scanStage.hidden = false;
+    runProgressText.hidden = false;
+    runProgressText.textContent = "מריץ סריקה חיה מול DataForSEO… (עד כ-20 שניות)";
+    runProgressResult.hidden = true;
+    runProgressOverlay.hidden = false;
+  }
+
   function showRunResult(kind, message){
-    runResult.className = `run-result ${kind}`;
-    runResult.innerHTML = `<span>${message}</span>`;
+    scanStage.hidden = true;
+    runProgressText.hidden = true;
+    runProgressResult.className = `run-result ${kind}`;
+    runProgressResult.innerHTML = `<span>${message}</span>`;
     if(kind !== "error"){
       const link = document.createElement("button");
       link.className = "run-result-link";
       link.type = "button";
       link.textContent = "מעבר לסריקת נתונים ‹";
-      link.addEventListener("click", ()=> goTo("filter", "scan"));
-      runResult.appendChild(link);
+      link.addEventListener("click", ()=>{
+        runProgressOverlay.hidden = true;
+        goTo("filter", "scan");
+      });
+      runProgressResult.appendChild(link);
     }
-    runResult.hidden = false;
+    runProgressResult.hidden = false;
   }
+
+  runProgressOverlay.addEventListener("click", (e)=>{
+    if(e.target === runProgressOverlay) runProgressOverlay.hidden = true;
+  });
 
   refreshBtn.addEventListener("click", ()=>{
     goTo("filter", "run");
