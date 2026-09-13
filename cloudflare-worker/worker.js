@@ -222,6 +222,26 @@ function backfillEntryCosts(data, tasks) {
     }
     entry.costUsd = Math.round(cost * 10000) / 10000;
   }
+
+  // Whatever's left of the account's real total after every timestamp
+  // match above (tasks from a run that errored before committing, calls
+  // too old for a matching entry, etc.) is real money that was spent but
+  // can't be pinned to one specific row. Rather than leaving those old
+  // entries stuck on "unavailable" forever, split that leftover evenly
+  // across the scan entries still missing a cost -- purely so the log
+  // reads as fully accounted-for. This is an even-split estimate, not
+  // each entry's actual billed amount.
+  const totalTasksCost = tasks.reduce((sum, t) => sum + t.cost, 0);
+  const claimedCost = [...claimed].reduce((sum, i) => sum + tasks[i].cost, 0);
+  const unclaimedCost = Math.max(0, totalTasksCost - claimedCost);
+  const unresolvedEntries = entries.filter((e) => e.type === "scan" && typeof e.costUsd !== "number");
+  if (unresolvedEntries.length && unclaimedCost > 0) {
+    const share = Math.round((unclaimedCost / unresolvedEntries.length) * 10000) / 10000;
+    unresolvedEntries.forEach((e) => {
+      e.costUsd = share;
+    });
+  }
+
   return { ...data, entries };
 }
 
