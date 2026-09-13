@@ -1131,10 +1131,10 @@
             <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></span>
             <div class="insight-content"><span class="value" id="insightSignals">0</span><span class="label">איתותי עלייה</span></div>
           </button>
-          <div class="insight-stat tone-wire">
+          <button type="button" class="insight-stat tone-wire insight-stat-link" id="regionsStatCard">
             <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
             <div class="insight-content"><span class="value" id="insightRegions">0</span><span class="label">אזורים במעקב</span></div>
-          </div>
+          </button>
           <div class="insight-stat">
             <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></span>
             <div class="insight-content"><span class="value" id="insightDiscoveries">0</span><span class="label">גילויי מילות מפתח</span></div>
@@ -1198,6 +1198,34 @@
           <span>אשר תזמון</span>
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="regionPickerOverlay" hidden>
+  <div class="modal-card">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+    </div>
+    <div class="modal-title">איזה אזור תרצה לראות?</div>
+    <div class="run-choice-grid">
+      <button class="run-choice" id="regionPickIndianapolis" style="--choice-color:#4f8fd1" type="button">
+        <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+        <span>אינדיאנפוליס</span>
+      </button>
+      <button class="run-choice has-soon" disabled style="--choice-color:#2fa855" type="button">
+        <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+        <span>בוסטון</span>
+        <span class="soon-badge">Soon</span>
+      </button>
+      <button class="run-choice has-soon" disabled style="--choice-color:#20c4b0" type="button">
+        <span class="run-choice-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+        <span>מיאמי</span>
+        <span class="soon-badge">Soon</span>
+      </button>
+    </div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="modal-btn modal-btn-secondary" id="regionPickerCancel" type="button">ביטול</button>
     </div>
   </div>
 </div>
@@ -1840,6 +1868,21 @@
   runPanelBtn.addEventListener("click", handleRunClick);
   document.getElementById("scansStatCard").addEventListener("click", ()=> goTo("filter", "scan"));
   document.getElementById("signalsStatCard").addEventListener("click", ()=> goTo("filter", "score"));
+
+  const regionPickerOverlay = document.getElementById("regionPickerOverlay");
+  document.getElementById("regionsStatCard").addEventListener("click", ()=>{
+    regionPickerOverlay.hidden = false;
+  });
+  regionPickerOverlay.addEventListener("click", (e)=>{
+    if(e.target === regionPickerOverlay) regionPickerOverlay.hidden = true;
+  });
+  document.getElementById("regionPickerCancel").addEventListener("click", ()=>{
+    regionPickerOverlay.hidden = true;
+  });
+  document.getElementById("regionPickIndianapolis").addEventListener("click", ()=>{
+    regionPickerOverlay.hidden = true;
+    goTo("region", "Indianapolis");
+  });
 
   (function initRunWizard(){
     const NEIGHBORHOODS = {
