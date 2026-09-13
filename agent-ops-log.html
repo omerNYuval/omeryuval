@@ -673,6 +673,71 @@
     flex-shrink:0;
   }
   .scheduled-cancel:hover{border-color:var(--amber); color:var(--amber);}
+
+  .keyword-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:10px;
+    transition:opacity .15s ease;
+  }
+  .keyword-item.is-off{opacity:0.55;}
+  .keyword-name{
+    font-size:0.92rem;
+    font-weight:600;
+    color:var(--paper);
+    direction:ltr;
+    text-align:start;
+  }
+  .keyword-toggle{
+    direction:ltr;
+    position:relative;
+    width:46px;
+    height:26px;
+    flex-shrink:0;
+  }
+  .keyword-toggle input{
+    opacity:0;
+    width:100%;
+    height:100%;
+    margin:0;
+    position:absolute;
+    inset:0;
+    cursor:pointer;
+    z-index:1;
+  }
+  .keyword-toggle-slider{
+    position:absolute;
+    inset:0;
+    background:var(--steel);
+    border-radius:999px;
+    transition:background-color .2s ease;
+  }
+  .keyword-toggle-slider::before{
+    content:"";
+    position:absolute;
+    width:20px;
+    height:20px;
+    left:3px;
+    top:3px;
+    background:var(--paper);
+    border-radius:50%;
+    transition:transform .2s ease;
+    box-shadow:0 1px 3px rgba(0,0,0,0.3);
+  }
+  .keyword-toggle input:checked + .keyword-toggle-slider{background:var(--moss);}
+  .keyword-toggle input:checked + .keyword-toggle-slider::before{transform:translateX(20px);}
+  .keywords-footer{
+    margin-top:6px;
+    font-size:0.82rem;
+    color:var(--muted);
+  }
+  .keywords-footer.warn{color:var(--amber); font-weight:700;}
   .insights-header{
     display:flex;
     align-items:center;
@@ -973,6 +1038,7 @@
       <div class="side-label">סוג פעולה</div>
       <button class="side-link active" data-filter="all">הכול</button>
       <button class="side-link" data-filter="run">הרצת הבוט</button>
+      <button class="side-link" data-filter="keywords">מילות מפתח</button>
       <button class="side-link" data-filter="scheduled">הרצות מתוזמנות</button>
       <button class="side-link" data-filter="scan">סריקת נתונים</button>
       <button class="side-link" data-filter="score">מונח בעלייה</button>
@@ -1115,6 +1181,19 @@
         <div id="scheduledList"></div>
       </div>
 
+      <div class="insights-panel" id="keywordsPanel" hidden>
+        <div class="insights-header">
+          <span class="insights-icon" style="color:var(--amber);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+          </span>
+          <div>
+            <h2>מילות מפתח</h2>
+            <div class="insights-sub">בחר אילו מילות מפתח ייכללו בהרצה הבאה</div>
+          </div>
+        </div>
+        <div id="keywordsList"></div>
+      </div>
+
       <div class="insights-panel" id="insightsPanel" hidden>
         <div class="insights-header">
           <span class="insights-icon">🧠</span>
@@ -1255,6 +1334,27 @@
   const RECOMMENDED_HOUR_START = 18;
   const RECOMMENDED_HOUR_END = 20;
   const runSelection = { frequency: "monthly", city: "Indianapolis", scope: "city", neighborhood: "" };
+
+  const ALL_KEYWORDS = [
+    "garage door repair",
+    "garage door spring repair",
+    "garage door opener repair",
+    "garage door won't open",
+    "garage door off track",
+  ];
+  const KEYWORDS_KEY = "agent-ops-enabled-keywords";
+
+  function loadEnabledKeywords(){
+    try{
+      const saved = JSON.parse(localStorage.getItem(KEYWORDS_KEY));
+      if(Array.isArray(saved)) return ALL_KEYWORDS.filter(k=>saved.includes(k));
+    }catch(e){}
+    return [...ALL_KEYWORDS];
+  }
+  function saveEnabledKeywords(list){
+    try{ localStorage.setItem(KEYWORDS_KEY, JSON.stringify(list)); }catch(e){}
+  }
+  let enabledKeywords = loadEnabledKeywords();
 
   let allEntries = [];
   let meta = {};
@@ -1430,9 +1530,14 @@
     scheduledPanel.hidden = !showingScheduled;
     if(showingScheduled) renderScheduledPanel();
 
+    const keywordsPanel = document.getElementById("keywordsPanel");
+    const showingKeywords = activeAxis === "filter" && activeFilter === "keywords";
+    keywordsPanel.hidden = !showingKeywords;
+    if(showingKeywords) renderKeywordsPanel();
+
     const showingAll = activeAxis === "filter" && activeFilter === "all";
-    feed.hidden = showingAll || showingRun || showingScheduled;
-    if(showingAll || showingRun || showingScheduled){
+    feed.hidden = showingAll || showingRun || showingScheduled || showingKeywords;
+    if(showingAll || showingRun || showingScheduled || showingKeywords){
       feed.innerHTML = "";
       return;
     }
@@ -1574,6 +1679,11 @@
   }
 
   function handleRunClick(){
+    if(enabledKeywords.length === 0){
+      statusText.textContent = "בחר לפחות מילת מפתח אחת לפני ההרצה";
+      goTo("filter", "keywords");
+      return;
+    }
     if(runSelection.frequency === "daily"){
       const indy = currentTimeInZone(MARKET_TIMEZONE);
       const inWindow = indy.hour >= RECOMMENDED_HOUR_START && indy.hour < RECOMMENDED_HOUR_END;
@@ -1714,6 +1824,7 @@
       city: runSelection.city,
       scope: runSelection.scope,
       neighborhood: runSelection.neighborhood,
+      keywords: [...enabledKeywords],
       scheduledFor: nextRecommendedTime().toISOString(),
     };
     const list = loadScheduledRuns();
@@ -1730,6 +1841,7 @@
       city: runSelection.city,
       scope: runSelection.scope,
       neighborhood: runSelection.neighborhood,
+      keywords: [...enabledKeywords],
       scheduledFor: zonedTimeToUtc(dateStr, RECOMMENDED_HOUR_START, 0, MARKET_TIMEZONE).toISOString(),
     };
     const list = loadScheduledRuns();
@@ -1762,7 +1874,8 @@
     runSelection.city = entry.city;
     runSelection.scope = entry.scope;
     runSelection.neighborhood = entry.neighborhood;
-    await runAgentNow();
+    const keywordsSnapshot = Array.isArray(entry.keywords) && entry.keywords.length ? entry.keywords : enabledKeywords;
+    await runAgentNow(keywordsSnapshot);
   }
 
   function removeScheduledRun(id){
@@ -1803,11 +1916,53 @@
     });
   }
 
+  function renderKeywordsPanel(){
+    const container = document.getElementById("keywordsList");
+    container.innerHTML = ALL_KEYWORDS.map(kw=>{
+      const checked = enabledKeywords.includes(kw);
+      return `
+        <div class="keyword-item${checked ? "" : " is-off"}">
+          <span class="keyword-name" dir="ltr">${kw}</span>
+          <label class="keyword-toggle">
+            <input type="checkbox" data-keyword="${kw}" ${checked ? "checked" : ""}>
+            <span class="keyword-toggle-slider"></span>
+          </label>
+        </div>
+      `;
+    }).join("") + `<div class="keywords-footer${enabledKeywords.length ? "" : " warn"}" id="keywordsFooter"></div>`;
+    updateKeywordsFooter();
+    container.querySelectorAll("input[data-keyword]").forEach(input=>{
+      input.addEventListener("change", ()=>{
+        const kw = input.dataset.keyword;
+        if(input.checked){
+          if(!enabledKeywords.includes(kw)) enabledKeywords.push(kw);
+        }else{
+          enabledKeywords = enabledKeywords.filter(k=>k!==kw);
+        }
+        saveEnabledKeywords(enabledKeywords);
+        input.closest(".keyword-item").classList.toggle("is-off", !input.checked);
+        updateKeywordsFooter();
+      });
+    });
+  }
+
+  function updateKeywordsFooter(){
+    const footer = document.getElementById("keywordsFooter");
+    if(!footer) return;
+    if(enabledKeywords.length === 0){
+      footer.className = "keywords-footer warn";
+      footer.textContent = "צריך לבחור לפחות מילת מפתח אחת כדי להריץ את הבוט.";
+    }else{
+      footer.className = "keywords-footer";
+      footer.textContent = `${enabledKeywords.length} מתוך ${ALL_KEYWORDS.length} מילות מפתח ייכללו בהרצה הבאה.`;
+    }
+  }
+
   // Re-arm any schedule that survived a page reload/close; if its time
   // already passed while the tab was closed, this fires it immediately.
   loadScheduledRuns().forEach(armScheduledTimer);
 
-  async function runAgentNow(){
+  async function runAgentNow(keywordsOverride){
     refreshBtn.disabled = true;
     refreshBtn.classList.add("spinning");
     runPanelBtn.hidden = true;
@@ -1819,7 +1974,7 @@
       const res = await fetch(WORKER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(runSelection),
+        body: JSON.stringify({ ...runSelection, keywords: keywordsOverride || enabledKeywords }),
       });
       if(!res.ok) throw new Error("worker request failed");
       const result = await res.json();

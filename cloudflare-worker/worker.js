@@ -117,14 +117,19 @@ async function parseSelection(request) {
   const city = body.city === "Boston" ? "Boston" : "Indianapolis";
   const scope = body.scope === "neighborhood" ? "neighborhood" : "city";
   const neighborhood = scope === "neighborhood" && typeof body.neighborhood === "string" ? body.neighborhood.trim() : "";
-  return { frequency, city, scope: neighborhood ? scope : "city", neighborhood };
+  // Only accept keywords from the known catalog (never arbitrary client input,
+  // since that goes straight into a billed DataForSEO request) and fall back
+  // to the full catalog if nothing valid was selected.
+  const requestedKeywords = Array.isArray(body.keywords) ? body.keywords.filter((k) => KEYWORDS.includes(k)) : [];
+  const keywords = requestedKeywords.length ? requestedKeywords : KEYWORDS;
+  return { frequency, city, scope: neighborhood ? scope : "city", neighborhood, keywords };
 }
 
 // ---- monthly run: real absolute search volume, city/neighborhood-accurate ----
 
 async function runMonthly(env, selection) {
   const { locationName, label } = monthlyLocation(selection);
-  const results = await fetchSearchVolume(env, locationName);
+  const results = await fetchSearchVolume(env, locationName, selection.keywords);
   const { date, time } = nowInMarket();
 
   const newEntries = [];
@@ -158,7 +163,7 @@ async function runMonthly(env, selection) {
     time,
     type: "scan",
     title: "סריקת ביקוש הושלמה",
-    detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור ${bdi(label)} (הרצה חודשית). נמצאו ${signalsFound} מונחים בעלייה.${buildBreakdownHtml(breakdown)}`,
+    detail: `נבדקו ${selection.keywords.length} מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור ${bdi(label)} (הרצה חודשית). נמצאו ${signalsFound} מונחים בעלייה.${buildBreakdownHtml(breakdown)}`,
     region: label,
     tags: ["נתונים אמיתיים", "חודשי"],
   });
@@ -191,7 +196,7 @@ function monthlyLocation(selection) {
   };
 }
 
-async function fetchSearchVolume(env, locationName) {
+async function fetchSearchVolume(env, locationName, keywords) {
   const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
   const res = await fetch("https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live", {
     method: "POST",
@@ -199,7 +204,7 @@ async function fetchSearchVolume(env, locationName) {
       Authorization: `Basic ${auth}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify([{ keywords: KEYWORDS, location_name: locationName, language_name: LANGUAGE_NAME }]),
+    body: JSON.stringify([{ keywords, location_name: locationName, language_name: LANGUAGE_NAME }]),
   });
   if (!res.ok) throw new Error(`DataForSEO HTTP error: ${res.status}`);
   const data = await res.json();
@@ -238,7 +243,7 @@ async function runTrends(env, selection) {
   const { dateFrom, dateTo } = trendsDateRange(lookbackDays);
 
   const candidates = trendsLocationCandidates(selection);
-  const resolved = await fetchTrendsWithFallback(env, candidates, dateFrom, dateTo);
+  const resolved = await fetchTrendsWithFallback(env, candidates, dateFrom, dateTo, selection.keywords);
   const { dataPoints, isCityLevel, locationName } = resolved;
   let { label, precisionNote } = resolved;
 
@@ -248,7 +253,7 @@ async function runTrends(env, selection) {
   // Indianapolis-driven before we'd otherwise have to label it generic.
   let verifiedTag = null;
   if (!isCityLevel && selection.city === "Indianapolis") {
-    const dominant = await fetchDominantSubregion(env, locationName, dateFrom, dateTo);
+    const dominant = await fetchDominantSubregion(env, locationName, dateFrom, dateTo, selection.keywords);
     if (dominant && dominant.toLowerCase().includes("indianapolis")) {
       label = CITY_LABEL.Indianapolis;
       precisionNote = `${precisionNote} — זוהה כמגיע בעיקר מאזור אינדיאנפוליס`;
@@ -267,7 +272,7 @@ async function runTrends(env, selection) {
   if (isDaily) {
     const curr = dataPoints[dataPoints.length - 1];
     const prev = dataPoints[dataPoints.length - 2];
-    KEYWORDS.forEach((keyword, i) => {
+    selection.keywords.forEach((keyword, i) => {
       const pct = pctChange(valueAt(prev, i), valueAt(curr, i));
       breakdown.push({
         keyword,
@@ -296,14 +301,14 @@ async function runTrends(env, selection) {
       time,
       type: "scan",
       title: "סריקת מגמה יומית הושלמה",
-      detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, ${bdi(precisionNote)}. נמצאו ${signalsFound} מונחים בעלייה.${buildBreakdownHtml(breakdown)}`,
+      detail: `נבדקו ${selection.keywords.length} מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, ${bdi(precisionNote)}. נמצאו ${signalsFound} מונחים בעלייה.${buildBreakdownHtml(breakdown)}`,
       region: label,
       tags: scanTags,
     });
   } else {
     const thisWeek = dataPoints.slice(-7);
     const prevWeek = dataPoints.slice(-14, -7);
-    KEYWORDS.forEach((keyword, i) => {
+    selection.keywords.forEach((keyword, i) => {
       const currAvg = avgValue(thisWeek, i);
       const prevAvg = avgValue(prevWeek, i);
       const pct = pctChange(prevAvg, currAvg);
@@ -334,7 +339,7 @@ async function runTrends(env, selection) {
       time,
       type: "scan",
       title: "סריקת מגמה שבועית הושלמה",
-      detail: `נבדקו ${KEYWORDS.length} מונחי מפתח מול מגמת החיפוש של השבוע האחרון, ${bdi(precisionNote)}. נמצאו ${signalsFound} מונחים בעלייה.${buildBreakdownHtml(breakdown)}`,
+      detail: `נבדקו ${selection.keywords.length} מונחי מפתח מול מגמת החיפוש של השבוע האחרון, ${bdi(precisionNote)}. נמצאו ${signalsFound} מונחים בעלייה.${buildBreakdownHtml(breakdown)}`,
       region: label,
       tags: scanTags,
     });
@@ -373,11 +378,11 @@ function trendsLocationCandidates(selection) {
   return candidates;
 }
 
-async function fetchTrendsWithFallback(env, candidates, dateFrom, dateTo) {
+async function fetchTrendsWithFallback(env, candidates, dateFrom, dateTo, keywords) {
   let lastError = null;
   for (const candidate of candidates) {
     try {
-      const dataPoints = await fetchTrends(env, candidate.locationName, dateFrom, dateTo);
+      const dataPoints = await fetchTrends(env, candidate.locationName, dateFrom, dateTo, keywords);
       if (dataPoints && dataPoints.length >= 2) {
         return {
           dataPoints,
@@ -400,7 +405,7 @@ async function fetchTrendsWithFallback(env, candidates, dateFrom, dateTo) {
 // endpoint which subregion of that broader area is actually driving the
 // interest — so we can honestly upgrade the entry to "Indianapolis" only
 // when the data itself points there, instead of always guessing broad.
-async function fetchDominantSubregion(env, locationName, dateFrom, dateTo) {
+async function fetchDominantSubregion(env, locationName, dateFrom, dateTo, keywords) {
   try {
     const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
     const res = await fetch("https://api.dataforseo.com/v3/keywords_data/google_trends/subregion_interests/live", {
@@ -410,7 +415,7 @@ async function fetchDominantSubregion(env, locationName, dateFrom, dateTo) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify([{
-        keywords: KEYWORDS,
+        keywords,
         location_name: locationName,
         date_from: dateFrom,
         date_to: dateTo,
@@ -448,7 +453,7 @@ function subregionName(entry) {
   return null;
 }
 
-async function fetchTrends(env, locationName, dateFrom, dateTo) {
+async function fetchTrends(env, locationName, dateFrom, dateTo, keywords) {
   const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
   const res = await fetch("https://api.dataforseo.com/v3/keywords_data/google_trends/explore/live", {
     method: "POST",
@@ -457,7 +462,7 @@ async function fetchTrends(env, locationName, dateFrom, dateTo) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify([{
-      keywords: KEYWORDS,
+      keywords,
       location_name: locationName,
       language_code: "en",
       date_from: dateFrom,
