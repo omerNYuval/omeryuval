@@ -38,33 +38,6 @@
     },
     {
       "date": "2026-09-10",
-      "time": "15:09",
-      "type": "score",
-      "title": "גילוי: המונח הכי מבוקש הוא <bdi dir=\"ltr\">\"garage door repair\"</bdi>",
-      "detail": "מתוך 30 ביטויים אמיתיים שנבדקו סביב <bdi dir=\"ltr\">\"garage door\"</bdi> באזור <bdi dir=\"ltr\">Indianapolis, IN</bdi>, <bdi dir=\"ltr\">\"garage door repair\"</bdi> מוביל עם כ-<bdi dir=\"ltr\">246,000</bdi> חיפושים בחודש.",
-      "region": "Indianapolis, IN",
-      "tags": [
-        "246000 חיפושים לחודש",
-        "גילוי מילות מפתח",
-        "garage doors – 201000",
-        "garage door opener repair – 201000",
-        "garage door opener – 135000"
-      ]
-    },
-    {
-      "date": "2026-09-10",
-      "time": "14:44",
-      "type": "score",
-      "title": "עלייה בביקוש: <bdi dir=\"ltr\">garage door repair</bdi>",
-      "detail": "נפח החיפוש למונח <bdi dir=\"ltr\">\"garage door repair\"</bdi> עלה ב-<bdi dir=\"ltr\">39%</bdi> לעומת החודש הקודם באזור <bdi dir=\"ltr\">Indianapolis, IN</bdi> (נפח נוכחי: כ-<bdi dir=\"ltr\">880</bdi> חיפושים בחודש).",
-      "region": "Indianapolis, IN",
-      "tags": [
-        "+39%",
-        "880 חיפושים לחודש"
-      ]
-    },
-    {
-      "date": "2026-09-10",
       "time": "13:44",
       "type": "score",
       "title": "עלייה בביקוש: <bdi dir=\"ltr\">garage door spring repair</bdi>",
@@ -89,6 +62,35 @@
     }
   ],
   "archived_entries": [
+    {
+      "date": "2026-09-10",
+      "time": "14:44",
+      "type": "score",
+      "title": "עלייה בביקוש: <bdi dir=\"ltr\">garage door repair</bdi>",
+      "detail": "נפח החיפוש למונח <bdi dir=\"ltr\">\"garage door repair\"</bdi> עלה ב-<bdi dir=\"ltr\">39%</bdi> לעומת החודש הקודם באזור <bdi dir=\"ltr\">Indianapolis, IN</bdi> (נפח נוכחי: כ-<bdi dir=\"ltr\">880</bdi> חיפושים בחודש).",
+      "region": "Indianapolis, IN",
+      "tags": [
+        "+39%",
+        "880 חיפושים לחודש"
+      ],
+      "archived_at": "2026-09-13T16:39:20.083Z"
+    },
+    {
+      "date": "2026-09-10",
+      "time": "15:09",
+      "type": "score",
+      "title": "גילוי: המונח הכי מבוקש הוא <bdi dir=\"ltr\">\"garage door repair\"</bdi>",
+      "detail": "מתוך 30 ביטויים אמיתיים שנבדקו סביב <bdi dir=\"ltr\">\"garage door\"</bdi> באזור <bdi dir=\"ltr\">Indianapolis, IN</bdi>, <bdi dir=\"ltr\">\"garage door repair\"</bdi> מוביל עם כ-<bdi dir=\"ltr\">246,000</bdi> חיפושים בחודש.",
+      "region": "Indianapolis, IN",
+      "tags": [
+        "246000 חיפושים לחודש",
+        "גילוי מילות מפתח",
+        "garage doors – 201000",
+        "garage door opener repair – 201000",
+        "garage door opener – 135000"
+      ],
+      "archived_at": "2026-09-13T16:39:20.083Z"
+    },
     {
       "date": "2026-09-10",
       "time": "13:44",
