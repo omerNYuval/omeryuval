@@ -136,7 +136,8 @@
       "region": "Meridian-Kessler, Indianapolis, IN",
       "tags": [
         "10 חיפושים לחודש"
-      ]
+      ],
+      "costUsd": 0.135
     },
     {
       "date": "2026-09-10",
@@ -145,7 +146,8 @@
       "title": "סריקת ביקוש הושלמה",
       "detail": "נבדקו 5 מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור <bdi dir=\"ltr\">Boston, MA</bdi>. נמצאו 2 מונחים בעלייה.",
       "region": "Boston, MA",
-      "tags": []
+      "tags": [],
+      "costUsd": 0.135
     },
     {
       "date": "2026-09-10",
