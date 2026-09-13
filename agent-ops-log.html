@@ -2311,8 +2311,22 @@
   // Cost is only known for scans run after the Worker started tagging it
   // (via balance-before/balance-after), so older entries show "לא זמינה"
   // rather than a misleading $0.
+  // Logs are a record of what actually happened, not a view of what's
+  // currently in the feed -- archiving (or restoring) an entry elsewhere
+  // must never make it vanish from or reappear here. So this reads both
+  // live and archived entries, deduped by key in case the same run is
+  // somehow present in both lists at once.
   function renderLogsPanel(){
-    const scans = allEntries.filter(e=> e.type === "scan").slice().sort((a,b)=> (a.date+a.time < b.date+b.time ? 1 : -1));
+    const seen = new Set();
+    const scans = [...allEntries, ...archivedEntries]
+      .filter(e=>{
+        if(e.type !== "scan") return false;
+        const key = entryKeyOf(e);
+        if(seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a,b)=> (a.date+a.time < b.date+b.time ? 1 : -1));
     const summary = document.getElementById("logsSummary");
     const withCost = scans.filter(e=> typeof e.costUsd === "number");
     const totalCost = withCost.reduce((sum,e)=> sum + e.costUsd, 0);
