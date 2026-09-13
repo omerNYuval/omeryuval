@@ -153,18 +153,6 @@
       "date": "2026-09-10",
       "time": "13:44",
       "type": "score",
-      "title": "עלייה בביקוש: <bdi dir=\"ltr\">garage door opener repair</bdi>",
-      "detail": "נפח החיפוש למונח <bdi dir=\"ltr\">\"garage door opener repair\"</bdi> עלה ב-<bdi dir=\"ltr\">24%</bdi> לעומת החודש הקודם באזור <bdi dir=\"ltr\">Boston, MA</bdi> (נפח נוכחי: כ-<bdi dir=\"ltr\">210</bdi> חיפושים בחודש).",
-      "region": "Boston, MA",
-      "tags": [
-        "+24%",
-        "210 חיפושים לחודש"
-      ]
-    },
-    {
-      "date": "2026-09-10",
-      "time": "13:44",
-      "type": "score",
       "title": "עלייה בביקוש: <bdi dir=\"ltr\">garage door spring repair</bdi>",
       "detail": "נפח החיפוש למונח <bdi dir=\"ltr\">\"garage door spring repair\"</bdi> עלה ב-<bdi dir=\"ltr\">100%</bdi> לעומת החודש הקודם באזור <bdi dir=\"ltr\">Boston, MA</bdi> (נפח נוכחי: כ-<bdi dir=\"ltr\">20</bdi> חיפושים בחודש).",
       "region": "Boston, MA",
@@ -174,5 +162,19 @@
       ]
     }
   ],
-  "archived_entries": []
+  "archived_entries": [
+    {
+      "date": "2026-09-10",
+      "time": "13:44",
+      "type": "score",
+      "title": "עלייה בביקוש: <bdi dir=\"ltr\">garage door opener repair</bdi>",
+      "detail": "נפח החיפוש למונח <bdi dir=\"ltr\">\"garage door opener repair\"</bdi> עלה ב-<bdi dir=\"ltr\">24%</bdi> לעומת החודש הקודם באזור <bdi dir=\"ltr\">Boston, MA</bdi> (נפח נוכחי: כ-<bdi dir=\"ltr\">210</bdi> חיפושים בחודש).",
+      "region": "Boston, MA",
+      "tags": [
+        "+24%",
+        "210 חיפושים לחודש"
+      ],
+      "archived_at": "2026-09-13T19:29:15.857Z"
+    }
+  ]
 }
