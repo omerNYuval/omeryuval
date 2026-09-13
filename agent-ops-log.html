@@ -1166,6 +1166,7 @@
   .log-item-top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
   .log-item-title{font-size:0.92rem; font-weight:700;}
   .log-item-meta{font-size:0.78rem; color:var(--muted); margin-top:4px;}
+  .log-deleted-note{color:var(--danger); font-weight:700;}
   .log-item .meta{margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;}
   .log-cost-badge{
     font-size:0.8rem;
@@ -1615,6 +1616,7 @@
 
   let allEntries = [];
   let archivedEntries = [];
+  let logHistory = [];
   let meta = {};
   let activeFilter = "all";
   let activeRegion = "Indianapolis";
@@ -1918,6 +1920,7 @@
       meta = json;
       allEntries = json.entries || [];
       archivedEntries = json.archived_entries || [];
+      logHistory = json.logHistory || [];
       if(typeof json.totalSpendUsd === "number") totalSpendCache = json.totalSpendUsd;
     }catch(err){
       meta = {};
@@ -2311,14 +2314,18 @@
   // Cost is only known for scans run after the Worker started tagging it
   // (via balance-before/balance-after), so older entries show "לא זמינה"
   // rather than a misleading $0.
-  // Logs are a record of what actually happened, not a view of what's
-  // currently in the feed -- archiving (or restoring) an entry elsewhere
-  // must never make it vanish from or reappear here. So this reads both
-  // live and archived entries, deduped by key in case the same run is
-  // somehow present in both lists at once.
+  // Logs are a permanent record of what actually happened, not a view of
+  // what's currently in the feed -- archiving, restoring, or even
+  // permanently deleting a card elsewhere must never make it vanish from
+  // or reappear here. logHistory (from the Worker) is the authoritative
+  // source; until it's been seeded server-side (an old cached response
+  // predating it), this falls back to merging live + archived entries so
+  // Logs still shows something in the meantime.
   function renderLogsPanel(){
+    const liveKeys = new Set([...allEntries, ...archivedEntries].map(entryKeyOf));
     const seen = new Set();
-    const scans = [...allEntries, ...archivedEntries]
+    const source = logHistory.length ? logHistory : [...allEntries, ...archivedEntries];
+    const scans = source
       .filter(e=>{
         if(e.type !== "scan") return false;
         const key = entryKeyOf(e);
@@ -2350,13 +2357,14 @@
     container.innerHTML = scans.map(e=>{
       const costLabel = typeof e.costUsd === "number" ? `$${e.costUsd.toFixed(4)}` : "עלות לא זמינה";
       const costClass = typeof e.costUsd === "number" ? "" : " unknown";
+      const wasDeleted = !liveKeys.has(entryKeyOf(e));
       return `
         <div class="log-item">
           <div class="log-item-top">
             <span class="log-item-title">${e.title}</span>
             <span class="log-cost-badge${costClass}">${costLabel}</span>
           </div>
-          <div class="log-item-meta">${e.region} · ${dayLabel(e.date)}, ${e.time}</div>
+          <div class="log-item-meta">${e.region} · ${dayLabel(e.date)}, ${e.time}${wasDeleted ? ' · <span class="log-deleted-note">נמחק לצמיתות</span>' : ""}</div>
           <div class="meta">
             ${e.tags.map(t=>`<span class="badge${t.includes("אומת: אינדיאנפוליס") ? " badge-indianapolis" : ""}">${t}</span>`).join("")}
           </div>
@@ -2407,6 +2415,7 @@
       meta = result;
       allEntries = result.entries || [];
       archivedEntries = result.archived_entries || [];
+      logHistory = result.logHistory || [];
       updateStatusPill();
       renderLogsPanel();
     }catch(err){
@@ -2441,6 +2450,7 @@
     meta = data;
     allEntries = data.entries || [];
     archivedEntries = data.archived_entries || [];
+    logHistory = data.logHistory || [];
     if(typeof data.totalSpendUsd === "number") totalSpendCache = data.totalSpendUsd;
     render();
     updateStatusPill();
@@ -2566,6 +2576,7 @@
         meta = result.data;
         allEntries = meta.entries || [];
         archivedEntries = meta.archived_entries || [];
+        logHistory = meta.logHistory || [];
         if(typeof meta.totalSpendUsd === "number") totalSpendCache = meta.totalSpendUsd;
         render();
         updateStatusPill();
@@ -2577,6 +2588,7 @@
       meta = result;
       allEntries = result.entries || [];
       archivedEntries = result.archived_entries || [];
+      logHistory = result.logHistory || [];
       if(typeof result.totalSpendUsd === "number") totalSpendCache = result.totalSpendUsd;
       render();
       updateStatusPill();
