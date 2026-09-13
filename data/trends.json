@@ -148,7 +148,9 @@
       "region": "Boston, MA",
       "tags": [],
       "costUsd": 0.135
-    },
+    }
+  ],
+  "archived_entries": [
     {
       "date": "2026-09-10",
       "time": "13:44",
@@ -159,10 +161,9 @@
       "tags": [
         "+100%",
         "20 חיפושים לחודש"
-      ]
-    }
-  ],
-  "archived_entries": [
+      ],
+      "archived_at": "2026-09-13T19:29:17.406Z"
+    },
     {
       "date": "2026-09-10",
       "time": "13:44",
