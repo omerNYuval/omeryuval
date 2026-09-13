@@ -1338,6 +1338,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
             הרץ סריקה עכשיו
           </button>
+          <div class="run-result" id="runResult" hidden></div>
         </div>
 
         <div class="run-recommendations">
@@ -1558,7 +1559,6 @@
       </div>
     </div>
     <div class="run-progress-text" id="runProgressText">מריץ סריקה חיה מול DataForSEO… (עד כ-20 שניות)</div>
-    <div class="run-result" id="runProgressResult" hidden></div>
   </div>
 </div>
 
@@ -1577,10 +1577,10 @@
   const statusText = document.getElementById("statusText");
   const balanceValue = document.getElementById("balanceValue");
   const runPanelBtn = document.getElementById("runPanelBtn");
+  const runResult = document.getElementById("runResult");
   const runProgressOverlay = document.getElementById("runProgressOverlay");
   const scanStage = document.getElementById("scanStage");
   const runProgressText = document.getElementById("runProgressText");
-  const runProgressResult = document.getElementById("runProgressResult");
   const timingModalOverlay = document.getElementById("timingModalOverlay");
   const timingModalText = document.getElementById("timingModalText");
   const THEME_KEY = "agent-ops-theme";
@@ -1780,6 +1780,7 @@
     const showingRun = activeAxis === "filter" && activeFilter === "run";
     runPanel.hidden = !showingRun;
     if(showingRun) renderRunRecommendations();
+    else runResult.hidden = true;
 
     const scheduledPanel = document.getElementById("scheduledPanel");
     const showingScheduled = activeAxis === "filter" && activeFilter === "scheduled";
@@ -2530,6 +2531,7 @@
     refreshBtn.disabled = true;
     refreshBtn.classList.add("spinning");
     runPanelBtn.hidden = true;
+    runResult.hidden = true;
     openRunProgress();
     statusPill.classList.remove("stale");
     statusText.textContent = "מריץ סריקה חיה… (עד כ-20 שניות)";
@@ -2572,35 +2574,34 @@
     }
   }
 
-  // The scanning animation and its result live in a one-shot overlay, not
-  // in the run panel itself — so once it's dismissed (link click or
-  // clicking outside it) it's gone for good, and simply returning to the
-  // "הרצת הבוט" room later never resurrects a stale result banner.
+  // The bot animation overlay is only for the "in flight" wait -- it closes
+  // the moment a result is ready, and the result itself is a row under the
+  // run button (like before the overlay existed), not part of the overlay.
+  // It's still cleared on leaving the run panel (see render()) so it can't
+  // resurrect as a stale banner the way the pre-overlay version did.
   function openRunProgress(){
     scanStage.hidden = false;
     runProgressText.hidden = false;
     runProgressText.textContent = "מריץ סריקה חיה מול DataForSEO… (עד כ-20 שניות)";
-    runProgressResult.hidden = true;
     runProgressOverlay.hidden = false;
   }
 
   function showRunResult(kind, message){
-    scanStage.hidden = true;
-    runProgressText.hidden = true;
-    runProgressResult.className = `run-result ${kind}`;
-    runProgressResult.innerHTML = `<span>${message}</span>`;
+    runProgressOverlay.hidden = true;
+    runResult.className = `run-result ${kind}`;
+    runResult.innerHTML = `<span>${message}</span>`;
     if(kind !== "error"){
       const link = document.createElement("button");
       link.className = "run-result-link";
       link.type = "button";
       link.textContent = "מעבר לסריקת נתונים ‹";
       link.addEventListener("click", ()=>{
-        runProgressOverlay.hidden = true;
+        runResult.hidden = true;
         goTo("filter", "scan");
       });
-      runProgressResult.appendChild(link);
+      runResult.appendChild(link);
     }
-    runProgressResult.hidden = false;
+    runResult.hidden = false;
   }
 
   runProgressOverlay.addEventListener("click", (e)=>{
