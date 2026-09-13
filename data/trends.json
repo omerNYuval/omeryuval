@@ -11,42 +11,6 @@
   "balance": 2.5124,
   "entries": [
     {
-      "date": "2026-09-13",
-      "time": "09:00",
-      "type": "scan",
-      "title": "סריקת ביקוש הושלמה",
-      "detail": "נבדקו 5 מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור <bdi dir=\"ltr\">Indianapolis, IN</bdi> (הרצה חודשית). נמצאו 0 מונחים בעלייה.<div class=\"scan-breakdown-label\">פירוט מלא לפי מונח:</div><ul class=\"scan-breakdown\"><li><bdi dir=\"ltr\">garage door repair</bdi>: <bdi dir=\"ltr\">880 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">-28%</bdi>)</li><li><bdi dir=\"ltr\">garage door spring repair</bdi>: <bdi dir=\"ltr\">90 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">-44%</bdi>)</li><li><bdi dir=\"ltr\">garage door opener repair</bdi>: <bdi dir=\"ltr\">720 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">-18%</bdi>)</li><li><bdi dir=\"ltr\">garage door won't open</bdi>: <bdi dir=\"ltr\">20 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">-25%</bdi>)</li><li><bdi dir=\"ltr\">garage door off track</bdi>: <bdi dir=\"ltr\">10 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">+0%</bdi>)</li></ul>",
-      "region": "Indianapolis, IN",
-      "tags": [
-        "נתונים אמיתיים",
-        "חודשי"
-      ]
-    },
-    {
-      "date": "2026-09-12",
-      "time": "17:04",
-      "type": "scan",
-      "title": "סריקת ביקוש הושלמה",
-      "detail": "נבדקו 5 מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור <bdi dir=\"ltr\">Indianapolis, IN</bdi> (הרצה חודשית). נמצאו 0 מונחים בעלייה.",
-      "region": "Indianapolis, IN",
-      "tags": [
-        "נתונים אמיתיים",
-        "חודשי"
-      ]
-    },
-    {
-      "date": "2026-09-12",
-      "time": "15:59",
-      "type": "scan",
-      "title": "סריקת מגמה יומית הושלמה",
-      "detail": "נבדקו 5 מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi>. נמצאו 1 מונחים בעלייה.",
-      "region": "מדינת אינדיאנה",
-      "tags": [
-        "הרצה יומית",
-        "ברמת מדינה (לא ספציפי לעיר)"
-      ]
-    },
-    {
       "date": "2026-09-12",
       "time": "15:59",
       "type": "score",
@@ -69,18 +33,6 @@
       "tags": [
         "+37%",
         "יומי",
-        "ברמת מדינה (לא ספציפי לעיר)"
-      ]
-    },
-    {
-      "date": "2026-09-12",
-      "time": "15:08",
-      "type": "scan",
-      "title": "סריקת מגמה יומית הושלמה",
-      "detail": "נבדקו 5 מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi>. נמצאו 1 מונחים בעלייה.",
-      "region": "מדינת אינדיאנה",
-      "tags": [
-        "הרצה יומית",
         "ברמת מדינה (לא ספציפי לעיר)"
       ]
     },
@@ -113,18 +65,6 @@
     },
     {
       "date": "2026-09-10",
-      "time": "14:38",
-      "type": "scan",
-      "title": "סריקת ביקוש הושלמה",
-      "detail": "נבדק המונח <bdi dir=\"ltr\">\"garage door repair\"</bdi> באזור <bdi dir=\"ltr\">Meridian-Kessler, Indianapolis, IN</bdi>. נפח חיפוש נוכחי: כ-<bdi dir=\"ltr\">10</bdi> חיפושים בחודש.",
-      "region": "Meridian-Kessler, Indianapolis, IN",
-      "tags": [
-        "10 חיפושים לחודש",
-        "נתונים אמיתיים"
-      ]
-    },
-    {
-      "date": "2026-09-10",
       "time": "13:44",
       "type": "score",
       "title": "עלייה בביקוש: <bdi dir=\"ltr\">garage door spring repair</bdi>",
@@ -146,7 +86,9 @@
         "+24%",
         "210 חיפושים לחודש"
       ]
-    },
+    }
+  ],
+  "archived_entries": [
     {
       "date": "2026-09-10",
       "time": "13:44",
@@ -156,7 +98,73 @@
       "region": "Boston, MA",
       "tags": [
         "נתונים אמיתיים"
-      ]
+      ],
+      "archived_at": "2026-09-13T16:39:08.432Z"
+    },
+    {
+      "date": "2026-09-10",
+      "time": "14:38",
+      "type": "scan",
+      "title": "סריקת ביקוש הושלמה",
+      "detail": "נבדק המונח <bdi dir=\"ltr\">\"garage door repair\"</bdi> באזור <bdi dir=\"ltr\">Meridian-Kessler, Indianapolis, IN</bdi>. נפח חיפוש נוכחי: כ-<bdi dir=\"ltr\">10</bdi> חיפושים בחודש.",
+      "region": "Meridian-Kessler, Indianapolis, IN",
+      "tags": [
+        "10 חיפושים לחודש",
+        "נתונים אמיתיים"
+      ],
+      "archived_at": "2026-09-13T16:39:08.432Z"
+    },
+    {
+      "date": "2026-09-12",
+      "time": "15:08",
+      "type": "scan",
+      "title": "סריקת מגמה יומית הושלמה",
+      "detail": "נבדקו 5 מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi>. נמצאו 1 מונחים בעלייה.",
+      "region": "מדינת אינדיאנה",
+      "tags": [
+        "הרצה יומית",
+        "ברמת מדינה (לא ספציפי לעיר)"
+      ],
+      "archived_at": "2026-09-13T16:39:08.432Z"
+    },
+    {
+      "date": "2026-09-12",
+      "time": "15:59",
+      "type": "scan",
+      "title": "סריקת מגמה יומית הושלמה",
+      "detail": "נבדקו 5 מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi>. נמצאו 1 מונחים בעלייה.",
+      "region": "מדינת אינדיאנה",
+      "tags": [
+        "הרצה יומית",
+        "ברמת מדינה (לא ספציפי לעיר)"
+      ],
+      "archived_at": "2026-09-13T16:39:08.432Z"
+    },
+    {
+      "date": "2026-09-12",
+      "time": "17:04",
+      "type": "scan",
+      "title": "סריקת ביקוש הושלמה",
+      "detail": "נבדקו 5 מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור <bdi dir=\"ltr\">Indianapolis, IN</bdi> (הרצה חודשית). נמצאו 0 מונחים בעלייה.",
+      "region": "Indianapolis, IN",
+      "tags": [
+        "נתונים אמיתיים",
+        "חודשי"
+      ],
+      "archived_at": "2026-09-13T16:39:08.432Z"
+    },
+    {
+      "date": "2026-09-13",
+      "time": "09:00",
+      "type": "scan",
+      "title": "סריקת ביקוש הושלמה",
+      "detail": "נבדקו 5 מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור <bdi dir=\"ltr\">Indianapolis, IN</bdi> (הרצה חודשית). נמצאו 0 מונחים בעלייה.<div class=\"scan-breakdown-label\">פירוט מלא לפי מונח:</div><ul class=\"scan-breakdown\"><li><bdi dir=\"ltr\">garage door repair</bdi>: <bdi dir=\"ltr\">880 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">-28%</bdi>)</li><li><bdi dir=\"ltr\">garage door spring repair</bdi>: <bdi dir=\"ltr\">90 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">-44%</bdi>)</li><li><bdi dir=\"ltr\">garage door opener repair</bdi>: <bdi dir=\"ltr\">720 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">-18%</bdi>)</li><li><bdi dir=\"ltr\">garage door won't open</bdi>: <bdi dir=\"ltr\">20 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">-25%</bdi>)</li><li><bdi dir=\"ltr\">garage door off track</bdi>: <bdi dir=\"ltr\">10 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">+0%</bdi>)</li></ul>",
+      "region": "Indianapolis, IN",
+      "tags": [
+        "נתונים אמיתיים",
+        "חודשי"
+      ],
+      "archived_at": "2026-09-13T16:39:08.432Z"
     }
   ]
 }
