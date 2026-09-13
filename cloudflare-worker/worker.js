@@ -723,8 +723,17 @@ async function fetchBalance(env) {
 // whole request.
 async function fetchTotalSpend(env) {
   const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
-  const datetimeFrom = "2000-01-01 00:00:00 +00:00";
-  const datetimeTo = new Date().toISOString().replace("T", " ").slice(0, 19) + " +00:00";
+  // id_list only accepts a datetime_from/datetime_to range within the last
+  // 6 months (confirmed live: an older datetime_from is rejected as an
+  // "Invalid Field") -- fine here since this account's whole history is
+  // recent, but it does mean anything older than 6 months would silently
+  // drop out of the total.
+  const now = new Date();
+  const sixMonthsAgo = new Date(now);
+  sixMonthsAgo.setUTCMonth(sixMonthsAgo.getUTCMonth() - 6, sixMonthsAgo.getUTCDate() + 1);
+  const formatDatetime = (d) => d.toISOString().replace("T", " ").slice(0, 19) + " +00:00";
+  const datetimeFrom = formatDatetime(sixMonthsAgo);
+  const datetimeTo = formatDatetime(now);
   const limit = 1000;
   let offset = 0;
   let total = 0;
