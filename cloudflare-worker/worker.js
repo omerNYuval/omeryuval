@@ -92,11 +92,14 @@ export default {
       if (body.action === "backfill_costs") {
         const tasks = await fetchAllTasks(env);
         const output = backfillEntryCosts(current.json, tasks);
-        const changed = JSON.stringify(output.entries) !== JSON.stringify(current.json.entries || []);
+        const totalSpend = Math.round(tasks.reduce((sum, t) => sum + t.cost, 0) * 10000) / 10000;
+        output.totalSpendUsd = totalSpend;
+        const changed =
+          JSON.stringify(output.entries) !== JSON.stringify(current.json.entries || []) ||
+          output.totalSpendUsd !== current.json.totalSpendUsd;
         if (changed) {
           await commitToGitHub(env, current.sha, output);
         }
-        const totalSpend = Math.round(tasks.reduce((sum, t) => sum + t.cost, 0) * 10000) / 10000;
         return json({ ...(changed ? output : current.json), totalSpend }, 200);
       }
 
@@ -118,15 +121,23 @@ export default {
         : await runTrends(env, selection);
 
       const balance = await fetchBalance(env).catch(() => current.json.balance ?? null);
-      attachRunCost(newEntries, current.json.balance, balance);
+      const runCost = attachRunCost(newEntries, current.json.balance, balance);
 
       const merged = dedupeAndSort([...newEntries, ...(current.json.entries || [])]).slice(0, MAX_ENTRIES);
+
+      // Stored and incremented here (like balance) instead of fetched live
+      // from DataForSEO on every page view -- "רענן" in לוגים still exists
+      // to reconcile against the authoritative id_list total when wanted,
+      // but normal viewing just reads this straight out of the file.
+      const prevTotalSpend = typeof current.json.totalSpendUsd === "number" ? current.json.totalSpendUsd : 0;
+      const totalSpendUsd = Math.round((prevTotalSpend + (runCost || 0)) * 10000) / 10000;
 
       const output = {
         generated_at: new Date().toISOString(),
         market,
         keywords: KEYWORDS,
         balance,
+        totalSpendUsd,
         entries: merged,
         archived_entries: current.json.archived_entries || [],
       };
@@ -158,15 +169,16 @@ function entryKey(e) {
 // topped up between the two reads) is left untagged rather than shown as
 // a nonsensical negative cost.
 function attachRunCost(newEntries, balanceBefore, balanceAfter) {
-  if (typeof balanceBefore !== "number" || typeof balanceAfter !== "number") return;
+  if (typeof balanceBefore !== "number" || typeof balanceAfter !== "number") return null;
   const cost = balanceBefore - balanceAfter;
-  if (cost < 0) return;
+  if (cost < 0) return null;
   const scanEntry = newEntries.find((e) => e.type === "scan");
-  if (!scanEntry) return;
+  if (!scanEntry) return null;
   // costUsd is enough on its own -- it's only rendered as a badge in the
   // לוגים panel, so it shouldn't also show up as a tag on every card the
   // entry appears on elsewhere in the feed.
   scanEntry.costUsd = Math.round(cost * 10000) / 10000;
+  return scanEntry.costUsd;
 }
 
 // Matches DataForSEO's own billed tasks (from id_list) back to the scan

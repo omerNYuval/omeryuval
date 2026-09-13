@@ -1914,6 +1914,7 @@
       meta = json;
       allEntries = json.entries || [];
       archivedEntries = json.archived_entries || [];
+      if(typeof json.totalSpendUsd === "number") totalSpendCache = json.totalSpendUsd;
     }catch(err){
       meta = {};
       allEntries = [];
@@ -2422,6 +2423,7 @@
     meta = data;
     allEntries = data.entries || [];
     archivedEntries = data.archived_entries || [];
+    if(typeof data.totalSpendUsd === "number") totalSpendCache = data.totalSpendUsd;
     render();
     updateStatusPill();
   }
@@ -2545,6 +2547,7 @@
         meta = result.data;
         allEntries = meta.entries || [];
         archivedEntries = meta.archived_entries || [];
+        if(typeof meta.totalSpendUsd === "number") totalSpendCache = meta.totalSpendUsd;
         render();
         updateStatusPill();
         statusText.textContent = `הסריקה האחרונה הייתה לפני ${result.minutes_since_last_run} דקות — אפשר להריץ שוב בעוד כ-${waitMin} דקות`;
@@ -2555,6 +2558,7 @@
       meta = result;
       allEntries = result.entries || [];
       archivedEntries = result.archived_entries || [];
+      if(typeof result.totalSpendUsd === "number") totalSpendCache = result.totalSpendUsd;
       render();
       updateStatusPill();
       showRunResult("success", "הסריקה הושלמה בהצלחה! התוצאות נוספו לפיד.");
