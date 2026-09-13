@@ -94,8 +94,10 @@ export default {
         const output = backfillEntryCosts(current.json, tasks);
         const totalSpend = Math.round(tasks.reduce((sum, t) => sum + t.cost, 0) * 10000) / 10000;
         output.totalSpendUsd = totalSpend;
+        output.logHistory = backfillEntryCosts({ entries: buildLogHistory(current.json, []) }, tasks).entries;
         const changed =
           JSON.stringify(output.entries) !== JSON.stringify(current.json.entries || []) ||
+          JSON.stringify(output.logHistory) !== JSON.stringify(current.json.logHistory || []) ||
           output.totalSpendUsd !== current.json.totalSpendUsd;
         if (changed) {
           await commitToGitHub(env, current.sha, output);
@@ -140,6 +142,7 @@ export default {
         totalSpendUsd,
         entries: merged,
         archived_entries: current.json.archived_entries || [],
+        logHistory: buildLogHistory(current.json, newEntries),
       };
 
       await commitToGitHub(env, current.sha, output);
@@ -160,6 +163,21 @@ export default {
 
 function entryKey(e) {
   return `${e.date}|${e.time}|${e.title}|${e.region}`;
+}
+
+// Logs are meant to be a permanent record of every scan that ever ran --
+// unlike entries/archived_entries, archiving or even permanently deleting
+// a card must never make it disappear from here. Once logHistory exists
+// it's just carried forward as-is; the first time this runs on data saved
+// before logHistory existed, it lazily seeds itself from every scan
+// currently in entries + archived_entries so nothing already tracked is
+// lost the moment this ships.
+function buildLogHistory(data, newEntries) {
+  const existing = Array.isArray(data.logHistory)
+    ? data.logHistory
+    : [...(data.entries || []), ...(data.archived_entries || [])].filter((e) => e.type === "scan");
+  const scanAdditions = (newEntries || []).filter((e) => e.type === "scan");
+  return dedupeAndSort([...scanAdditions, ...existing]);
 }
 
 // The DataForSEO balance is fetched both before (current.json.balance, from
@@ -253,6 +271,10 @@ function timeStringToMinutes(hhmm) {
 function applyArchiveAction(data, body) {
   const entries = Array.isArray(data.entries) ? [...data.entries] : [];
   const archived = Array.isArray(data.archived_entries) ? [...data.archived_entries] : [];
+  // Seeded here (not only on a real run) so that a permanent "delete" below
+  // can never outrun the migration -- by the time an entry is spliced out
+  // of archived_entries for good, logHistory has already captured it.
+  const logHistory = buildLogHistory(data, []);
 
   if (body.action === "archive" || body.action === "archive_bulk") {
     const keys = new Set(
@@ -268,7 +290,7 @@ function applyArchiveAction(data, body) {
         remaining.push(e);
       }
     }
-    return { ...data, entries: remaining, archived_entries: archived };
+    return { ...data, entries: remaining, archived_entries: archived, logHistory };
   }
 
   if (body.action === "restore" || body.action === "restore_bulk") {
@@ -289,14 +311,14 @@ function applyArchiveAction(data, body) {
     if (body.action === "restore" && remainingArchived.length === archived.length) {
       throw new Error("Archived entry not found");
     }
-    return { ...data, entries: dedupeAndSort(entries), archived_entries: remainingArchived };
+    return { ...data, entries: dedupeAndSort(entries), archived_entries: remainingArchived, logHistory };
   }
 
   if (body.action === "delete") {
     const idx = archived.findIndex((e) => entryKey(e) === body.entryKey);
     if (idx === -1) throw new Error("Archived entry not found");
     archived.splice(idx, 1);
-    return { ...data, archived_entries: archived };
+    return { ...data, archived_entries: archived, logHistory };
   }
 
   throw new Error("Unknown archive action");
