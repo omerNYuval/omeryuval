@@ -163,8 +163,10 @@ function attachRunCost(newEntries, balanceBefore, balanceAfter) {
   if (cost < 0) return;
   const scanEntry = newEntries.find((e) => e.type === "scan");
   if (!scanEntry) return;
+  // costUsd is enough on its own -- it's only rendered as a badge in the
+  // לוגים panel, so it shouldn't also show up as a tag on every card the
+  // entry appears on elsewhere in the feed.
   scanEntry.costUsd = Math.round(cost * 10000) / 10000;
-  scanEntry.tags = [...scanEntry.tags, `עלות: $${scanEntry.costUsd.toFixed(4)}`];
 }
 
 // Matches DataForSEO's own billed tasks (from id_list) back to the scan
@@ -201,9 +203,6 @@ function backfillEntryCosts(data, tasks) {
       cost += tasks[m.index].cost;
     }
     entry.costUsd = Math.round(cost * 10000) / 10000;
-    if (!entry.tags.some((t) => t.startsWith("עלות:"))) {
-      entry.tags = [...entry.tags, `עלות: $${entry.costUsd.toFixed(4)}`];
-    }
   }
   return { ...data, entries };
 }

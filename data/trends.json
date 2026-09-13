@@ -18,8 +18,7 @@
       "detail": "נבדקו 5 מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור <bdi dir=\"ltr\">Indianapolis, IN</bdi> (הרצה חודשית). נמצאו 0 מונחים בעלייה.<div class=\"scan-breakdown-label\">פירוט מלא לפי מונח:</div><ul class=\"scan-breakdown\"><li><bdi dir=\"ltr\">garage door repair</bdi>: <bdi dir=\"ltr\">880 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">-28%</bdi>)</li><li><bdi dir=\"ltr\">garage door spring repair</bdi>: <bdi dir=\"ltr\">90 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">-44%</bdi>)</li><li><bdi dir=\"ltr\">garage door opener repair</bdi>: <bdi dir=\"ltr\">720 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">-18%</bdi>)</li><li><bdi dir=\"ltr\">garage door won't open</bdi>: <bdi dir=\"ltr\">20 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">-25%</bdi>)</li><li><bdi dir=\"ltr\">garage door off track</bdi>: <bdi dir=\"ltr\">10 חיפושים לחודש</bdi> (<bdi dir=\"ltr\">+0%</bdi>)</li></ul>",
       "region": "Indianapolis, IN",
       "tags": [
-        "חודשי",
-        "עלות: $0.4500"
+        "חודשי"
       ],
       "costUsd": 0.45
     },
@@ -31,8 +30,7 @@
       "detail": "נבדקו 5 מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור <bdi dir=\"ltr\">Indianapolis, IN</bdi> (הרצה חודשית). נמצאו 0 מונחים בעלייה.",
       "region": "Indianapolis, IN",
       "tags": [
-        "חודשי",
-        "עלות: $0.0900"
+        "חודשי"
       ],
       "costUsd": 0.09
     },
@@ -45,8 +43,7 @@
       "region": "מדינת אינדיאנה",
       "tags": [
         "הרצה יומית",
-        "ברמת מדינה (לא ספציפי לעיר)",
-        "עלות: $0.0110"
+        "ברמת מדינה (לא ספציפי לעיר)"
       ],
       "costUsd": 0.011
     },
@@ -72,8 +69,7 @@
       "region": "מדינת אינדיאנה",
       "tags": [
         "הרצה יומית",
-        "ברמת מדינה (לא ספציפי לעיר)",
-        "עלות: $0.0110"
+        "ברמת מדינה (לא ספציפי לעיר)"
       ],
       "costUsd": 0.011
     },
