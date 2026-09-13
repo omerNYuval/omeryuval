@@ -24,6 +24,7 @@
     --amber:#e8a33d;
     --moss:#7d9a68;
     --wire:#5a92a8;
+    --danger:#c96a5f;
   }
 
   :root[data-theme="light"]{
@@ -36,6 +37,7 @@
     --amber:#8a5209;
     --moss:#4f6b3d;
     --wire:#2f6478;
+    --danger:#a8392c;
   }
 
   *{box-sizing:border-box;}
@@ -1023,6 +1025,80 @@
     direction:ltr;
   }
 
+  .entry .row1-end{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .entry-delete-btn{
+    background:transparent;
+    border:none;
+    color:var(--muted);
+    cursor:pointer;
+    padding:4px;
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:color .15s ease, background-color .15s ease;
+  }
+  .entry-delete-btn svg{width:15px;height:15px;}
+  .entry-delete-btn:hover{color:var(--danger); background:color-mix(in srgb, var(--danger) 16%, transparent);}
+
+  .feed-toolbar{display:flex;justify-content:flex-end;margin-bottom:14px;}
+  .feed-clear-btn{
+    background:transparent;
+    color:var(--muted);
+    border:1px solid var(--steel);
+    padding:8px 16px;
+    border-radius:999px;
+    font-family:'Heebo', sans-serif;
+    font-weight:700;
+    font-size:0.82rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .feed-clear-btn svg{width:14px;height:14px;}
+  .feed-clear-btn:hover{border-color:var(--danger); color:var(--danger);}
+
+  .archive-item{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:10px;
+  }
+  .archive-item-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .archive-item-title{font-size:0.92rem;font-weight:700;}
+  .archive-item-meta{font-size:0.76rem;color:var(--muted);white-space:nowrap;}
+  .archive-item-detail{font-size:0.82rem;color:var(--muted);margin-top:8px;line-height:1.55;}
+  .archive-item-actions{display:flex;gap:8px;margin-top:12px;}
+  .archive-restore-btn{
+    background:var(--wire);
+    color:var(--paper);
+    border:none;
+    padding:8px 18px;
+    border-radius:999px;
+    font-family:'Heebo', sans-serif;
+    font-weight:800;
+    font-size:0.8rem;
+    cursor:pointer;
+    transition:transform .15s ease;
+  }
+  .archive-restore-btn:hover{transform:translateY(-1px);}
+  .archive-delete-btn{
+    background:transparent;
+    color:var(--danger);
+    border:1px solid var(--danger);
+    padding:8px 18px;
+    border-radius:999px;
+    font-family:'Heebo', sans-serif;
+    font-weight:800;
+    font-size:0.8rem;
+    cursor:pointer;
+    transition:background-color .15s ease, color .15s ease;
+  }
+  .archive-delete-btn:hover{background:var(--danger); color:var(--paper);}
+
   .empty{
     text-align:center;
     color:var(--muted);
@@ -1059,6 +1135,7 @@
       <button class="side-link" data-filter="scan">סריקת נתונים</button>
       <button class="side-link" data-filter="score">מונח בעלייה</button>
       <button class="side-link" data-filter="discovery">גילויי מילות מפתח</button>
+      <button class="side-link" data-filter="archive">גיבוי ושחזור</button>
       <div class="side-label">אזור</div>
       <button class="side-link" data-region="Indianapolis"><span class="region-dot"></span>אינדיאנפוליס</button>
       <button class="side-link" data-region="Boston"><span class="region-dot"></span>בוסטון</button>
@@ -1209,6 +1286,19 @@
           <button type="button" class="keywords-select-all" id="keywordsSelectAllBtn">הפעל הכל</button>
         </div>
         <div id="keywordsList"></div>
+      </div>
+
+      <div class="insights-panel" id="archivePanel" hidden>
+        <div class="insights-header">
+          <span class="insights-icon" style="color:var(--muted);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          </span>
+          <div>
+            <h2>גיבוי ושחזור</h2>
+            <div class="insights-sub">פריטים שהוסרו מהתצוגה הראשית. אפשר לשחזר אותם או למחוק לצמיתות.</div>
+          </div>
+        </div>
+        <div id="archiveList"></div>
       </div>
 
       <div class="insights-panel" id="insightsPanel" hidden>
@@ -1374,6 +1464,7 @@
   let enabledKeywords = loadEnabledKeywords();
 
   let allEntries = [];
+  let archivedEntries = [];
   let meta = {};
   let activeFilter = "all";
   let activeRegion = "Indianapolis";
@@ -1552,9 +1643,14 @@
     keywordsPanel.hidden = !showingKeywords;
     if(showingKeywords) renderKeywordsPanel();
 
+    const archivePanel = document.getElementById("archivePanel");
+    const showingArchive = activeAxis === "filter" && activeFilter === "archive";
+    archivePanel.hidden = !showingArchive;
+    if(showingArchive) renderArchivePanel();
+
     const showingAll = activeAxis === "filter" && activeFilter === "all";
-    feed.hidden = showingAll || showingRun || showingScheduled || showingKeywords;
-    if(showingAll || showingRun || showingScheduled || showingKeywords){
+    feed.hidden = showingAll || showingRun || showingScheduled || showingKeywords || showingArchive;
+    if(showingAll || showingRun || showingScheduled || showingKeywords || showingArchive){
       feed.innerHTML = "";
       return;
     }
@@ -1577,6 +1673,20 @@
       return;
     }
 
+    const toolbar = document.createElement("div");
+    toolbar.className = "feed-toolbar";
+    toolbar.innerHTML = `
+      <button type="button" class="feed-clear-btn" id="feedClearBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        נקה נתונים
+      </button>
+    `;
+    feed.appendChild(toolbar);
+    toolbar.querySelector("#feedClearBtn").addEventListener("click", ()=>{
+      const keys = filtered.map(entryKeyOf);
+      archiveBulk(keys);
+    });
+
     const groups = {};
     filtered.forEach(e=>{
       if(!groups[e.date]) groups[e.date] = [];
@@ -1593,6 +1703,7 @@
       groupDiv.appendChild(heading);
 
       groups[date].forEach(e=>{
+        const key = entryKeyOf(e);
         const entry = document.createElement("div");
         entry.className = "entry";
         entry.setAttribute("data-type", e.type);
@@ -1602,7 +1713,12 @@
               <span class="tag type">${typeLabels[e.type] || e.type}</span>
               <span class="title">${e.title}</span>
             </div>
-            <span class="time">${e.time}</span>
+            <div class="row1-end">
+              <span class="time">${e.time}</span>
+              <button type="button" class="entry-delete-btn" title="העבר לגיבוי" aria-label="העבר לגיבוי">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
           </div>
           <div class="detail">${e.detail}</div>
           <div class="meta">
@@ -1610,11 +1726,16 @@
             ${e.tags.map(t=>`<span class="badge${t.includes("אומת: אינדיאנפוליס") ? " badge-indianapolis" : ""}">${t}</span>`).join("")}
           </div>
         `;
+        entry.querySelector(".entry-delete-btn").addEventListener("click", ()=> archiveEntry(key));
         groupDiv.appendChild(entry);
       });
 
       feed.appendChild(groupDiv);
     });
+  }
+
+  function entryKeyOf(e){
+    return `${e.date}|${e.time}|${e.title}|${e.region}`;
   }
 
   async function loadData(forceRefresh){
@@ -1627,9 +1748,11 @@
       const json = await res.json();
       meta = json;
       allEntries = json.entries || [];
+      archivedEntries = json.archived_entries || [];
     }catch(err){
       meta = {};
       allEntries = [];
+      archivedEntries = [];
     }finally{
       updateStatusPill();
       render();
@@ -1981,6 +2104,85 @@
     }
   }
 
+  function renderArchivePanel(){
+    const container = document.getElementById("archiveList");
+    if(!archivedEntries.length){
+      container.innerHTML = '<div class="empty archive-empty">אין פריטים בגיבוי כרגע.</div>';
+      return;
+    }
+    container.innerHTML = archivedEntries.map(e=>{
+      const key = encodeURIComponent(entryKeyOf(e));
+      return `
+        <div class="archive-item">
+          <div class="archive-item-top">
+            <span class="archive-item-title">${e.title}</span>
+            <span class="archive-item-meta">${e.region} · ${dayLabel(e.date)}, ${e.time}</span>
+          </div>
+          <div class="archive-item-detail">${e.detail}</div>
+          <div class="archive-item-actions">
+            <button type="button" class="archive-restore-btn" data-restore-key="${key}">שחזר</button>
+            <button type="button" class="archive-delete-btn" data-delete-key="${key}">מחק לצמיתות</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+    container.querySelectorAll("[data-restore-key]").forEach(btn=>{
+      btn.addEventListener("click", ()=> restoreArchivedEntry(decodeURIComponent(btn.dataset.restoreKey)));
+    });
+    container.querySelectorAll("[data-delete-key]").forEach(btn=>{
+      btn.addEventListener("click", ()=> deleteArchivedForever(decodeURIComponent(btn.dataset.deleteKey)));
+    });
+  }
+
+  async function sendArchiveAction(body){
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if(!res.ok) throw new Error("archive action failed");
+    const result = await res.json();
+    meta = result;
+    allEntries = result.entries || [];
+    archivedEntries = result.archived_entries || [];
+    render();
+    updateStatusPill();
+  }
+
+  async function archiveEntry(key){
+    try{
+      await sendArchiveAction({ action: "archive", entryKey: key });
+    }catch(err){
+      statusText.textContent = "העברה לגיבוי נכשלה — נסה שוב";
+    }
+  }
+
+  async function archiveBulk(keys){
+    if(!keys.length) return;
+    try{
+      await sendArchiveAction({ action: "archive_bulk", entryKeys: keys });
+    }catch(err){
+      statusText.textContent = "ניקוי הנתונים נכשל — נסה שוב";
+    }
+  }
+
+  async function restoreArchivedEntry(key){
+    try{
+      await sendArchiveAction({ action: "restore", entryKey: key });
+    }catch(err){
+      statusText.textContent = "השחזור נכשל — נסה שוב";
+    }
+  }
+
+  async function deleteArchivedForever(key){
+    if(!confirm("למחוק את הפריט הזה לצמיתות? לא ניתן יהיה לשחזר אותו.")) return;
+    try{
+      await sendArchiveAction({ action: "delete", entryKey: key });
+    }catch(err){
+      statusText.textContent = "המחיקה נכשלה — נסה שוב";
+    }
+  }
+
   // Re-arm any schedule that survived a page reload/close; if its time
   // already passed while the tab was closed, this fires it immediately.
   loadScheduledRuns().forEach(armScheduledTimer);
@@ -2006,6 +2208,7 @@
         const waitMin = Math.max(0, result.cooldown_minutes - result.minutes_since_last_run);
         meta = result.data;
         allEntries = meta.entries || [];
+        archivedEntries = meta.archived_entries || [];
         render();
         updateStatusPill();
         statusText.textContent = `הסריקה האחרונה הייתה לפני ${result.minutes_since_last_run} דקות — אפשר להריץ שוב בעוד כ-${waitMin} דקות`;
@@ -2015,6 +2218,7 @@
 
       meta = result;
       allEntries = result.entries || [];
+      archivedEntries = result.archived_entries || [];
       render();
       updateStatusPill();
       showRunResult("success", "הסריקה הושלמה בהצלחה! התוצאות נוספו לפיד.");

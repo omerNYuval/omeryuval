@@ -15,6 +15,11 @@ const COOLDOWN_MINUTES = 30;
 const MAX_ENTRIES = 300;
 const ALLOWED_ORIGIN = "https://omernyuval.github.io";
 
+// Data-management actions (archive/restore/permanently delete an entry) are
+// lightweight GitHub-only writes — they never call DataForSEO, so they skip
+// the cooldown/billing path entirely rather than being folded into a "run".
+const ARCHIVE_ACTIONS = ["archive", "archive_bulk", "restore", "delete"];
+
 // All "day" boundaries (what counts as "yesterday", the run's date/time
 // stamp, the Trends request window) are computed in the target market's
 // own local time, not UTC/server time — otherwise a US day boundary can
@@ -64,8 +69,21 @@ export default {
       return json({ error: "Use GET or POST" }, 405);
     }
 
+    let body = {};
+    try {
+      body = await request.json();
+    } catch (err) {
+      body = {};
+    }
+
     try {
       const current = await getCurrentData(env);
+
+      if (ARCHIVE_ACTIONS.includes(body.action)) {
+        const output = applyArchiveAction(current.json, body);
+        await commitToGitHub(env, current.sha, output);
+        return json(output, 200);
+      }
 
       if (current.json.generated_at) {
         const minutesSince = (Date.now() - new Date(current.json.generated_at).getTime()) / 60000;
@@ -79,7 +97,7 @@ export default {
         }
       }
 
-      const selection = await parseSelection(request);
+      const selection = parseSelection(body);
       const { newEntries, market } = selection.frequency === "monthly"
         ? await runMonthly(env, selection)
         : await runTrends(env, selection);
@@ -93,6 +111,7 @@ export default {
         keywords: KEYWORDS,
         balance,
         entries: merged,
+        archived_entries: current.json.archived_entries || [],
       };
 
       await commitToGitHub(env, current.sha, output);
@@ -104,13 +123,58 @@ export default {
   },
 };
 
-async function parseSelection(request) {
-  let body = {};
-  try {
-    body = await request.json();
-  } catch (err) {
-    body = {};
+// ---- data management: archive/restore/permanently-delete an entry ----
+//
+// Entries have no stored id, so they're addressed by the same composite key
+// dedupeAndSort already uses to tell entries apart (date+time+title+region
+// is unique within the feed). Archived entries live in their own array in
+// the same trends.json file — no extra file, no extra commit machinery.
+
+function entryKey(e) {
+  return `${e.date}|${e.time}|${e.title}|${e.region}`;
+}
+
+function applyArchiveAction(data, body) {
+  const entries = Array.isArray(data.entries) ? [...data.entries] : [];
+  const archived = Array.isArray(data.archived_entries) ? [...data.archived_entries] : [];
+
+  if (body.action === "archive" || body.action === "archive_bulk") {
+    const keys = new Set(
+      body.action === "archive_bulk"
+        ? (Array.isArray(body.entryKeys) ? body.entryKeys : [])
+        : [body.entryKey]
+    );
+    const remaining = [];
+    for (const e of entries) {
+      if (keys.has(entryKey(e))) {
+        archived.unshift({ ...e, archived_at: new Date().toISOString() });
+      } else {
+        remaining.push(e);
+      }
+    }
+    return { ...data, entries: remaining, archived_entries: archived };
   }
+
+  if (body.action === "restore") {
+    const idx = archived.findIndex((e) => entryKey(e) === body.entryKey);
+    if (idx === -1) throw new Error("Archived entry not found");
+    const [entry] = archived.splice(idx, 1);
+    delete entry.archived_at;
+    entries.push(entry);
+    return { ...data, entries: dedupeAndSort(entries), archived_entries: archived };
+  }
+
+  if (body.action === "delete") {
+    const idx = archived.findIndex((e) => entryKey(e) === body.entryKey);
+    if (idx === -1) throw new Error("Archived entry not found");
+    archived.splice(idx, 1);
+    return { ...data, archived_entries: archived };
+  }
+
+  throw new Error("Unknown archive action");
+}
+
+function parseSelection(body) {
   const frequency = ["daily", "weekly", "monthly"].includes(body.frequency) ? body.frequency : "monthly";
   // Only Indianapolis is reachable from the wizard right now (Boston is
   // blocked there like Miami) — default anything else back to it.
@@ -612,7 +676,7 @@ function dedupeAndSort(entries) {
   const seen = new Set();
   const out = [];
   for (const e of entries) {
-    const key = `${e.date}|${e.time}|${e.title}|${e.region}`;
+    const key = entryKey(e);
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(e);
