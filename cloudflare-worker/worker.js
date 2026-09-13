@@ -76,6 +76,17 @@ export default {
       body = {};
     }
 
+    // Read-only and free (no DataForSEO cost, no GitHub involvement at all)
+    // so it's handled before touching GitHub, unlike every other action.
+    if (body.action === "total_spend") {
+      try {
+        const totalSpend = await fetchTotalSpend(env);
+        return json({ totalSpend }, 200);
+      } catch (err) {
+        return json({ error: String(err && err.message ? err.message : err) }, 500);
+      }
+    }
+
     try {
       const current = await getCurrentData(env);
 
@@ -700,6 +711,49 @@ async function fetchBalance(env) {
   const task = data.tasks && data.tasks[0];
   const result = task && task.result && task.result[0];
   return result && result.money ? result.money.balance : null;
+}
+
+// keywords_data/id_list lists every task ever run on this account across
+// all of its endpoints (search volume, trends, subregion interests) and
+// doesn't deduct from the balance to call it -- it's the one place we can
+// get a fully authoritative "total ever spent" figure, since individual
+// runs only started carrying their own cost going forward (see
+// attachRunCost). Defensive about the exact per-item shape: any item
+// without a numeric cost field is just skipped rather than failing the
+// whole request.
+async function fetchTotalSpend(env) {
+  const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
+  const datetimeFrom = "2000-01-01 00:00:00 +00:00";
+  const datetimeTo = new Date().toISOString().replace("T", " ").slice(0, 19) + " +00:00";
+  const limit = 1000;
+  let offset = 0;
+  let total = 0;
+
+  for (let page = 0; page < 20; page++) {
+    const res = await fetch("https://api.dataforseo.com/v3/keywords_data/id_list", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([{ datetime_from: datetimeFrom, datetime_to: datetimeTo, limit, offset }]),
+    });
+    if (!res.ok) throw new Error(`DataForSEO id_list HTTP error: ${res.status}`);
+    const data = await res.json();
+    if (data.status_code !== 20000) throw new Error(`DataForSEO id_list error: ${data.status_message}`);
+    const task = data.tasks && data.tasks[0];
+    if (!task || task.status_code !== 20000) {
+      throw new Error(`DataForSEO id_list task error: ${task ? task.status_message : "no task"}`);
+    }
+    const items = task.result || [];
+    for (const item of items) {
+      if (typeof item.cost === "number") total += item.cost;
+    }
+    if (items.length < limit) break;
+    offset += limit;
+  }
+
+  return Math.round(total * 10000) / 10000;
 }
 
 function dedupeAndSort(entries) {

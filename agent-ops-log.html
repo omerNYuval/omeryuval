@@ -1180,6 +1180,33 @@
     background:rgba(255,255,255,0.05);
     border-color:rgba(255,255,255,0.08);
   }
+  .logs-total-spend{
+    margin-bottom:16px;
+    padding:10px 14px;
+    border-radius:10px;
+    background:color-mix(in srgb, var(--wire) 12%, transparent);
+    border:1px solid color-mix(in srgb, var(--wire) 35%, transparent);
+    color:var(--wire);
+    font-size:0.85rem;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .log-refresh-btn{
+    background:transparent;
+    color:var(--wire);
+    border:1px solid color-mix(in srgb, var(--wire) 45%, transparent);
+    padding:5px 14px;
+    border-radius:999px;
+    font-family:'Heebo', sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    cursor:pointer;
+    white-space:nowrap;
+  }
 
   .empty{
     text-align:center;
@@ -1390,6 +1417,7 @@
             <div class="insights-sub" id="logsSummary">כל הסריקות שבוצעו והעלות של כל אחת</div>
           </div>
         </div>
+        <div class="logs-total-spend" id="logsTotalSpend"></div>
         <div id="logsList"></div>
       </div>
 
@@ -2289,6 +2317,9 @@
       summary.textContent = `${scans.length} סריקות בסך הכול · ${costNote}`;
     }
 
+    if(totalSpendCache != null) renderTotalSpendLine("ok");
+    else loadTotalSpend();
+
     const container = document.getElementById("logsList");
     if(!scans.length){
       container.innerHTML = '<div class="empty">אין עדיין לוגים להצגה.</div>';
@@ -2310,6 +2341,46 @@
         </div>
       `;
     }).join("");
+  }
+
+  // A per-scan cost is only known from the moment the Worker started
+  // tagging it, but DataForSEO itself has the full history of every task
+  // ever run on this account (via the free keywords_data/id_list
+  // endpoint) -- so this asks the Worker to sum that up as a fully
+  // authoritative "total ever spent" figure, cached per page load so
+  // revisiting the לוגים tab doesn't re-fetch it every time.
+  let totalSpendCache = null;
+
+  function renderTotalSpendLine(state){
+    const el = document.getElementById("logsTotalSpend");
+    if(!el) return;
+    if(state === "loading"){
+      el.innerHTML = `<span>טוען את סך ההוצאה הכוללת מ-DataForSEO…</span>`;
+      return;
+    }
+    if(state === "error"){
+      el.innerHTML = `<span>לא הצלחנו לטעון את סך ההוצאה הכוללת כרגע.</span><button type="button" id="logsRefreshSpendBtn" class="log-refresh-btn">נסה שוב</button>`;
+    }else{
+      el.innerHTML = `<span>סך הכול הוצא אי פעם על החשבון (לפי DataForSEO): $${totalSpendCache.toFixed(4)}</span><button type="button" id="logsRefreshSpendBtn" class="log-refresh-btn">רענן</button>`;
+    }
+    document.getElementById("logsRefreshSpendBtn").addEventListener("click", loadTotalSpend);
+  }
+
+  async function loadTotalSpend(){
+    renderTotalSpendLine("loading");
+    try{
+      const res = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "total_spend" }),
+      });
+      const result = await res.json();
+      if(!res.ok || result.error || typeof result.totalSpend !== "number") throw new Error(result.error || "bad response");
+      totalSpendCache = result.totalSpend;
+      renderTotalSpendLine("ok");
+    }catch(err){
+      renderTotalSpendLine("error");
+    }
   }
 
   // Fires the request in the background and reconciles local state with
