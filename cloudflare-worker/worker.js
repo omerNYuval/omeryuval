@@ -320,7 +320,7 @@ async function runMonthly(env, selection) {
     title: "סריקת ביקוש הושלמה",
     detail: `נבדקו ${selection.keywords.length} מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור ${bdi(label)} (הרצה חודשית). נמצאו ${signalsFound} מונחים בעלייה.${buildBreakdownHtml(breakdown)}`,
     region: label,
-    tags: ["נתונים אמיתיים", "חודשי"],
+    tags: ["חודשי"],
   });
 
   return { newEntries, market: label };
