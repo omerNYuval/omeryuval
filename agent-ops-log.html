@@ -721,6 +721,13 @@
   .insight-stat.tone-wire{--tone-color:var(--wire);}
   .insight-stat.tone-moss{--tone-color:var(--moss);}
   .insight-stat.tone-muted{--tone-color:var(--muted);}
+  .insight-stat-link{
+    cursor:pointer;
+    font-family:inherit;
+    color:inherit;
+    width:100%;
+  }
+  .insight-stat-link:hover{border-color:color-mix(in srgb, var(--tone-color) 55%, transparent);}
   .insight-icon{
     width:36px;
     height:36px;
@@ -1113,10 +1120,10 @@
           </div>
         </div>
         <div class="insights-stats">
-          <div class="insight-stat tone-wire">
+          <button type="button" class="insight-stat tone-wire insight-stat-link" id="scansStatCard">
             <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></span>
             <div class="insight-content"><span class="value" id="insightScans">0</span><span class="label">סריקות שבוצעו</span></div>
-          </div>
+          </button>
           <div class="insight-stat">
             <span class="insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></span>
             <div class="insight-content"><span class="value" id="insightSignals">0</span><span class="label">איתותי עלייה</span></div>
@@ -1828,6 +1835,7 @@
     goTo("filter", "run");
   });
   runPanelBtn.addEventListener("click", handleRunClick);
+  document.getElementById("scansStatCard").addEventListener("click", ()=> goTo("filter", "scan"));
 
   (function initRunWizard(){
     const NEIGHBORHOODS = {
