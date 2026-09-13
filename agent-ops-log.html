@@ -1153,6 +1153,34 @@
   }
   .archive-delete-btn:hover{background:var(--danger); color:var(--paper);}
 
+  .log-item{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px;
+    padding:14px 16px;
+    margin-bottom:10px;
+  }
+  .log-item-top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .log-item-title{font-size:0.92rem; font-weight:700;}
+  .log-item-meta{font-size:0.78rem; color:var(--muted); margin-top:4px;}
+  .log-item .meta{margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;}
+  .log-cost-badge{
+    font-size:0.8rem;
+    font-weight:800;
+    color:var(--moss);
+    background:color-mix(in srgb, var(--moss) 18%, transparent);
+    border:1px solid color-mix(in srgb, var(--moss) 45%, transparent);
+    padding:3px 10px;
+    border-radius:999px;
+    white-space:nowrap;
+    direction:ltr;
+  }
+  .log-cost-badge.unknown{
+    color:var(--muted);
+    background:rgba(255,255,255,0.05);
+    border-color:rgba(255,255,255,0.08);
+  }
+
   .empty{
     text-align:center;
     color:var(--muted);
@@ -1190,6 +1218,7 @@
       <button class="side-link" data-filter="score">מונח בעלייה</button>
       <button class="side-link" data-filter="discovery">גילויי מילות מפתח</button>
       <button class="side-link" data-filter="archive">גיבוי ושחזור</button>
+      <button class="side-link" data-filter="logs">לוגים</button>
       <div class="side-label">אזור</div>
       <button class="side-link" data-region="Indianapolis"><span class="region-dot"></span>אינדיאנפוליס</button>
       <button class="side-link" data-region="Boston"><span class="region-dot"></span>בוסטון</button>
@@ -1349,6 +1378,19 @@
           <button type="button" class="keywords-select-all" id="restoreAllBtn">שחזר הכל</button>
         </div>
         <div id="archiveList"></div>
+      </div>
+
+      <div class="insights-panel" id="logsPanel" hidden>
+        <div class="insights-header">
+          <span class="insights-icon" style="color:var(--wire);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M4 4h16v16H4z"></path><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="12" y2="17"></line></svg>
+          </span>
+          <div>
+            <h2>לוגים</h2>
+            <div class="insights-sub" id="logsSummary">כל הסריקות שבוצעו והעלות של כל אחת</div>
+          </div>
+        </div>
+        <div id="logsList"></div>
       </div>
 
       <div class="insights-panel" id="insightsPanel" hidden>
@@ -1724,9 +1766,14 @@
     archivePanel.hidden = !showingArchive;
     if(showingArchive) renderArchivePanel();
 
+    const logsPanel = document.getElementById("logsPanel");
+    const showingLogs = activeAxis === "filter" && activeFilter === "logs";
+    logsPanel.hidden = !showingLogs;
+    if(showingLogs) renderLogsPanel();
+
     const showingAll = activeAxis === "filter" && activeFilter === "all";
-    feed.hidden = showingAll || showingRun || showingScheduled || showingKeywords || showingArchive;
-    if(showingAll || showingRun || showingScheduled || showingKeywords || showingArchive){
+    feed.hidden = showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs;
+    if(showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs){
       feed.innerHTML = "";
       return;
     }
@@ -2224,6 +2271,46 @@
   }
 
   document.getElementById("restoreAllBtn").addEventListener("click", restoreAllArchived);
+
+  // Cost is only known for scans run after the Worker started tagging it
+  // (via balance-before/balance-after), so older entries show "לא זמינה"
+  // rather than a misleading $0.
+  function renderLogsPanel(){
+    const scans = allEntries.filter(e=> e.type === "scan").slice().sort((a,b)=> (a.date+a.time < b.date+b.time ? 1 : -1));
+    const summary = document.getElementById("logsSummary");
+    const withCost = scans.filter(e=> typeof e.costUsd === "number");
+    const totalCost = withCost.reduce((sum,e)=> sum + e.costUsd, 0);
+    if(!scans.length){
+      summary.textContent = "עדיין לא בוצעו סריקות";
+    }else{
+      const costNote = withCost.length
+        ? `עלות כוללת ידועה: $${totalCost.toFixed(4)}${withCost.length < scans.length ? ` (${withCost.length} מתוך ${scans.length} סריקות עם נתוני עלות)` : ""}`
+        : "אין עדיין נתוני עלות לסריקות הקיימות";
+      summary.textContent = `${scans.length} סריקות בסך הכול · ${costNote}`;
+    }
+
+    const container = document.getElementById("logsList");
+    if(!scans.length){
+      container.innerHTML = '<div class="empty">אין עדיין לוגים להצגה.</div>';
+      return;
+    }
+    container.innerHTML = scans.map(e=>{
+      const costLabel = typeof e.costUsd === "number" ? `$${e.costUsd.toFixed(4)}` : "עלות לא זמינה";
+      const costClass = typeof e.costUsd === "number" ? "" : " unknown";
+      return `
+        <div class="log-item">
+          <div class="log-item-top">
+            <span class="log-item-title">${e.title}</span>
+            <span class="log-cost-badge${costClass}">${costLabel}</span>
+          </div>
+          <div class="log-item-meta">${e.region} · ${dayLabel(e.date)}, ${e.time}</div>
+          <div class="meta">
+            ${e.tags.map(t=>`<span class="badge${t.includes("אומת: אינדיאנפוליס") ? " badge-indianapolis" : ""}">${t}</span>`).join("")}
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
 
   // Fires the request in the background and reconciles local state with
   // the server's real response once it lands. Callers apply their own

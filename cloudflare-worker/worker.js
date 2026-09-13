@@ -102,8 +102,10 @@ export default {
         ? await runMonthly(env, selection)
         : await runTrends(env, selection);
 
-      const merged = dedupeAndSort([...newEntries, ...(current.json.entries || [])]).slice(0, MAX_ENTRIES);
       const balance = await fetchBalance(env).catch(() => current.json.balance ?? null);
+      attachRunCost(newEntries, current.json.balance, balance);
+
+      const merged = dedupeAndSort([...newEntries, ...(current.json.entries || [])]).slice(0, MAX_ENTRIES);
 
       const output = {
         generated_at: new Date().toISOString(),
@@ -132,6 +134,22 @@ export default {
 
 function entryKey(e) {
   return `${e.date}|${e.time}|${e.title}|${e.region}`;
+}
+
+// The DataForSEO balance is fetched both before (current.json.balance, from
+// the last commit) and after (balance, just now) every real run, so the
+// run's actual dollar cost is simply the difference -- no separate
+// cost-tracking API call needed. A negative diff (e.g. the account was
+// topped up between the two reads) is left untagged rather than shown as
+// a nonsensical negative cost.
+function attachRunCost(newEntries, balanceBefore, balanceAfter) {
+  if (typeof balanceBefore !== "number" || typeof balanceAfter !== "number") return;
+  const cost = balanceBefore - balanceAfter;
+  if (cost < 0) return;
+  const scanEntry = newEntries.find((e) => e.type === "scan");
+  if (!scanEntry) return;
+  scanEntry.costUsd = Math.round(cost * 10000) / 10000;
+  scanEntry.tags = [...scanEntry.tags, `עלות: $${scanEntry.costUsd.toFixed(4)}`];
 }
 
 function applyArchiveAction(data, body) {
