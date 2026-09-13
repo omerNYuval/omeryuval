@@ -738,6 +738,22 @@
     color:var(--muted);
   }
   .keywords-footer.warn{color:var(--amber); font-weight:700;}
+  .keywords-select-all{
+    margin-inline-start:auto;
+    background:transparent;
+    color:var(--paper);
+    border:1px solid var(--steel);
+    padding:8px 18px;
+    border-radius:999px;
+    font-family:'Heebo', sans-serif;
+    font-weight:700;
+    font-size:0.82rem;
+    cursor:pointer;
+    white-space:nowrap;
+    flex-shrink:0;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .keywords-select-all:hover{border-color:var(--amber); color:var(--amber);}
   .insights-header{
     display:flex;
     align-items:center;
@@ -1190,6 +1206,7 @@
             <h2>מילות מפתח</h2>
             <div class="insights-sub">בחר אילו מילות מפתח ייכללו בהרצה הבאה</div>
           </div>
+          <button type="button" class="keywords-select-all" id="keywordsSelectAllBtn">הפעל הכל</button>
         </div>
         <div id="keywordsList"></div>
       </div>
@@ -1945,6 +1962,12 @@
       });
     });
   }
+
+  document.getElementById("keywordsSelectAllBtn").addEventListener("click", ()=>{
+    enabledKeywords = [...ALL_KEYWORDS];
+    saveEnabledKeywords(enabledKeywords);
+    renderKeywordsPanel();
+  });
 
   function updateKeywordsFooter(){
     const footer = document.getElementById("keywordsFooter");
