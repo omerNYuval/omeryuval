@@ -182,15 +182,21 @@ function attachRunCost(newEntries, balanceBefore, balanceAfter) {
 }
 
 // Matches DataForSEO's own billed tasks (from id_list) back to the scan
-// entry that caused them, for entries created before attachRunCost existed.
-// Each entry only stores a market-local date+time at minute granularity
-// (not the task's own id), so matching is by proximity: a task counts as
-// belonging to an entry if it was posted on the same market-local date and
-// within a few minutes of the entry's recorded time -- safe here because
-// runs are always well over the 30-minute cooldown apart. A run can involve
-// more than one billed call (location-fallback attempts, the subregion
-// check), so every task within the window is claimed and summed, not just
-// the single closest one.
+// entry that caused them. This is the authoritative source of truth for
+// cost, so it always overwrites whatever costUsd an entry already has --
+// including one set by attachRunCost's real-time balance-diff, which can
+// be wrong if any other DataForSEO usage (a run that errored out after
+// consuming balance but before committing, manual testing, etc.) happened
+// in between two successfully-committed runs and got lumped into the
+// wrong entry. Each entry only stores a market-local date+time at minute
+// granularity (not the task's own id), so matching is by proximity: a task
+// counts as belonging to an entry if it was posted on the same market-local
+// date and within a few minutes of the entry's recorded time -- safe here
+// because runs are always well over the 30-minute cooldown apart. A run can
+// involve more than one billed call (location-fallback attempts, the
+// subregion check), so every task within the window is claimed and summed,
+// not just the single closest one. An entry with no matching task keeps
+// whatever costUsd it already had (id_list only covers the last ~6 months).
 const COST_MATCH_WINDOW_MINUTES = 5;
 
 function backfillEntryCosts(data, tasks) {
@@ -199,7 +205,7 @@ function backfillEntryCosts(data, tasks) {
 
   const claimed = new Set();
   for (const entry of entries) {
-    if (entry.type !== "scan" || typeof entry.costUsd === "number") continue;
+    if (entry.type !== "scan") continue;
     const entryMinutes = timeStringToMinutes(entry.time);
     const matches = [];
     tasks.forEach((t, i) => {
