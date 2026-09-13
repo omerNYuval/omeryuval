@@ -122,17 +122,21 @@
         "10 חיפושים לחודש",
         "נתונים אמיתיים"
       ]
-    },
+    }
+  ],
+  "archived_entries": [
     {
       "date": "2026-09-10",
       "time": "13:44",
-      "type": "scan",
-      "title": "סריקת ביקוש הושלמה",
-      "detail": "נבדקו 5 מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור <bdi dir=\"ltr\">Boston, MA</bdi>. נמצאו 2 מונחים בעלייה.",
+      "type": "score",
+      "title": "עלייה בביקוש: <bdi dir=\"ltr\">garage door spring repair</bdi>",
+      "detail": "נפח החיפוש למונח <bdi dir=\"ltr\">\"garage door spring repair\"</bdi> עלה ב-<bdi dir=\"ltr\">100%</bdi> לעומת החודש הקודם באזור <bdi dir=\"ltr\">Boston, MA</bdi> (נפח נוכחי: כ-<bdi dir=\"ltr\">20</bdi> חיפושים בחודש).",
       "region": "Boston, MA",
       "tags": [
-        "נתונים אמיתיים"
-      ]
+        "+100%",
+        "20 חיפושים לחודש"
+      ],
+      "archived_at": "2026-09-13T16:52:15.888Z"
     },
     {
       "date": "2026-09-10",
@@ -144,20 +148,20 @@
       "tags": [
         "+24%",
         "210 חיפושים לחודש"
-      ]
+      ],
+      "archived_at": "2026-09-13T16:52:15.888Z"
     },
     {
       "date": "2026-09-10",
       "time": "13:44",
-      "type": "score",
-      "title": "עלייה בביקוש: <bdi dir=\"ltr\">garage door spring repair</bdi>",
-      "detail": "נפח החיפוש למונח <bdi dir=\"ltr\">\"garage door spring repair\"</bdi> עלה ב-<bdi dir=\"ltr\">100%</bdi> לעומת החודש הקודם באזור <bdi dir=\"ltr\">Boston, MA</bdi> (נפח נוכחי: כ-<bdi dir=\"ltr\">20</bdi> חיפושים בחודש).",
+      "type": "scan",
+      "title": "סריקת ביקוש הושלמה",
+      "detail": "נבדקו 5 מונחי מפתח מרכזיים מול נתוני חיפוש אמיתיים עבור <bdi dir=\"ltr\">Boston, MA</bdi>. נמצאו 2 מונחים בעלייה.",
       "region": "Boston, MA",
       "tags": [
-        "+100%",
-        "20 חיפושים לחודש"
-      ]
+        "נתונים אמיתיים"
+      ],
+      "archived_at": "2026-09-13T16:52:15.888Z"
     }
-  ],
-  "archived_entries": []
+  ]
 }
