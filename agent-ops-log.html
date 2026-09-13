@@ -2140,11 +2140,23 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    if(!res.ok) throw new Error("archive action failed");
+    if(!res.ok) throw new Error("הבקשה ל-Worker נכשלה");
     const result = await res.json();
-    meta = result;
-    allEntries = result.entries || [];
-    archivedEntries = result.archived_entries || [];
+    if(result.error) throw new Error(result.error);
+
+    // A worker that doesn't understand archive actions yet (old deploy)
+    // silently falls through to its normal run logic instead of erroring,
+    // and neither of its response shapes carries "archived_entries" — so
+    // that field's presence is what proves this request was actually
+    // handled as an archive/restore/delete, not misread as a live run.
+    const data = result.skipped ? result.data : result;
+    if(!data || !("archived_entries" in data)){
+      throw new Error("ה-Worker עדיין לא מעודכן לתמיכה בגיבוי ושחזור — צריך לפרוס מחדש את הקוד שלו לפני שהפעולה הזו תעבוד");
+    }
+
+    meta = data;
+    allEntries = data.entries || [];
+    archivedEntries = data.archived_entries || [];
     render();
     updateStatusPill();
   }
@@ -2153,7 +2165,7 @@
     try{
       await sendArchiveAction({ action: "archive", entryKey: key });
     }catch(err){
-      statusText.textContent = "העברה לגיבוי נכשלה — נסה שוב";
+      statusText.textContent = err.message || "העברה לגיבוי נכשלה — נסה שוב";
     }
   }
 
@@ -2162,7 +2174,7 @@
     try{
       await sendArchiveAction({ action: "archive_bulk", entryKeys: keys });
     }catch(err){
-      statusText.textContent = "ניקוי הנתונים נכשל — נסה שוב";
+      statusText.textContent = err.message || "ניקוי הנתונים נכשל — נסה שוב";
     }
   }
 
@@ -2170,7 +2182,7 @@
     try{
       await sendArchiveAction({ action: "restore", entryKey: key });
     }catch(err){
-      statusText.textContent = "השחזור נכשל — נסה שוב";
+      statusText.textContent = err.message || "השחזור נכשל — נסה שוב";
     }
   }
 
@@ -2179,7 +2191,7 @@
     try{
       await sendArchiveAction({ action: "delete", entryKey: key });
     }catch(err){
-      statusText.textContent = "המחיקה נכשלה — נסה שוב";
+      statusText.textContent = err.message || "המחיקה נכשלה — נסה שוב";
     }
   }
 
