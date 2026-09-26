@@ -896,14 +896,27 @@
     margin-top:2px;
   }
   .site-update-frame-wrap{
+    position:relative;
     border:1px solid var(--steel);
     border-radius:12px;
     overflow:hidden;
     height:70vh;
     background:var(--panel);
   }
+  /* garage-door-site is its own document -- our CSS can't reach its inner
+     content to hide its native scrollbar the way we do for this page's own
+     html/body. Instead the iframe is drawn a bit wider than its clipped
+     wrapper and pinned to the physical left edge (not a logical/RTL-aware
+     one, so this holds regardless of this page's own rtl direction): the
+     scrollbar always renders at the far edge of whatever the iframed page's
+     own writing direction is, and the extra width pushes it past the
+     wrapper's visible bounds where overflow:hidden clips it. Wheel/trackpad
+     scrolling inside the iframe still works -- only the visible bar is gone. */
   .site-update-frame-wrap iframe{
-    width:100%;
+    position:absolute;
+    top:0;
+    left:0;
+    width:calc(100% + 20px);
     height:100%;
     border:none;
     display:block;
