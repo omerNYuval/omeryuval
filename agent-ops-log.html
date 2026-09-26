@@ -930,11 +930,47 @@
     background:var(--panel-raised);
   }
   .site-update-frame-gate[hidden]{display:none;}
-  .site-update-frame-gate .keywords-select-all{
-    margin-inline-start:0;
-    padding:12px 26px;
-    font-size:0.9rem;
+  .site-update-primary-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    background:var(--wire);
+    color:var(--charcoal);
+    font-family:'Heebo', sans-serif;
+    font-weight:800;
+    font-size:0.95rem;
+    border:none;
+    padding:14px 28px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 8px 24px color-mix(in srgb, var(--wire) 35%, transparent);
+    transition:transform .15s ease, box-shadow .15s ease;
   }
+  .site-update-primary-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 30px color-mix(in srgb, var(--wire) 45%, transparent);
+  }
+  .site-update-primary-btn svg{width:19px;height:19px;flex-shrink:0;}
+  .site-update-open-link{
+    margin-inline-start:auto;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:transparent;
+    color:var(--wire);
+    border:1px solid color-mix(in srgb, var(--wire) 45%, transparent);
+    padding:8px 18px;
+    border-radius:999px;
+    font-family:'Heebo', sans-serif;
+    font-weight:700;
+    font-size:0.82rem;
+    cursor:pointer;
+    white-space:nowrap;
+    flex-shrink:0;
+    transition:border-color .15s ease, background-color .15s ease;
+  }
+  .site-update-open-link:hover{background:color-mix(in srgb, var(--wire) 14%, transparent); border-color:var(--wire);}
+  .site-update-open-link svg{width:15px;height:15px;flex-shrink:0;}
   .insights-stats{
     display:grid;
     grid-template-columns:repeat(5,1fr);
@@ -1301,6 +1337,9 @@
     flex-wrap:wrap;
   }
   .log-refresh-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
     background:transparent;
     color:var(--wire);
     border:1px solid color-mix(in srgb, var(--wire) 45%, transparent);
@@ -1311,7 +1350,10 @@
     font-size:0.78rem;
     cursor:pointer;
     white-space:nowrap;
+    transition:background-color .15s ease;
   }
+  .log-refresh-btn:hover{background:color-mix(in srgb, var(--wire) 14%, transparent);}
+  .log-refresh-btn svg{width:13px;height:13px;flex-shrink:0;}
 
   .empty{
     text-align:center;
@@ -1529,13 +1571,19 @@
             <h2>עדכון דפי אתר</h2>
             <div class="insights-sub">חיבור לאתר הלקוחות (garage-door-site) — כרגע תצוגה בלבד, בלי שום עריכה.</div>
           </div>
-          <a class="keywords-select-all" href="https://omernyuval.github.io/garage-door-site/" target="_blank" rel="noopener">פתח באתר עצמו ‹</a>
+          <a class="site-update-open-link" href="https://omernyuval.github.io/garage-door-site/" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            פתח באתר עצמו
+          </a>
         </div>
         <div class="logs-total-spend" id="siteUpdateMeta"><span>טוען פרטים על האתר…</span></div>
         <div class="site-update-frame-wrap">
           <iframe id="siteUpdateFrame" title="תצוגה חיה של garage-door-site" loading="lazy"></iframe>
           <div class="site-update-frame-gate" id="siteUpdateFrameGate">
-            <button type="button" class="keywords-select-all" id="siteUpdateLoadBtn">הצג תצוגה חיה של האתר ‹</button>
+            <button type="button" class="site-update-primary-btn" id="siteUpdateLoadBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              הצג תצוגה חיה של האתר
+            </button>
           </div>
         </div>
       </div>
@@ -2580,13 +2628,14 @@
       el.innerHTML = `<span>טוען פרטים על garage-door-site…</span>`;
       return;
     }
+    const refreshIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>`;
     if(state === "error"){
-      el.innerHTML = `<span>לא הצלחנו לטעון פרטים על האתר: <bdi dir="ltr">${info}</bdi></span><button type="button" id="siteUpdateRefreshBtn" class="log-refresh-btn">נסה שוב</button>`;
+      el.innerHTML = `<span>לא הצלחנו לטעון פרטים על האתר: <bdi dir="ltr">${info}</bdi></span><button type="button" id="siteUpdateRefreshBtn" class="log-refresh-btn">${refreshIcon}נסה שוב</button>`;
     }else{
       const commitPart = info.lastCommitDate
         ? ` · עודכן לאחרונה: ${info.lastCommitDate}${info.lastCommitMessage ? ` — "<bdi dir="ltr">${info.lastCommitMessage}</bdi>"` : ""}`
         : "";
-      el.innerHTML = `<span>כותרת נוכחית באתר: <bdi dir="ltr">${info.title || "לא נמצאה"}</bdi>${commitPart}</span><button type="button" id="siteUpdateRefreshBtn" class="log-refresh-btn">רענן</button>`;
+      el.innerHTML = `<span>כותרת נוכחית באתר: <bdi dir="ltr">${info.title || "לא נמצאה"}</bdi>${commitPart}</span><button type="button" id="siteUpdateRefreshBtn" class="log-refresh-btn">${refreshIcon}רענן</button>`;
     }
     document.getElementById("siteUpdateRefreshBtn").addEventListener("click", loadSiteUpdateMeta);
   }
