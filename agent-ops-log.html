@@ -920,6 +920,15 @@
     height:100%;
     border:none;
     display:block;
+    transition:filter .3s ease, transform .3s ease;
+  }
+  /* Loads right away (needed to have something to show) but sits blurred
+     and non-interactive behind the gate button until the user asks for
+     it -- a scaled-up blur avoids a sharp, obviously-blurred edge. */
+  .site-update-frame-wrap iframe.is-blurred{
+    filter:blur(14px);
+    transform:scale(1.05);
+    pointer-events:none;
   }
   .site-update-frame-gate{
     position:absolute;
@@ -927,7 +936,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    background:var(--panel-raised);
+    background:rgba(0,0,0,0.4);
   }
   .site-update-frame-gate[hidden]{display:none;}
   .site-update-primary-btn{
@@ -1615,7 +1624,7 @@
         </div>
         <div class="site-update-info" id="siteUpdateMeta"><div class="site-update-info-loading">טוען פרטים על garage-door-site…</div></div>
         <div class="site-update-frame-wrap">
-          <iframe id="siteUpdateFrame" title="תצוגה חיה של garage-door-site" loading="lazy"></iframe>
+          <iframe id="siteUpdateFrame" src="https://omernyuval.github.io/garage-door-site/" title="תצוגה חיה של garage-door-site" loading="lazy" class="is-blurred"></iframe>
           <div class="site-update-frame-gate" id="siteUpdateFrameGate">
             <button type="button" class="site-update-primary-btn" id="siteUpdateLoadBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
@@ -2527,12 +2536,11 @@
 
   document.getElementById("restoreAllBtn").addEventListener("click", restoreAllArchived);
 
-  // The iframe only actually loads garage-door-site once the user asks for
-  // it, instead of firing on every visit to the panel -- once loaded it
-  // stays up for the rest of the session, no need to re-click.
+  // The iframe loads right away so there's something to show blurred behind
+  // the gate, but stays non-interactive until clicked -- once revealed it
+  // stays sharp for the rest of the session, no need to re-click.
   document.getElementById("siteUpdateLoadBtn").addEventListener("click", ()=>{
-    const frame = document.getElementById("siteUpdateFrame");
-    if(!frame.src) frame.src = "https://omernyuval.github.io/garage-door-site/";
+    document.getElementById("siteUpdateFrame").classList.remove("is-blurred");
     document.getElementById("siteUpdateFrameGate").hidden = true;
   });
 
