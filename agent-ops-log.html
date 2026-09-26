@@ -971,6 +971,43 @@
   }
   .site-update-open-link:hover{background:color-mix(in srgb, var(--wire) 14%, transparent); border-color:var(--wire);}
   .site-update-open-link svg{width:15px;height:15px;flex-shrink:0;}
+  .site-update-info{
+    background:rgba(var(--overlay-rgb),0.04);
+    border:1px solid rgba(var(--overlay-rgb),0.08);
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:16px;
+  }
+  .site-update-info-loading{font-size:0.85rem; color:var(--muted);}
+  .site-update-info-error{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    font-size:0.85rem;
+    color:var(--danger);
+  }
+  .site-update-info-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .site-update-info-header span{font-size:0.78rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em;}
+  .site-update-info-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:14px;
+  }
+  @media (max-width:900px){
+    .site-update-info-grid{grid-template-columns:1fr;}
+  }
+  .site-update-info-item{display:flex; flex-direction:column; gap:3px; min-width:0;}
+  .site-update-info-label{font-size:0.72rem; color:var(--muted);}
+  .site-update-info-value{font-size:0.88rem; font-weight:700; color:var(--paper); line-height:1.5; overflow-wrap:break-word;}
+  .site-update-info-value bdi{font-weight:600;}
   .insights-stats{
     display:grid;
     grid-template-columns:repeat(5,1fr);
@@ -1576,7 +1613,7 @@
             פתח באתר עצמו
           </a>
         </div>
-        <div class="logs-total-spend" id="siteUpdateMeta"><span>טוען פרטים על האתר…</span></div>
+        <div class="site-update-info" id="siteUpdateMeta"><div class="site-update-info-loading">טוען פרטים על garage-door-site…</div></div>
         <div class="site-update-frame-wrap">
           <iframe id="siteUpdateFrame" title="תצוגה חיה של garage-door-site" loading="lazy"></iframe>
           <div class="site-update-frame-gate" id="siteUpdateFrameGate">
@@ -2625,17 +2662,32 @@
     const el = document.getElementById("siteUpdateMeta");
     if(!el) return;
     if(state === "loading"){
-      el.innerHTML = `<span>טוען פרטים על garage-door-site…</span>`;
+      el.innerHTML = `<div class="site-update-info-loading">טוען פרטים על garage-door-site…</div>`;
       return;
     }
     const refreshIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>`;
     if(state === "error"){
-      el.innerHTML = `<span>לא הצלחנו לטעון פרטים על האתר: <bdi dir="ltr">${info}</bdi></span><button type="button" id="siteUpdateRefreshBtn" class="log-refresh-btn">${refreshIcon}נסה שוב</button>`;
+      el.innerHTML = `<div class="site-update-info-error"><span>לא הצלחנו לטעון פרטים על האתר: <bdi dir="ltr">${info}</bdi></span><button type="button" id="siteUpdateRefreshBtn" class="log-refresh-btn">${refreshIcon}נסה שוב</button></div>`;
     }else{
-      const commitPart = info.lastCommitDate
-        ? ` · עודכן לאחרונה: ${info.lastCommitDate}${info.lastCommitMessage ? ` — "<bdi dir="ltr">${info.lastCommitMessage}</bdi>"` : ""}`
-        : "";
-      el.innerHTML = `<span>כותרת נוכחית באתר: <bdi dir="ltr">${info.title || "לא נמצאה"}</bdi>${commitPart}</span><button type="button" id="siteUpdateRefreshBtn" class="log-refresh-btn">${refreshIcon}רענן</button>`;
+      const commitValue = info.lastCommitDate
+        ? `${info.lastCommitDate}${info.lastCommitMessage ? ` — "<bdi dir="ltr">${info.lastCommitMessage}</bdi>"` : ""}`
+        : "לא ידוע";
+      el.innerHTML = `
+        <div class="site-update-info-header">
+          <span>פרטי האתר</span>
+          <button type="button" id="siteUpdateRefreshBtn" class="log-refresh-btn">${refreshIcon}רענן</button>
+        </div>
+        <div class="site-update-info-grid">
+          <div class="site-update-info-item">
+            <span class="site-update-info-label">כותרת נוכחית באתר</span>
+            <span class="site-update-info-value"><bdi dir="ltr">${info.title || "לא נמצאה"}</bdi></span>
+          </div>
+          <div class="site-update-info-item">
+            <span class="site-update-info-label">עודכן לאחרונה</span>
+            <span class="site-update-info-value">${commitValue}</span>
+          </div>
+        </div>
+      `;
     }
     document.getElementById("siteUpdateRefreshBtn").addEventListener("click", loadSiteUpdateMeta);
   }
