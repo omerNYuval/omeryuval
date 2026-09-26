@@ -920,16 +920,26 @@
     height:100%;
     border:none;
     display:block;
-    transition:filter .3s ease, transform .3s ease;
   }
-  /* Loads right away (needed to have something to show) but sits blurred
-     and non-interactive behind the gate button until the user asks for
-     it -- a scaled-up blur avoids a sharp, obviously-blurred edge. */
-  .site-update-frame-wrap iframe.is-blurred{
-    filter:blur(14px);
-    transform:scale(1.05);
-    pointer-events:none;
+  .site-update-frame-wrap iframe[hidden]{display:none;}
+  /* A blurred live iframe was laggy -- garage-door-site's hero runs a
+     parallax effect, and re-rasterizing a blur filter over a repainting
+     layer every frame is expensive. A blurred static image behind the gate
+     is cheap (blurred once, never recomputed) and looks the same at a
+     glance; the iframe itself stays unblurred and unloaded (no src) until
+     the button is clicked, so nothing animated is ever rendered under a
+     blur. og-image.png is the site's own social-preview screenshot, sized
+     for exactly this kind of "preview of the page" use. */
+  .site-update-blur-img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    filter:blur(18px);
+    transform:scale(1.08);
   }
+  .site-update-blur-img[hidden]{display:none;}
   .site-update-frame-gate{
     position:absolute;
     inset:0;
@@ -1624,7 +1634,8 @@
         </div>
         <div class="site-update-info" id="siteUpdateMeta"><div class="site-update-info-loading">טוען פרטים על garage-door-site…</div></div>
         <div class="site-update-frame-wrap">
-          <iframe id="siteUpdateFrame" src="https://omernyuval.github.io/garage-door-site/" title="תצוגה חיה של garage-door-site" loading="lazy" class="is-blurred"></iframe>
+          <img id="siteUpdateBlurImg" class="site-update-blur-img" src="https://omernyuval.github.io/garage-door-site/og-image.png" alt="" aria-hidden="true">
+          <iframe id="siteUpdateFrame" title="תצוגה חיה של garage-door-site" loading="lazy" hidden></iframe>
           <div class="site-update-frame-gate" id="siteUpdateFrameGate">
             <button type="button" class="site-update-primary-btn" id="siteUpdateLoadBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
@@ -2536,11 +2547,15 @@
 
   document.getElementById("restoreAllBtn").addEventListener("click", restoreAllArchived);
 
-  // The iframe loads right away so there's something to show blurred behind
-  // the gate, but stays non-interactive until clicked -- once revealed it
-  // stays sharp for the rest of the session, no need to re-click.
+  // The iframe itself only loads once clicked -- the blurred static image
+  // behind the gate is what stands in for a live preview until then, so
+  // nothing animated ever needs to render under a blur (see the CSS note
+  // on .site-update-blur-img for why that mattered).
   document.getElementById("siteUpdateLoadBtn").addEventListener("click", ()=>{
-    document.getElementById("siteUpdateFrame").classList.remove("is-blurred");
+    const frame = document.getElementById("siteUpdateFrame");
+    if(!frame.src) frame.src = "https://omernyuval.github.io/garage-door-site/";
+    frame.hidden = false;
+    document.getElementById("siteUpdateBlurImg").hidden = true;
     document.getElementById("siteUpdateFrameGate").hidden = true;
   });
 
