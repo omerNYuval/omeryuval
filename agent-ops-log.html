@@ -921,6 +921,20 @@
     border:none;
     display:block;
   }
+  .site-update-frame-gate{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--panel-raised);
+  }
+  .site-update-frame-gate[hidden]{display:none;}
+  .site-update-frame-gate .keywords-select-all{
+    margin-inline-start:0;
+    padding:12px 26px;
+    font-size:0.9rem;
+  }
   .insights-stats{
     display:grid;
     grid-template-columns:repeat(5,1fr);
@@ -1519,7 +1533,10 @@
         </div>
         <div class="logs-total-spend" id="siteUpdateMeta"><span>טוען פרטים על האתר…</span></div>
         <div class="site-update-frame-wrap">
-          <iframe id="siteUpdateFrame" src="https://omernyuval.github.io/garage-door-site/" title="תצוגה חיה של garage-door-site" loading="lazy"></iframe>
+          <iframe id="siteUpdateFrame" title="תצוגה חיה של garage-door-site" loading="lazy"></iframe>
+          <div class="site-update-frame-gate" id="siteUpdateFrameGate">
+            <button type="button" class="keywords-select-all" id="siteUpdateLoadBtn">הצג תצוגה חיה של האתר ‹</button>
+          </div>
         </div>
       </div>
 
@@ -2424,6 +2441,15 @@
   }
 
   document.getElementById("restoreAllBtn").addEventListener("click", restoreAllArchived);
+
+  // The iframe only actually loads garage-door-site once the user asks for
+  // it, instead of firing on every visit to the panel -- once loaded it
+  // stays up for the rest of the session, no need to re-click.
+  document.getElementById("siteUpdateLoadBtn").addEventListener("click", ()=>{
+    const frame = document.getElementById("siteUpdateFrame");
+    if(!frame.src) frame.src = "https://omernyuval.github.io/garage-door-site/";
+    document.getElementById("siteUpdateFrameGate").hidden = true;
+  });
 
   // Cost is only known for scans run after the Worker started tagging it
   // (via balance-before/balance-after), so older entries show "לא זמינה"
