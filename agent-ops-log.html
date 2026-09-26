@@ -895,6 +895,19 @@
     color:var(--muted);
     margin-top:2px;
   }
+  .site-update-frame-wrap{
+    border:1px solid var(--steel);
+    border-radius:12px;
+    overflow:hidden;
+    height:70vh;
+    background:var(--panel);
+  }
+  .site-update-frame-wrap iframe{
+    width:100%;
+    height:100%;
+    border:none;
+    display:block;
+  }
   .insights-stats{
     display:grid;
     grid-template-columns:repeat(5,1fr);
@@ -1319,7 +1332,7 @@
       <button class="side-link has-soon" data-region="Boston" disabled><span><span class="region-dot"></span>בוסטון</span><span class="soon-badge">Soon</span></button>
       <button class="side-link has-soon" data-region="Miami" disabled><span><span class="region-dot"></span>מיאמי</span><span class="soon-badge">Soon</span></button>
       <div class="side-label">אתר משני</div>
-      <button class="side-link has-soon" disabled><span>עדכון דפי אתר</span><span class="soon-badge">Soon</span></button>
+      <button class="side-link" data-filter="site-update">עדכון דפי אתר</button>
       <button class="side-link has-soon" disabled><span>פרסום דפי אתר</span><span class="soon-badge">Soon</span></button>
       <button class="side-link has-soon" disabled><span>מסמכים עידן שושני</span><span class="soon-badge">Soon</span></button>
       <div class="side-label" id="dataManagementLabel">ניהול נתונים</div>
@@ -1478,6 +1491,23 @@
           <button type="button" class="keywords-select-all" id="restoreAllBtn">שחזר הכל</button>
         </div>
         <div id="archiveList"></div>
+      </div>
+
+      <div class="insights-panel" id="siteUpdatePanel" hidden>
+        <div class="insights-header">
+          <span class="insights-icon" style="color:var(--wire);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          </span>
+          <div>
+            <h2>עדכון דפי אתר</h2>
+            <div class="insights-sub">חיבור לאתר הלקוחות (garage-door-site) — כרגע תצוגה בלבד, בלי שום עריכה.</div>
+          </div>
+          <a class="keywords-select-all" href="https://omernyuval.github.io/garage-door-site/" target="_blank" rel="noopener">פתח באתר עצמו ‹</a>
+        </div>
+        <div class="logs-total-spend" id="siteUpdateMeta"><span>טוען פרטים על האתר…</span></div>
+        <div class="site-update-frame-wrap">
+          <iframe id="siteUpdateFrame" src="https://omernyuval.github.io/garage-door-site/" title="תצוגה חיה של garage-door-site" loading="lazy"></iframe>
+        </div>
       </div>
 
       <div class="insights-panel" id="logsPanel" hidden>
@@ -1873,9 +1903,14 @@
     logsPanel.hidden = !showingLogs;
     if(showingLogs) renderLogsPanel();
 
+    const siteUpdatePanel = document.getElementById("siteUpdatePanel");
+    const showingSiteUpdate = activeAxis === "filter" && activeFilter === "site-update";
+    siteUpdatePanel.hidden = !showingSiteUpdate;
+    if(showingSiteUpdate) renderSiteUpdatePanel();
+
     const showingAll = activeAxis === "filter" && activeFilter === "all";
-    feed.hidden = showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs;
-    if(showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs){
+    feed.hidden = showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs || showingSiteUpdate;
+    if(showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs || showingSiteUpdate){
       feed.innerHTML = "";
       return;
     }
@@ -2487,6 +2522,67 @@
     }catch(err){
       renderTotalSpendLine("error", err.message);
     }
+  }
+
+  // Step 1 of the garage-door-site integration (see DECISIONS.md): read-only
+  // access only -- a live preview iframe plus a few facts pulled straight
+  // from its public repo (no token needed, since both the repo and its
+  // GitHub Pages deploy are public; only a future *write* step would need
+  // one). Cached per page load like totalSpendCache, with the same manual
+  // "רענן" pattern, since it's an external fetch we don't want firing on
+  // every re-render.
+  const SITE_UPDATE_REPO = "omerNYuval/garage-door-site";
+  let siteUpdateMetaCache = null;
+
+  function renderSiteUpdateMeta(state, info){
+    const el = document.getElementById("siteUpdateMeta");
+    if(!el) return;
+    if(state === "loading"){
+      el.innerHTML = `<span>טוען פרטים על garage-door-site…</span>`;
+      return;
+    }
+    if(state === "error"){
+      el.innerHTML = `<span>לא הצלחנו לטעון פרטים על האתר: <bdi dir="ltr">${info}</bdi></span><button type="button" id="siteUpdateRefreshBtn" class="log-refresh-btn">נסה שוב</button>`;
+    }else{
+      const commitPart = info.lastCommitDate
+        ? ` · עודכן לאחרונה: ${info.lastCommitDate}${info.lastCommitMessage ? ` — "<bdi dir="ltr">${info.lastCommitMessage}</bdi>"` : ""}`
+        : "";
+      el.innerHTML = `<span>כותרת נוכחית באתר: <bdi dir="ltr">${info.title || "לא נמצאה"}</bdi>${commitPart}</span><button type="button" id="siteUpdateRefreshBtn" class="log-refresh-btn">רענן</button>`;
+    }
+    document.getElementById("siteUpdateRefreshBtn").addEventListener("click", loadSiteUpdateMeta);
+  }
+
+  async function loadSiteUpdateMeta(){
+    renderSiteUpdateMeta("loading");
+    try{
+      const [htmlRes, commitsRes] = await Promise.all([
+        fetch(`https://raw.githubusercontent.com/${SITE_UPDATE_REPO}/main/index.html`, { cache: "no-store" }),
+        fetch(`https://api.github.com/repos/${SITE_UPDATE_REPO}/commits?path=index.html&per_page=1`, { cache: "no-store" }),
+      ]);
+      if(!htmlRes.ok) throw new Error(`HTTP ${htmlRes.status} בקריאת index.html`);
+      const html = await htmlRes.text();
+      const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
+
+      let lastCommitDate = null, lastCommitMessage = null;
+      if(commitsRes.ok){
+        const commits = await commitsRes.json();
+        const latest = Array.isArray(commits) ? commits[0] : null;
+        if(latest && latest.commit && latest.commit.author){
+          lastCommitDate = new Date(latest.commit.author.date).toLocaleString("he-IL", { day:"numeric", month:"numeric", year:"numeric", hour:"2-digit", minute:"2-digit" });
+          lastCommitMessage = (latest.commit.message || "").split("\n")[0];
+        }
+      }
+
+      siteUpdateMetaCache = { title: titleMatch ? titleMatch[1] : null, lastCommitDate, lastCommitMessage };
+      renderSiteUpdateMeta("ok", siteUpdateMetaCache);
+    }catch(err){
+      renderSiteUpdateMeta("error", err.message);
+    }
+  }
+
+  function renderSiteUpdatePanel(){
+    if(siteUpdateMetaCache) renderSiteUpdateMeta("ok", siteUpdateMetaCache);
+    else loadSiteUpdateMeta();
   }
 
   // Fires the request in the background and reconciles local state with
