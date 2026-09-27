@@ -20,6 +20,40 @@ const ALLOWED_ORIGIN = "https://omernyuval.github.io";
 // the cooldown/billing path entirely rather than being folded into a "run".
 const ARCHIVE_ACTIONS = ["archive", "archive_bulk", "restore", "restore_bulk", "delete"];
 
+// ---- garage-door-site integration (see DECISIONS.md) ----
+//
+// Step 2: propose a specific, narrow content change (which of the 4 "jobs
+// we do most" cards leads) whenever one of our tracked keywords is
+// trending, and only ever push it after an explicit human approval click
+// -- never automatically. "garage door repair" itself has no single card
+// (it's the general service, not one job), so it's left out of the map on
+// purpose and never drives a proposal.
+const SITE_UPDATE_REPO = "omerNYuval/garage-door-site";
+const SITE_UPDATE_FILE_PATH = "index.html";
+const SITE_UPDATE_BRANCH = "main";
+const KEYWORD_CARD_MAP = {
+  "garage door spring repair": "springs",
+  "garage door opener repair": "openers",
+  "garage door won't open": "emergency",
+  "garage door off track": "emergency",
+};
+// Each card's onclick="bookService('<key>')" call is the one thing in the
+// markup that's unique to it regardless of copy edits elsewhere on the
+// page, so it's used to identify which card is which rather than matching
+// on its (more likely to change) heading text.
+const CARD_MARKERS = {
+  emergency: "bookService('emergency')",
+  springs: "bookService('springs')",
+  openers: "bookService('openers')",
+  install: "bookService('install')",
+};
+const CARD_LABELS = {
+  emergency: "עזרה דחופה (דלת תקועה / לא נסגרת)",
+  springs: "קפיצים וכבלים",
+  openers: "מנועים חשמליים",
+  install: "התקנת דלת חדשה",
+};
+
 // All "day" boundaries (what counts as "yesterday", the run's date/time
 // stamp, the Trends request window) are computed in the target market's
 // own local time, not UTC/server time — otherwise a US day boundary can
@@ -83,6 +117,83 @@ export default {
         const output = applyArchiveAction(current.json, body);
         await commitToGitHub(env, current.sha, output);
         return json(output, 200);
+      }
+
+      // Read-only: figures out which tracked keyword is trending from data
+      // already in this file (no DataForSEO call), then fetches
+      // garage-door-site's current index.html (public, no token) to show
+      // exactly what would change. Never writes anything.
+      if (body.action === "propose_site_update") {
+        const target = findTrendingCardTarget(current.json);
+        if (!target) return json({ proposal: null }, 200);
+        const siteRes = await fetch(
+          `https://raw.githubusercontent.com/${SITE_UPDATE_REPO}/${SITE_UPDATE_BRANCH}/${SITE_UPDATE_FILE_PATH}`
+        );
+        if (!siteRes.ok) throw new Error(`Failed to fetch garage-door-site: HTTP ${siteRes.status}`);
+        const html = await siteRes.text();
+        const currentOrder = extractFeatureCards(html).articles.map(cardKeyForArticle);
+        const result = reorderFeatures(html, target.card);
+        if (!result.changed) {
+          return json({ proposal: null, note: "הכרטיס המוביל כבר תואם למגמה הנוכחית" }, 200);
+        }
+        return json({
+          proposal: {
+            keyword: target.keyword,
+            pct: target.pct,
+            targetCard: target.card,
+            currentOrder,
+            proposedOrder: result.order,
+            cardLabels: CARD_LABELS,
+          },
+        }, 200);
+      }
+
+      // The one write path to garage-door-site -- only ever reached by an
+      // explicit approval click in the dashboard (see DECISIONS.md), never
+      // automatically. Re-fetches the file fresh (via the GitHub API, not
+      // raw, since committing needs the blob sha) rather than trusting
+      // whatever the client last saw, so a stale proposal can't clobber a
+      // newer edit to the site.
+      if (body.action === "approve_site_update") {
+        const targetCard = body.targetCard;
+        if (!CARD_LABELS[targetCard]) throw new Error(`Unknown targetCard: ${targetCard}`);
+        const fileRes = await fetch(
+          `https://api.github.com/repos/${SITE_UPDATE_REPO}/contents/${SITE_UPDATE_FILE_PATH}?ref=${SITE_UPDATE_BRANCH}`,
+          {
+            headers: {
+              Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+              "User-Agent": "garage-signal-worker",
+              Accept: "application/vnd.github+json",
+            },
+          }
+        );
+        if (!fileRes.ok) throw new Error(`GitHub read failed for garage-door-site: ${fileRes.status}`);
+        const fileData = await fileRes.json();
+        const html = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ""))));
+        const result = reorderFeatures(html, targetCard);
+        if (!result.changed) {
+          return json({ pushed: false, note: "אין שינוי לבצע — הכרטיס כבר מוביל" }, 200);
+        }
+        const putRes = await fetch(`https://api.github.com/repos/${SITE_UPDATE_REPO}/contents/${SITE_UPDATE_FILE_PATH}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+            "User-Agent": "garage-signal-worker",
+            Accept: "application/vnd.github+json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: `Reorder services: lead with ${targetCard} (trend-driven update from omeryuval)`,
+            content: btoa(unescape(encodeURIComponent(result.html))),
+            branch: SITE_UPDATE_BRANCH,
+            sha: fileData.sha,
+          }),
+        });
+        if (!putRes.ok) {
+          const text = await putRes.text();
+          throw new Error(`GitHub write failed for garage-door-site: ${putRes.status} ${text}`);
+        }
+        return json({ pushed: true, order: result.order }, 200);
       }
 
       // Free and DataForSEO-only for the read (id_list doesn't touch the
@@ -178,6 +289,70 @@ function buildLogHistory(data, newEntries) {
     : [...(data.entries || []), ...(data.archived_entries || [])].filter((e) => e.type === "scan");
   const scanAdditions = (newEntries || []).filter((e) => e.type === "scan");
   return dedupeAndSort([...scanAdditions, ...existing]);
+}
+
+// Picks the single highest-rising tracked keyword (across entries,
+// archived_entries and logHistory, deduped -- a "score" entry for the same
+// run can otherwise be counted twice) that actually maps to one of
+// garage-door-site's service cards, ignoring the rest. Ties/no matches
+// simply mean no proposal this time, not an error.
+function findTrendingCardTarget(data) {
+  const all = [...(data.entries || []), ...(data.archived_entries || []), ...(data.logHistory || [])];
+  const seen = new Set();
+  let best = null;
+  for (const e of all) {
+    if (e.type !== "score") continue;
+    const key = entryKey(e);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const titleMatch = e.title.match(/<bdi[^>]*>([^<]+)<\/bdi>/);
+    const keyword = titleMatch ? titleMatch[1] : null;
+    if (!keyword || !KEYWORD_CARD_MAP[keyword]) continue;
+    const pctTag = (e.tags || []).find((t) => /^[+-]?\d+%$/.test(t));
+    const pct = pctTag ? parseInt(pctTag, 10) : 0;
+    if (!best || pct > best.pct) {
+      best = { keyword, pct, card: KEYWORD_CARD_MAP[keyword] };
+    }
+  }
+  return best;
+}
+
+function extractFeatureCards(html) {
+  const sectionMatch = html.match(/<section class="features">[\s\S]*?<\/section>/);
+  if (!sectionMatch) throw new Error("garage-door-site: 'features' section not found (page layout may have changed)");
+  const articles = sectionMatch[0].match(/<article class="feature-row reveal">[\s\S]*?<\/article>/g);
+  if (!articles || articles.length !== 4) {
+    throw new Error(`garage-door-site: expected 4 feature cards, found ${articles ? articles.length : 0}`);
+  }
+  return { articles };
+}
+
+// Each card's onclick="bookService('<key>')" is the one thing in its markup
+// that won't change if the copy/headings get edited later, so identity is
+// matched on that instead of the (more likely to change) heading text.
+function cardKeyForArticle(article) {
+  for (const [key, marker] of Object.entries(CARD_MARKERS)) {
+    if (article.includes(marker)) return key;
+  }
+  return null;
+}
+
+// Moves the target card to the front of the "jobs we do most" section,
+// keeping the other three in their existing relative order, by replacing
+// each of the 4 <article> matches in place (via the replace callback) --
+// this reuses the original surrounding whitespace/indentation untouched
+// and only swaps which card's content sits at which position.
+function reorderFeatures(html, targetCard) {
+  const { articles } = extractFeatureCards(html);
+  const keyed = articles.map((a) => ({ key: cardKeyForArticle(a), html: a }));
+  const targetIdx = keyed.findIndex((a) => a.key === targetCard);
+  if (targetIdx === -1) throw new Error(`garage-door-site: target card "${targetCard}" not found among its 4 cards`);
+  if (targetIdx === 0) return { changed: false, html, order: keyed.map((a) => a.key) };
+
+  const reordered = [keyed[targetIdx], ...keyed.slice(0, targetIdx), ...keyed.slice(targetIdx + 1)];
+  let i = 0;
+  const newHtml = html.replace(/<article class="feature-row reveal">[\s\S]*?<\/article>/g, () => reordered[i++].html);
+  return { changed: true, html: newHtml, order: reordered.map((a) => a.key) };
 }
 
 // The DataForSEO balance is fetched both before (current.json.balance, from
