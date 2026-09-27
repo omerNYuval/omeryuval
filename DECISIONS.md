@@ -30,6 +30,31 @@ environments with no shared session memory.
   once proven reliable over time.
 - **2026-09-18** — Business owner (the client) will eventually get a
   restricted/partial view of this dashboard, not full access.
+- **2026-09-27** — Built step 1 (read-only access) and step 2 (first proposal
+  type) of the 2026-09-18 plan above:
+  - "עדכון דפי אתר" is a live, working page in the dashboard: a preview of
+    garage-door-site (blurred `og-image.png` behind a click-to-load gate,
+    then the real live iframe), plus its current `<title>` and last commit
+    info pulled from the public repo.
+  - The first proposal type is exactly the one first sketched in the
+    2026-09-18 entry, now concrete: reorder garage-door-site's 4 "jobs we do
+    most" service cards (`<section class="features">`, matched by each
+    card's `onclick="bookService('<key>')"`, keys: `emergency`/`springs`/
+    `openers`/`install`) to lead with whichever tracked keyword is
+    currently trending. Keyword→card map lives in `KEYWORD_CARD_MAP` in
+    `cloudflare-worker/worker.js` (`garage door repair` itself has no
+    single card, so it's deliberately left unmapped and never drives a
+    proposal). Approval gate is real and working: `propose_site_update` is
+    fully read-only (picks the trend, fetches garage-door-site's index.html,
+    diffs card order, returns it — never writes), `approve_site_update` is
+    the only action that ever writes to garage-door-site, and it only runs
+    on an explicit "אשר ופרסם" click (with a confirm() dialog) in the
+    dashboard.
+  - Not yet confirmed: whether the Worker's `GITHUB_TOKEN` secret actually
+    has write access to `garage-door-site` (it was only ever scoped for
+    `omeryuval`) — the first real approval click will reveal this; if it
+    fails, the token needs write access added to `omerNYuval/garage-door-site`
+    too.
 
 ## How to update this file
 
