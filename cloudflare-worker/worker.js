@@ -170,6 +170,7 @@ export default {
         if (!fileRes.ok) throw new Error(`GitHub read failed for garage-door-site: ${fileRes.status}`);
         const fileData = await fileRes.json();
         const html = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ""))));
+        const previousOrder = extractFeatureCards(html).articles.map(cardKeyForArticle);
         const result = reorderFeatures(html, targetCard);
         if (!result.changed) {
           return json({ pushed: false, note: "אין שינוי לבצע — הכרטיס כבר מוביל" }, 200);
@@ -193,7 +194,75 @@ export default {
           const text = await putRes.text();
           throw new Error(`GitHub write failed for garage-door-site: ${putRes.status} ${text}`);
         }
-        return json({ pushed: true, order: result.order }, 200);
+        // Recorded in our own trends.json (not garage-door-site) so "undo" survives a
+        // dashboard reload -- a single last-change slot, not a full history stack, since
+        // only one push can ever be pending approval/undo at a time.
+        const undoRecord = {
+          targetCard,
+          targetCardLabel: CARD_LABELS[targetCard],
+          previousOrder,
+          newOrder: result.order,
+          keyword: body.keyword || null,
+          pct: typeof body.pct === "number" ? body.pct : null,
+          pushedAt: new Date().toISOString(),
+          undone: false,
+        };
+        await commitToGitHub(env, current.sha, { ...current.json, siteUpdateHistory: undoRecord });
+        return json({ pushed: true, order: result.order, undo: undoRecord }, 200);
+      }
+
+      // Reverts garage-door-site to the order it had right before the last
+      // approved change (previousOrder[0] promoted back to the front -- the
+      // exact inverse of a single-card promotion). Reads the pending record
+      // from our own trends.json rather than trusting anything the client
+      // sends, and re-fetches garage-door-site fresh for the same
+      // stale-clobber reason approve_site_update does.
+      if (body.action === "undo_site_update") {
+        const record = current.json.siteUpdateHistory;
+        if (!record || record.undone) {
+          return json({ undone: false, note: "אין שינוי אחרון לביטול" }, 200);
+        }
+        const originalLeader = record.previousOrder[0];
+        const fileRes = await fetch(
+          `https://api.github.com/repos/${SITE_UPDATE_REPO}/contents/${SITE_UPDATE_FILE_PATH}?ref=${SITE_UPDATE_BRANCH}`,
+          {
+            headers: {
+              Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+              "User-Agent": "garage-signal-worker",
+              Accept: "application/vnd.github+json",
+            },
+          }
+        );
+        if (!fileRes.ok) throw new Error(`GitHub read failed for garage-door-site: ${fileRes.status}`);
+        const fileData = await fileRes.json();
+        const html = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ""))));
+        const result = reorderFeatures(html, originalLeader);
+        if (result.changed) {
+          const putRes = await fetch(`https://api.github.com/repos/${SITE_UPDATE_REPO}/contents/${SITE_UPDATE_FILE_PATH}`, {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+              "User-Agent": "garage-signal-worker",
+              Accept: "application/vnd.github+json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              message: `Revert service order: restore ${originalLeader} as lead (undo of trend-driven update from omeryuval)`,
+              content: btoa(unescape(encodeURIComponent(result.html))),
+              branch: SITE_UPDATE_BRANCH,
+              sha: fileData.sha,
+            }),
+          });
+          if (!putRes.ok) {
+            const text = await putRes.text();
+            throw new Error(`GitHub write failed for garage-door-site: ${putRes.status} ${text}`);
+          }
+        }
+        await commitToGitHub(env, current.sha, {
+          ...current.json,
+          siteUpdateHistory: { ...record, undone: true, undoneAt: new Date().toISOString() },
+        });
+        return json({ undone: true, order: result.order }, 200);
       }
 
       // Free and DataForSEO-only for the read (id_list doesn't touch the

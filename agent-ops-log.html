@@ -1042,60 +1042,137 @@
   .site-update-proposal-header span{font-size:0.9rem; font-weight:800;}
   .site-update-proposal-hint{font-size:0.85rem; color:var(--muted);}
   .site-update-proposal-card{
-    background:rgba(var(--overlay-rgb),0.04);
-    border:1px solid rgba(var(--overlay-rgb),0.08);
-    border-radius:12px;
-    padding:16px 18px;
+    background:linear-gradient(180deg, rgba(var(--overlay-rgb),0.05), rgba(var(--overlay-rgb),0.03));
+    border:1px solid rgba(var(--overlay-rgb),0.09);
+    border-top:2px solid color-mix(in srgb, var(--wire) 55%, transparent);
+    border-radius:14px;
+    padding:20px 22px;
   }
-  .site-update-proposal-trend{font-size:0.88rem; margin-bottom:14px;}
+  .site-update-proposal-card--success{
+    border-top-color:color-mix(in srgb, var(--moss) 55%, transparent);
+  }
+  .site-update-proposal-trend{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:0.9rem;
+    margin-bottom:18px;
+  }
+  .site-update-proposal-trend-icon{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:30px;
+    height:30px;
+    flex-shrink:0;
+    border-radius:50%;
+    background:color-mix(in srgb, var(--wire) 18%, transparent);
+    color:var(--wire);
+  }
+  .site-update-proposal-trend-icon svg{width:16px;height:16px;}
   .site-update-proposal-pct{color:var(--moss); font-weight:800; direction:ltr; display:inline-block;}
   .site-update-order-row{
     display:flex;
     align-items:center;
     gap:16px;
     flex-wrap:wrap;
-    margin-bottom:16px;
+    margin-bottom:20px;
   }
   .site-update-order-col{flex:1; min-width:180px;}
-  .site-update-order-arrow{color:var(--muted); font-size:1.2rem; flex-shrink:0;}
+  .site-update-order-arrow{color:var(--wire); flex-shrink:0; display:flex; align-items:center;}
+  .site-update-order-arrow svg{width:20px;height:20px;}
   .site-update-order-list{
     list-style:none;
-    margin:6px 0 0;
+    margin:8px 0 0;
     padding:0;
     display:flex;
     flex-direction:column;
-    gap:4px;
+    gap:5px;
     font-size:0.85rem;
   }
   .site-update-order-list li{
-    padding:6px 10px;
-    border-radius:8px;
-    background:rgba(var(--overlay-rgb),0.04);
+    padding:8px 12px;
+    border-radius:9px;
+    background:rgba(var(--overlay-rgb),0.045);
+    border:1px solid transparent;
+    transition:background-color .15s ease;
   }
   .site-update-order-list li.is-target{
     background:color-mix(in srgb, var(--moss) 16%, transparent);
+    border-color:color-mix(in srgb, var(--moss) 35%, transparent);
     color:var(--moss);
     font-weight:800;
   }
   .site-update-approve-btn{
     display:inline-flex;
     align-items:center;
-    gap:8px;
-    background:var(--danger);
-    color:var(--paper);
+    gap:9px;
+    background:var(--wire);
+    color:var(--charcoal);
     font-family:'Heebo', sans-serif;
     font-weight:800;
-    font-size:0.88rem;
+    font-size:0.9rem;
     border:none;
-    padding:10px 22px;
+    padding:12px 26px;
     border-radius:999px;
     cursor:pointer;
-    transition:opacity .15s ease;
+    box-shadow:0 6px 18px color-mix(in srgb, var(--wire) 32%, transparent);
+    transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
   }
-  .site-update-approve-btn:hover{opacity:0.85;}
-  .site-update-approve-btn:disabled{opacity:0.5; cursor:default;}
-  .site-update-proposal-error{color:var(--danger); font-size:0.85rem;}
-  .site-update-proposal-success{color:var(--moss); font-size:0.9rem; font-weight:700;}
+  .site-update-approve-btn:hover{transform:translateY(-1px); box-shadow:0 8px 22px color-mix(in srgb, var(--wire) 42%, transparent);}
+  .site-update-approve-btn:disabled{opacity:0.55; cursor:default; transform:none; box-shadow:none;}
+  .site-update-approve-btn svg{width:16px;height:16px;flex-shrink:0;}
+  .site-update-proposal-error{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:var(--danger);
+    font-size:0.85rem;
+    background:color-mix(in srgb, var(--danger) 10%, transparent);
+    border:1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .site-update-success-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:18px;
+  }
+  .site-update-success-icon{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:38px;
+    height:38px;
+    flex-shrink:0;
+    border-radius:50%;
+    background:color-mix(in srgb, var(--moss) 20%, transparent);
+    color:var(--moss);
+  }
+  .site-update-success-icon svg{width:19px;height:19px;}
+  .site-update-success-text{flex:1; min-width:0;}
+  .site-update-success-title{font-size:0.92rem; font-weight:800; color:var(--paper);}
+  .site-update-success-time{font-size:0.76rem; color:var(--muted); margin-top:3px;}
+  .site-update-undo-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    background:transparent;
+    color:var(--muted);
+    font-family:'Heebo', sans-serif;
+    font-weight:700;
+    font-size:0.82rem;
+    border:1px solid rgba(var(--overlay-rgb),0.18);
+    padding:9px 18px;
+    border-radius:999px;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:border-color .15s ease, color .15s ease, background-color .15s ease;
+  }
+  .site-update-undo-btn:hover{border-color:var(--danger); color:var(--danger); background:color-mix(in srgb, var(--danger) 10%, transparent);}
+  .site-update-undo-btn:disabled{opacity:0.55; cursor:default;}
+  .site-update-undo-btn svg{width:14px;height:14px;flex-shrink:0;}
   .insights-stats{
     display:grid;
     grid-template-columns:repeat(5,1fr);
@@ -2823,17 +2900,31 @@
     }
   }
 
+  // Runs once per page-load session: the first time the panel is opened, if
+  // trends.json already carries an undoable last change (from this session
+  // or a previous one -- it's read straight out of `meta`, no extra fetch),
+  // show it immediately instead of the plain hint. After that first render,
+  // whatever the user does interactively (check/approve/undo) owns the view.
+  let siteUpdateProposalRendered = false;
   function renderSiteUpdatePanel(){
     if(siteUpdateMetaCache) renderSiteUpdateMeta("ok", siteUpdateMetaCache);
     else loadSiteUpdateMeta();
+    if(!siteUpdateProposalRendered){
+      siteUpdateProposalRendered = true;
+      if(meta && meta.siteUpdateHistory && !meta.siteUpdateHistory.undone){
+        renderSiteUpdateProposal("pushed", meta.siteUpdateHistory);
+      }
+    }
   }
 
   // Step 2 of the garage-door-site integration (DECISIONS.md): the Worker
   // does all the real work (trend detection + diff computation server-side,
   // see propose_site_update/approve_site_update in worker.js) -- this is
-  // just the display + the explicit approval click. Never checked
-  // automatically on opening the panel; only on this button, so a pending
-  // proposal never surprises anyone mid-visit.
+  // just the display + the explicit approval click. A new proposal is never
+  // checked automatically on opening the panel; only on this button, so a
+  // pending proposal never surprises anyone mid-visit. "pushed" is the one
+  // exception: it just reflects whatever's already live (see
+  // renderSiteUpdatePanel above), not a fresh check.
   function renderSiteUpdateProposal(state, data){
     const el = document.getElementById("siteUpdateProposalBody");
     if(!el) return;
@@ -2842,7 +2933,10 @@
       return;
     }
     if(state === "error"){
-      el.innerHTML = `<div class="site-update-proposal-error">הבדיקה נכשלה: <bdi dir="ltr">${data}</bdi></div>`;
+      el.innerHTML = `<div class="site-update-proposal-error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span>הבדיקה נכשלה: <bdi dir="ltr">${data}</bdi></span>
+      </div>`;
       return;
     }
     if(state === "none"){
@@ -2850,29 +2944,58 @@
       return;
     }
     if(state === "pushed"){
-      el.innerHTML = `<div class="site-update-proposal-success">פורסם בהצלחה! garage-door-site עודכן.</div>`;
+      const record = data;
+      const when = record.pushedAt ? new Date(record.pushedAt).toLocaleString("he-IL", { day:"numeric", month:"numeric", year:"numeric", hour:"2-digit", minute:"2-digit" }) : null;
+      el.innerHTML = `
+        <div class="site-update-proposal-card site-update-proposal-card--success">
+          <div class="site-update-success-row">
+            <span class="site-update-success-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+            </span>
+            <div class="site-update-success-text">
+              <div class="site-update-success-title">האתר מוביל כרגע עם "${record.targetCardLabel || record.targetCard}"</div>
+              ${when ? `<div class="site-update-success-time">פורסם ב-${when}</div>` : ""}
+            </div>
+          </div>
+          <button type="button" id="siteUpdateUndoBtn" class="site-update-undo-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+            בטל ושחזר לסדר הקודם
+          </button>
+        </div>
+      `;
+      document.getElementById("siteUpdateUndoBtn").addEventListener("click", ()=> undoSiteUpdate());
       return;
     }
     const { keyword, pct, targetCard, currentOrder, proposedOrder, cardLabels } = data;
     const listHtml = (order) => order.map(key => `<li class="${key === targetCard ? "is-target" : ""}">${cardLabels[key] || key}</li>`).join("");
     el.innerHTML = `
       <div class="site-update-proposal-card">
-        <div class="site-update-proposal-trend">מגמה מזוהה: <bdi dir="ltr">${keyword}</bdi> <span class="site-update-proposal-pct">+${pct}%</span> — מציע להוביל עם "${cardLabels[targetCard] || targetCard}"</div>
+        <div class="site-update-proposal-trend">
+          <span class="site-update-proposal-trend-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+          </span>
+          <span>מגמה מזוהה: <bdi dir="ltr">${keyword}</bdi> <span class="site-update-proposal-pct">+${pct}%</span> — מציע להוביל עם "${cardLabels[targetCard] || targetCard}"</span>
+        </div>
         <div class="site-update-order-row">
           <div class="site-update-order-col">
             <span class="site-update-info-label">סדר נוכחי באתר</span>
             <ol class="site-update-order-list">${listHtml(currentOrder)}</ol>
           </div>
-          <div class="site-update-order-arrow">←</div>
+          <div class="site-update-order-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </div>
           <div class="site-update-order-col">
             <span class="site-update-info-label">סדר מוצע</span>
             <ol class="site-update-order-list">${listHtml(proposedOrder)}</ol>
           </div>
         </div>
-        <button type="button" id="siteUpdateApproveBtn" class="site-update-approve-btn">אשר ופרסם לאתר האמיתי</button>
+        <button type="button" id="siteUpdateApproveBtn" class="site-update-approve-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+          אשר ופרסם לאתר האמיתי
+        </button>
       </div>
     `;
-    document.getElementById("siteUpdateApproveBtn").addEventListener("click", ()=> approveSiteUpdate(targetCard));
+    document.getElementById("siteUpdateApproveBtn").addEventListener("click", ()=> approveSiteUpdate(targetCard, keyword, pct));
   }
 
   async function checkSiteUpdateProposal(){
@@ -2898,19 +3021,47 @@
   // The one action in the whole app that pushes to a different, live,
   // customer-facing site -- confirm() is a deliberate extra speed bump on
   // top of the button itself already being an explicit opt-in click.
-  async function approveSiteUpdate(targetCard){
+  async function approveSiteUpdate(targetCard, keyword, pct){
     if(!confirm("לאשר ולפרסם שינוי אמיתי באתר garage-door-site (סידור מחדש של כרטיסי השירותים)? הפעולה תדחוף ישירות לאתר החי.")) return;
     const btn = document.getElementById("siteUpdateApproveBtn");
-    if(btn){ btn.disabled = true; btn.textContent = "מפרסם…"; }
+    if(btn){ btn.disabled = true; btn.innerHTML = "מפרסם…"; }
     try{
       const res = await fetch(WORKER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "approve_site_update", targetCard }),
+        body: JSON.stringify({ action: "approve_site_update", targetCard, keyword, pct }),
       });
       const result = await res.json();
       if(!res.ok || result.error) throw new Error(result.error || `HTTP ${res.status}`);
-      renderSiteUpdateProposal(result.pushed ? "pushed" : "none", result.note);
+      if(result.pushed){
+        if(meta) meta.siteUpdateHistory = result.undo;
+        renderSiteUpdateProposal("pushed", result.undo);
+      }else{
+        renderSiteUpdateProposal("none", result.note);
+      }
+    }catch(err){
+      renderSiteUpdateProposal("error", err.message);
+    }
+  }
+
+  // The undo counterpart -- reverts garage-door-site to the order it had
+  // right before the last approved change (see undo_site_update in
+  // worker.js). Same confirm() speed bump as approving, since it's the same
+  // kind of real push to the live site.
+  async function undoSiteUpdate(){
+    if(!confirm("לבטל את השינוי האחרון ולהחזיר את סדר הכרטיסים לקדמותו באתר garage-door-site?")) return;
+    const btn = document.getElementById("siteUpdateUndoBtn");
+    if(btn){ btn.disabled = true; btn.innerHTML = "מבטל…"; }
+    try{
+      const res = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "undo_site_update" }),
+      });
+      const result = await res.json();
+      if(!res.ok || result.error) throw new Error(result.error || `HTTP ${res.status}`);
+      if(meta && meta.siteUpdateHistory) meta.siteUpdateHistory.undone = true;
+      renderSiteUpdateProposal("none", "השינוי בוטל — garage-door-site חזר לסדר הקודם.");
     }catch(err){
       renderSiteUpdateProposal("error", err.message);
     }
