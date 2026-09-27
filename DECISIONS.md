@@ -50,11 +50,16 @@ environments with no shared session memory.
     the only action that ever writes to garage-door-site, and it only runs
     on an explicit "אשר ופרסם" click (with a confirm() dialog) in the
     dashboard.
-  - Not yet confirmed: whether the Worker's `GITHUB_TOKEN` secret actually
-    has write access to `garage-door-site` (it was only ever scoped for
-    `omeryuval`) — the first real approval click will reveal this; if it
-    fails, the token needs write access added to `omerNYuval/garage-door-site`
-    too.
+  - The first real approval click did initially fail with a 403 (`Resource
+    not accessible by personal access token`), because the Worker's
+    `GITHUB_TOKEN` fine-grained PAT was scoped only to `omeryuval`. Fixed by
+    adding `omerNYuval/garage-door-site` to that token's repository access
+    list (same "Contents: Read and write" permission applies to both repos).
+  - **Confirmed working end-to-end**: after the token fix, a real
+    `approve_site_update` click successfully reordered garage-door-site's
+    service cards (led with "קפיצים וכבלים" per the trending keyword) and
+    pushed the commit live. The full propose → human-approve → push pipeline
+    is now proven, not just tested against mocks.
 
 ## How to update this file
 
