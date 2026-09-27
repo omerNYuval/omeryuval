@@ -1027,6 +1027,75 @@
   .site-update-info-label{font-size:0.72rem; color:var(--muted);}
   .site-update-info-value{font-size:0.88rem; font-weight:700; color:var(--paper); line-height:1.5; overflow-wrap:break-word;}
   .site-update-info-value bdi{font-weight:600;}
+  .site-update-proposal{
+    margin-top:20px;
+    padding-top:20px;
+    border-top:1px solid rgba(var(--overlay-rgb),0.08);
+  }
+  .site-update-proposal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .site-update-proposal-header span{font-size:0.9rem; font-weight:800;}
+  .site-update-proposal-hint{font-size:0.85rem; color:var(--muted);}
+  .site-update-proposal-card{
+    background:rgba(var(--overlay-rgb),0.04);
+    border:1px solid rgba(var(--overlay-rgb),0.08);
+    border-radius:12px;
+    padding:16px 18px;
+  }
+  .site-update-proposal-trend{font-size:0.88rem; margin-bottom:14px;}
+  .site-update-proposal-pct{color:var(--moss); font-weight:800; direction:ltr; display:inline-block;}
+  .site-update-order-row{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .site-update-order-col{flex:1; min-width:180px;}
+  .site-update-order-arrow{color:var(--muted); font-size:1.2rem; flex-shrink:0;}
+  .site-update-order-list{
+    list-style:none;
+    margin:6px 0 0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    font-size:0.85rem;
+  }
+  .site-update-order-list li{
+    padding:6px 10px;
+    border-radius:8px;
+    background:rgba(var(--overlay-rgb),0.04);
+  }
+  .site-update-order-list li.is-target{
+    background:color-mix(in srgb, var(--moss) 16%, transparent);
+    color:var(--moss);
+    font-weight:800;
+  }
+  .site-update-approve-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--danger);
+    color:var(--paper);
+    font-family:'Heebo', sans-serif;
+    font-weight:800;
+    font-size:0.88rem;
+    border:none;
+    padding:10px 22px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:opacity .15s ease;
+  }
+  .site-update-approve-btn:hover{opacity:0.85;}
+  .site-update-approve-btn:disabled{opacity:0.5; cursor:default;}
+  .site-update-proposal-error{color:var(--danger); font-size:0.85rem;}
+  .site-update-proposal-success{color:var(--moss); font-size:0.9rem; font-weight:700;}
   .insights-stats{
     display:grid;
     grid-template-columns:repeat(5,1fr);
@@ -1625,7 +1694,7 @@
           </span>
           <div>
             <h2>עדכון דפי אתר</h2>
-            <div class="insights-sub">חיבור לאתר הלקוחות (garage-door-site) — כרגע תצוגה בלבד, בלי שום עריכה.</div>
+            <div class="insights-sub">חיבור לאתר הלקוחות (garage-door-site). הצעות עדכון תוכן דורשות אישור ידני לפני פרסום — שום דבר לא נדחף אוטומטית.</div>
           </div>
           <a class="site-update-open-link" href="https://omernyuval.github.io/garage-door-site/" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
@@ -1642,6 +1711,17 @@
               הצג תצוגה חיה של האתר
             </button>
           </div>
+        </div>
+
+        <div class="site-update-proposal">
+          <div class="site-update-proposal-header">
+            <span>הצעת עדכון תוכן</span>
+            <button type="button" id="siteUpdateProposeBtn" class="log-refresh-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              בדוק אם יש הצעת עדכון
+            </button>
+          </div>
+          <div id="siteUpdateProposalBody"><div class="site-update-proposal-hint">לחץ "בדוק אם יש הצעת עדכון" כדי לראות אם יש שינוי מומלץ כרגע.</div></div>
         </div>
       </div>
 
@@ -2747,6 +2827,96 @@
     if(siteUpdateMetaCache) renderSiteUpdateMeta("ok", siteUpdateMetaCache);
     else loadSiteUpdateMeta();
   }
+
+  // Step 2 of the garage-door-site integration (DECISIONS.md): the Worker
+  // does all the real work (trend detection + diff computation server-side,
+  // see propose_site_update/approve_site_update in worker.js) -- this is
+  // just the display + the explicit approval click. Never checked
+  // automatically on opening the panel; only on this button, so a pending
+  // proposal never surprises anyone mid-visit.
+  function renderSiteUpdateProposal(state, data){
+    const el = document.getElementById("siteUpdateProposalBody");
+    if(!el) return;
+    if(state === "loading"){
+      el.innerHTML = `<div class="site-update-proposal-hint">בודק מגמות ומשווה מול האתר…</div>`;
+      return;
+    }
+    if(state === "error"){
+      el.innerHTML = `<div class="site-update-proposal-error">הבדיקה נכשלה: <bdi dir="ltr">${data}</bdi></div>`;
+      return;
+    }
+    if(state === "none"){
+      el.innerHTML = `<div class="site-update-proposal-hint">${data || "אין כרגע הצעת עדכון — אף אחת ממילות המפתח שלנו לא נמצאת במגמת עלייה שממופה לכרטיס שירות באתר."}</div>`;
+      return;
+    }
+    if(state === "pushed"){
+      el.innerHTML = `<div class="site-update-proposal-success">פורסם בהצלחה! garage-door-site עודכן.</div>`;
+      return;
+    }
+    const { keyword, pct, targetCard, currentOrder, proposedOrder, cardLabels } = data;
+    const listHtml = (order) => order.map(key => `<li class="${key === targetCard ? "is-target" : ""}">${cardLabels[key] || key}</li>`).join("");
+    el.innerHTML = `
+      <div class="site-update-proposal-card">
+        <div class="site-update-proposal-trend">מגמה מזוהה: <bdi dir="ltr">${keyword}</bdi> <span class="site-update-proposal-pct">+${pct}%</span> — מציע להוביל עם "${cardLabels[targetCard] || targetCard}"</div>
+        <div class="site-update-order-row">
+          <div class="site-update-order-col">
+            <span class="site-update-info-label">סדר נוכחי באתר</span>
+            <ol class="site-update-order-list">${listHtml(currentOrder)}</ol>
+          </div>
+          <div class="site-update-order-arrow">←</div>
+          <div class="site-update-order-col">
+            <span class="site-update-info-label">סדר מוצע</span>
+            <ol class="site-update-order-list">${listHtml(proposedOrder)}</ol>
+          </div>
+        </div>
+        <button type="button" id="siteUpdateApproveBtn" class="site-update-approve-btn">אשר ופרסם לאתר האמיתי</button>
+      </div>
+    `;
+    document.getElementById("siteUpdateApproveBtn").addEventListener("click", ()=> approveSiteUpdate(targetCard));
+  }
+
+  async function checkSiteUpdateProposal(){
+    renderSiteUpdateProposal("loading");
+    try{
+      const res = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "propose_site_update" }),
+      });
+      const result = await res.json();
+      if(!res.ok || result.error) throw new Error(result.error || `HTTP ${res.status}`);
+      if(!result.proposal){
+        renderSiteUpdateProposal("none", result.note);
+        return;
+      }
+      renderSiteUpdateProposal("proposal", result.proposal);
+    }catch(err){
+      renderSiteUpdateProposal("error", err.message);
+    }
+  }
+
+  // The one action in the whole app that pushes to a different, live,
+  // customer-facing site -- confirm() is a deliberate extra speed bump on
+  // top of the button itself already being an explicit opt-in click.
+  async function approveSiteUpdate(targetCard){
+    if(!confirm("לאשר ולפרסם שינוי אמיתי באתר garage-door-site (סידור מחדש של כרטיסי השירותים)? הפעולה תדחוף ישירות לאתר החי.")) return;
+    const btn = document.getElementById("siteUpdateApproveBtn");
+    if(btn){ btn.disabled = true; btn.textContent = "מפרסם…"; }
+    try{
+      const res = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve_site_update", targetCard }),
+      });
+      const result = await res.json();
+      if(!res.ok || result.error) throw new Error(result.error || `HTTP ${res.status}`);
+      renderSiteUpdateProposal(result.pushed ? "pushed" : "none", result.note);
+    }catch(err){
+      renderSiteUpdateProposal("error", err.message);
+    }
+  }
+
+  document.getElementById("siteUpdateProposeBtn").addEventListener("click", checkSiteUpdateProposal);
 
   // Fires the request in the background and reconciles local state with
   // the server's real response once it lands. Callers apply their own
