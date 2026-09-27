@@ -61,6 +61,19 @@ environments with no shared session memory.
     pushed the commit live. The full propose → human-approve → push pipeline
     is now proven, not just tested against mocks.
 
+- **2026-09-27** — Strategy for future pages (beyond the 4 service cards):
+  publish each new page to garage-door-site *live* as soon as it's written,
+  but unlinked from any prominent nav/homepage/card — reachable only by
+  direct URL, listed in `sitemap.xml` so Google can crawl and index it in
+  the background while it's not yet "in use". When the bot later decides a
+  page is worth surfacing (a trend justifies it), promoting it is just
+  adding a link/moving it into a prominent slot — an instant change, no
+  indexing wait, since Google already knows the page. Deliberately not
+  using `noindex` for this: that would keep the page truly invisible until
+  activated, but at the cost of losing the pre-indexing head start (Google
+  would then need to discover it from scratch once the noindex is removed).
+  So "hidden" here means unlinked-but-crawlable, not blocked-from-index.
+
 ## How to update this file
 
 When a decision is made in either project's session that the other side
