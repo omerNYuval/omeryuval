@@ -895,14 +895,39 @@
     color:var(--muted);
     margin-top:2px;
   }
+  .site-update-frame-section{
+    margin-top:20px;
+    padding-top:20px;
+    border-top:1px solid rgba(var(--overlay-rgb),0.08);
+  }
+  .site-update-frame-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .site-update-frame-header span{font-size:0.9rem; font-weight:800;}
   .site-update-frame-wrap{
     position:relative;
     border:1px solid var(--steel);
     border-radius:12px;
     overflow:hidden;
-    height:70vh;
+    height:90px;
     background:var(--panel);
+    transition:height .25s ease;
   }
+  .site-update-frame-wrap.expanded{height:70vh;}
+  /* Collapsed by default (a small strip, not the full-size live preview) --
+     the button/icon inside shrink to match so the gate doesn't visually
+     overflow the sliver of space it's now given. */
+  .site-update-frame-wrap:not(.expanded) .site-update-primary-btn{
+    padding:7px 14px;
+    font-size:0.72rem;
+    gap:6px;
+    box-shadow:none;
+  }
+  .site-update-frame-wrap:not(.expanded) .site-update-primary-btn svg{width:13px;height:13px;}
   /* garage-door-site is its own document -- our CSS can't reach its inner
      content to hide its native scrollbar the way we do for this page's own
      html/body. Instead the iframe is drawn a bit wider than its clipped
@@ -1779,16 +1804,6 @@
           </a>
         </div>
         <div class="site-update-info" id="siteUpdateMeta"><div class="site-update-info-loading">טוען פרטים על garage-door-site…</div></div>
-        <div class="site-update-frame-wrap">
-          <img id="siteUpdateBlurImg" class="site-update-blur-img" src="https://omernyuval.github.io/garage-door-site/og-image.png" alt="" aria-hidden="true">
-          <iframe id="siteUpdateFrame" title="תצוגה חיה של garage-door-site" loading="lazy" hidden></iframe>
-          <div class="site-update-frame-gate" id="siteUpdateFrameGate">
-            <button type="button" class="site-update-primary-btn" id="siteUpdateLoadBtn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-              הצג תצוגה חיה של האתר
-            </button>
-          </div>
-        </div>
 
         <div class="site-update-proposal">
           <div class="site-update-proposal-header">
@@ -1799,6 +1814,26 @@
             </button>
           </div>
           <div id="siteUpdateProposalBody"><div class="site-update-proposal-hint">לחץ "בדוק אם יש הצעת עדכון" כדי לראות אם יש שינוי מומלץ כרגע.</div></div>
+        </div>
+
+        <div class="site-update-frame-section">
+          <div class="site-update-frame-header">
+            <span>תצוגה חיה של האתר</span>
+            <button type="button" id="siteUpdateFrameToggle" class="log-refresh-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+              הגדל
+            </button>
+          </div>
+          <div class="site-update-frame-wrap" id="siteUpdateFrameWrap">
+            <img id="siteUpdateBlurImg" class="site-update-blur-img" src="https://omernyuval.github.io/garage-door-site/og-image.png" alt="" aria-hidden="true">
+            <iframe id="siteUpdateFrame" title="תצוגה חיה של garage-door-site" loading="lazy" hidden></iframe>
+            <div class="site-update-frame-gate" id="siteUpdateFrameGate">
+              <button type="button" class="site-update-primary-btn" id="siteUpdateLoadBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                הצג תצוגה חיה של האתר
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2714,6 +2749,22 @@
     frame.hidden = false;
     document.getElementById("siteUpdateBlurImg").hidden = true;
     document.getElementById("siteUpdateFrameGate").hidden = true;
+    setSiteUpdateFrameExpanded(true);
+  });
+
+  // Collapsed to a thin strip by default so it doesn't dominate the panel --
+  // "הגדל"/"הקטן" just toggles a CSS height, no re-fetch either way.
+  function setSiteUpdateFrameExpanded(expanded){
+    const wrap = document.getElementById("siteUpdateFrameWrap");
+    const btn = document.getElementById("siteUpdateFrameToggle");
+    wrap.classList.toggle("expanded", expanded);
+    btn.innerHTML = expanded
+      ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>הקטן`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>הגדל`;
+  }
+  document.getElementById("siteUpdateFrameToggle").addEventListener("click", ()=>{
+    const wrap = document.getElementById("siteUpdateFrameWrap");
+    setSiteUpdateFrameExpanded(!wrap.classList.contains("expanded"));
   });
 
   // Cost is only known for scans run after the Worker started tagging it
