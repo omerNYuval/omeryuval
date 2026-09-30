@@ -902,7 +902,7 @@ async function runTrends(env, selection) {
   let verifiedTag = null;
   let subregionDebugTag = null;
   if (!isCityLevel && selection.city === "Indianapolis") {
-    const { dominant, debug } = await fetchDominantSubregion(env, dateFrom, dateTo, selection.keywords);
+    const { dominant, debug } = await fetchDominantSubregion(env, locationName, dateFrom, dateTo, selection.keywords);
     if (dominant && dominant.toLowerCase().includes("indianapolis")) {
       label = CITY_LABEL.Indianapolis;
       precisionNote = `${precisionNote} — זוהה כמגיע בעיקר מאזור אינדיאנפוליס`;
@@ -1062,17 +1062,19 @@ async function fetchTrendsWithFallback(env, candidates, dateFrom, dateTo, keywor
 // interest — so we can honestly upgrade the entry to "Indianapolis" only
 // when the data itself points there, instead of always guessing broad.
 //
-// Corrected from an earlier version that called the wrong endpoint
-// (google_trends/subregion_interests instead of the real
-// dataforseo_trends/subregion_interests) with the wrong location_name
-// (the resolved state, e.g. "Indiana,United States", instead of a country
-// -- every real example request for this endpoint uses a bare country
-// name like "United States"). Also tries resolution: "CITY" for
-// city-level granularity, since a country's own "subregion" breakdown is
-// otherwise just its states -- not confirmed from official docs (network
-// access to them is blocked from here), so this is the best real fix
-// available until a live run confirms the actual response shape.
-async function fetchDominantSubregion(env, dateFrom, dateTo, keywords) {
+// Confirmed live (see the DEBUG tag from the first real test run): this
+// endpoint breaks a location down into whatever tier sits one level below
+// it in Google's geo hierarchy -- query a country and you get its states
+// back, which is useless for finding a city. Querying it with "United
+// States" was the bug: it needs the *resolved state* (e.g.
+// "Indiana,United States", the same locationName the main Trends call
+// itself resolved to) so the breakdown comes back one level lower, at
+// DMA/metro granularity -- where Indianapolis is itself one entry.
+// Response shape (also confirmed live): items[].interests[].values[] =
+// { geo_id, geo_name, value }, a 0-100 relative-interest score per
+// subregion -- so "dominant" is whichever value is highest, not whichever
+// happens to be listed first.
+async function fetchDominantSubregion(env, locationName, dateFrom, dateTo, keywords) {
   try {
     const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
     const res = await fetch("https://api.dataforseo.com/v3/keywords_data/dataforseo_trends/subregion_interests/live", {
@@ -1083,8 +1085,7 @@ async function fetchDominantSubregion(env, dateFrom, dateTo, keywords) {
       },
       body: JSON.stringify([{
         keywords,
-        location_name: "United States",
-        resolution: "CITY",
+        location_name: locationName,
         date_from: dateFrom,
         date_to: dateTo,
         type: "web",
@@ -1099,34 +1100,25 @@ async function fetchDominantSubregion(env, dateFrom, dateTo, keywords) {
     }
     const result = task.result && task.result[0];
     const items = (result && result.items) || [];
-    // Kept for one-time live debugging (see subregionDebugTag in
-    // runTrends) -- the exact response field names for this endpoint
-    // aren't confirmed, so this also logs the raw shape of what actually
-    // came back.
+    // Kept one more round for live debugging (see subregionDebugTag in
+    // runTrends), to confirm the state-level location now actually comes
+    // back with city/DMA-level names before this gets removed.
     const debug = items.length ? JSON.stringify(items.slice(0, 2)) : `empty items (raw: ${JSON.stringify(result).slice(0, 300)})`;
+
+    let best = null;
     for (const item of items) {
-      // Try a flat shape first (item itself is one subregion's entry)...
-      let name = subregionName(item);
-      if (name) return { dominant: name, debug };
-      // ...then a nested shape (item wraps one keyword's own subregion list).
-      const list = item.data || item.subregions || item.values || item.subregion_interests || [];
-      if (Array.isArray(list) && list.length) {
-        name = subregionName(list[0]);
-        if (name) return { dominant: name, debug };
+      for (const interest of item.interests || []) {
+        for (const v of interest.values || []) {
+          if (typeof v.value === "number" && v.geo_name && (!best || v.value > best.value)) {
+            best = v;
+          }
+        }
       }
     }
-    return { dominant: null, debug };
+    return { dominant: best ? best.geo_name : null, debug };
   } catch (err) {
     return { dominant: null, debug: `error: ${err.message}` };
   }
-}
-
-function subregionName(entry) {
-  if (!entry || typeof entry !== "object") return null;
-  for (const key of ["location_name", "geo_name", "region_name", "name", "subregion", "subregion_name"]) {
-    if (typeof entry[key] === "string" && entry[key]) return entry[key];
-  }
-  return null;
 }
 
 async function fetchTrends(env, locationName, dateFrom, dateTo, keywords) {
