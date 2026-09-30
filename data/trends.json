@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-30T16:39:59.798Z",
+  "generated_at": "2026-09-30T17:19:55.197Z",
   "market": "מדינת אינדיאנה",
   "keywords": [
     "garage door repair",
@@ -8,22 +8,35 @@
     "garage door won't open",
     "garage door off track"
   ],
-  "balance": 2.0380000000000003,
-  "totalSpendUsd": 0.9464,
+  "balance": 2.027,
+  "totalSpendUsd": 0.9574,
   "entries": [
     {
       "date": "2026-09-30",
-      "time": "12:39",
+      "time": "13:19",
       "type": "scan",
       "title": "סריקת מגמה יומית הושלמה",
-      "detail": "נבדקו 1 מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi>. נמצאו 1 מונחים בעלייה.<div class=\"scan-breakdown-label\">פירוט מלא לפי מונח:</div><ul class=\"scan-breakdown\"><li><bdi dir=\"ltr\">garage door repair</bdi>: <bdi dir=\"ltr\">מדד 36/100</bdi> (<bdi dir=\"ltr\">+24%</bdi>)</li></ul>",
+      "detail": "נבדקו 5 מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi>. נמצאו 1 מונחים בעלייה.<div class=\"scan-breakdown-label\">פירוט מלא לפי מונח:</div><ul class=\"scan-breakdown\"><li><bdi dir=\"ltr\">garage door repair</bdi>: <bdi dir=\"ltr\">מדד 37/100</bdi> (<bdi dir=\"ltr\">+28%</bdi>)</li><li><bdi dir=\"ltr\">garage door spring repair</bdi>: <bdi dir=\"ltr\">מדד –/100</bdi> (<bdi dir=\"ltr\">אין נתון להשוואה</bdi>)</li><li><bdi dir=\"ltr\">garage door opener repair</bdi>: <bdi dir=\"ltr\">מדד 6/100</bdi> (<bdi dir=\"ltr\">אין נתון להשוואה</bdi>)</li><li><bdi dir=\"ltr\">garage door won't open</bdi>: <bdi dir=\"ltr\">מדד –/100</bdi> (<bdi dir=\"ltr\">אין נתון להשוואה</bdi>)</li><li><bdi dir=\"ltr\">garage door off track</bdi>: <bdi dir=\"ltr\">מדד –/100</bdi> (<bdi dir=\"ltr\">אין נתון להשוואה</bdi>)</li></ul>",
       "region": "מדינת אינדיאנה",
       "tags": [
         "הרצה יומית",
         "ברמת מדינה (לא ספציפי לעיר)",
-        "DEBUG subregion: [{\"position\":1,\"type\":\"subregion_interests\",\"keywords\":[\"garage door repair\"],\"interests\":[{\"keyword\":\"garage door repair\",\"values\":[{\"geo_id\":null,\"geo_name\":\"Florida\",\"value\":24},{\"geo_id\":null,\"geo_name\":\"New Jersey\",\"value\":38},{\"geo_id\":null,\"geo_name\":\"New York\",\"value\":20},{\"geo_id\":null,\"geo_name\":\"Pennsylvania\",\"value\":36},{\"geo_id\":null,\"geo_name\":\"Texas\",\"value\":18},{\"geo_id\":null,\"geo_name\":\"Washington\",\"value\":100}]}],\"interests_comparison\":null}]"
+        "DEBUG subregion: task status 40501: Invalid Field: 'location_name'."
       ],
-      "costUsd": 0.0134
+      "costUsd": 0.011
+    },
+    {
+      "date": "2026-09-30",
+      "time": "13:19",
+      "type": "score",
+      "title": "עלייה במגמת חיפוש: <bdi dir=\"ltr\">garage door repair</bdi>",
+      "detail": "מדד העניין במונח <bdi dir=\"ltr\">\"garage door repair\"</bdi> עלה ב-<bdi dir=\"ltr\">28%</bdi> מהיום שלפני, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi> (מדד יחסי, לא נפח חיפושים מוחלט: <bdi dir=\"ltr\">37</bdi>/100).",
+      "region": "מדינת אינדיאנה",
+      "tags": [
+        "+28%",
+        "יומי",
+        "ברמת מדינה (לא ספציפי לעיר)"
+      ]
     },
     {
       "date": "2026-09-30",
@@ -37,6 +50,20 @@
         "יומי",
         "ברמת מדינה (לא ספציפי לעיר)"
       ]
+    },
+    {
+      "date": "2026-09-30",
+      "time": "12:39",
+      "type": "scan",
+      "title": "סריקת מגמה יומית הושלמה",
+      "detail": "נבדקו 1 מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi>. נמצאו 1 מונחים בעלייה.<div class=\"scan-breakdown-label\">פירוט מלא לפי מונח:</div><ul class=\"scan-breakdown\"><li><bdi dir=\"ltr\">garage door repair</bdi>: <bdi dir=\"ltr\">מדד 36/100</bdi> (<bdi dir=\"ltr\">+24%</bdi>)</li></ul>",
+      "region": "מדינת אינדיאנה",
+      "tags": [
+        "הרצה יומית",
+        "ברמת מדינה (לא ספציפי לעיר)",
+        "DEBUG subregion: [{\"position\":1,\"type\":\"subregion_interests\",\"keywords\":[\"garage door repair\"],\"interests\":[{\"keyword\":\"garage door repair\",\"values\":[{\"geo_id\":null,\"geo_name\":\"Florida\",\"value\":24},{\"geo_id\":null,\"geo_name\":\"New Jersey\",\"value\":38},{\"geo_id\":null,\"geo_name\":\"New York\",\"value\":20},{\"geo_id\":null,\"geo_name\":\"Pennsylvania\",\"value\":36},{\"geo_id\":null,\"geo_name\":\"Texas\",\"value\":18},{\"geo_id\":null,\"geo_name\":\"Washington\",\"value\":100}]}],\"interests_comparison\":null}]"
+      ],
+      "costUsd": 0.0134
     },
     {
       "date": "2026-09-27",
@@ -90,6 +117,19 @@
     {
       "date": "2026-09-12",
       "time": "15:59",
+      "type": "scan",
+      "title": "סריקת מגמה יומית הושלמה",
+      "detail": "נבדקו 5 מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi>. נמצאו 1 מונחים בעלייה.",
+      "region": "מדינת אינדיאנה",
+      "tags": [
+        "הרצה יומית",
+        "ברמת מדינה (לא ספציפי לעיר)"
+      ],
+      "costUsd": 0.011
+    },
+    {
+      "date": "2026-09-12",
+      "time": "15:59",
       "type": "score",
       "title": "עלייה במגמת חיפוש: <bdi dir=\"ltr\">garage door repair</bdi>",
       "detail": "מדד העניין במונח <bdi dir=\"ltr\">\"garage door repair\"</bdi> עלה ב-<bdi dir=\"ltr\">56%</bdi> מהיום שלפני, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi> (מדד יחסי, לא נפח חיפושים מוחלט: <bdi dir=\"ltr\">78</bdi>/100).",
@@ -102,7 +142,7 @@
     },
     {
       "date": "2026-09-12",
-      "time": "15:59",
+      "time": "15:08",
       "type": "scan",
       "title": "סריקת מגמה יומית הושלמה",
       "detail": "נבדקו 5 מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi>. נמצאו 1 מונחים בעלייה.",
@@ -125,19 +165,6 @@
         "יומי",
         "ברמת מדינה (לא ספציפי לעיר)"
       ]
-    },
-    {
-      "date": "2026-09-12",
-      "time": "15:08",
-      "type": "scan",
-      "title": "סריקת מגמה יומית הושלמה",
-      "detail": "נבדקו 5 מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi>. נמצאו 1 מונחים בעלייה.",
-      "region": "מדינת אינדיאנה",
-      "tags": [
-        "הרצה יומית",
-        "ברמת מדינה (לא ספציפי לעיר)"
-      ],
-      "costUsd": 0.011
     },
     {
       "date": "2026-09-10",
@@ -218,6 +245,20 @@
     }
   ],
   "logHistory": [
+    {
+      "date": "2026-09-30",
+      "time": "13:19",
+      "type": "scan",
+      "title": "סריקת מגמה יומית הושלמה",
+      "detail": "נבדקו 5 מונחי מפתח מול מגמת החיפוש של היומיים האחרונים, <bdi dir=\"ltr\">ברמת מדינה (לא ספציפי לעיר)</bdi>. נמצאו 1 מונחים בעלייה.<div class=\"scan-breakdown-label\">פירוט מלא לפי מונח:</div><ul class=\"scan-breakdown\"><li><bdi dir=\"ltr\">garage door repair</bdi>: <bdi dir=\"ltr\">מדד 37/100</bdi> (<bdi dir=\"ltr\">+28%</bdi>)</li><li><bdi dir=\"ltr\">garage door spring repair</bdi>: <bdi dir=\"ltr\">מדד –/100</bdi> (<bdi dir=\"ltr\">אין נתון להשוואה</bdi>)</li><li><bdi dir=\"ltr\">garage door opener repair</bdi>: <bdi dir=\"ltr\">מדד 6/100</bdi> (<bdi dir=\"ltr\">אין נתון להשוואה</bdi>)</li><li><bdi dir=\"ltr\">garage door won't open</bdi>: <bdi dir=\"ltr\">מדד –/100</bdi> (<bdi dir=\"ltr\">אין נתון להשוואה</bdi>)</li><li><bdi dir=\"ltr\">garage door off track</bdi>: <bdi dir=\"ltr\">מדד –/100</bdi> (<bdi dir=\"ltr\">אין נתון להשוואה</bdi>)</li></ul>",
+      "region": "מדינת אינדיאנה",
+      "tags": [
+        "הרצה יומית",
+        "ברמת מדינה (לא ספציפי לעיר)",
+        "DEBUG subregion: task status 40501: Invalid Field: 'location_name'."
+      ],
+      "costUsd": 0.011
+    },
     {
       "date": "2026-09-30",
       "time": "12:39",
