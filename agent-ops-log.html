@@ -1260,6 +1260,7 @@
     background:rgba(var(--overlay-rgb),0.06);
   }
   .pages-management-card-title{font-size:0.92rem; font-weight:800; margin-bottom:8px;}
+  .pages-management-card-eyebrow{font-size:0.72rem; font-weight:700; color:var(--wire); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:4px;}
   .pages-management-card-keywords{font-size:0.78rem; color:var(--muted); line-height:1.6;}
   .pages-management-card-keywords bdi{font-weight:700;}
   .pages-management-section-label{
@@ -3415,9 +3416,10 @@
 
   function renderPagesManagementCards(data){
     const el = document.getElementById("pagesManagementList");
-    const { order, cardLabels, cardKeywords } = data;
+    const { order, cardTitles, cardKeywords } = data;
     el.innerHTML = `<div class="pages-management-grid">${order.map((key, i) => {
       const isLeading = i === 0;
+      const title = cardTitles[key] || {};
       const keywords = (cardKeywords[key] || []);
       const keywordsHtml = keywords.length
         ? `ממופה למונחים: ${keywords.map(k => `<bdi dir="ltr">${k}</bdi>`).join(", ")}`
@@ -3425,7 +3427,10 @@
       return `
         <div class="pages-management-card ${isLeading ? "is-leading" : ""}">
           <span class="pages-management-badge ${isLeading ? "is-leading" : "is-other"}">${isLeading ? "מוביל כרגע" : `מיקום #${i + 1}`}</span>
-          <div class="pages-management-card-title">${cardLabels[key] || key}</div>
+          <div class="pages-management-card-title" dir="ltr">
+            ${title.eyebrow ? `<div class="pages-management-card-eyebrow">${title.eyebrow}</div>` : ""}
+            ${title.headline || key}
+          </div>
           <div class="pages-management-card-keywords">${keywordsHtml}</div>
         </div>
       `;

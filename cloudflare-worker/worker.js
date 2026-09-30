@@ -240,13 +240,21 @@ export default {
         );
         if (!siteRes.ok) throw new Error(`Failed to fetch garage-door-site: HTTP ${siteRes.status}`);
         const html = await siteRes.text();
-        const order = extractFeatureCards(html).articles.map(cardKeyForArticle);
+        const { articles } = extractFeatureCards(html);
+        const order = articles.map(cardKeyForArticle);
+        // The site's own real English copy (an <p class="eyebrow"> category
+        // label + an <h3> headline per card) -- used instead of CARD_LABELS'
+        // Hebrew paraphrase, since this panel shows what's actually live.
+        const cardTitles = {};
+        articles.forEach((article, i) => {
+          cardTitles[order[i]] = extractCardTitle(article);
+        });
         const cardKeywords = {};
         for (const key of Object.keys(CARD_LABELS)) cardKeywords[key] = [];
         for (const [keyword, cardKey] of Object.entries(KEYWORD_CARD_MAP)) {
           if (cardKeywords[cardKey]) cardKeywords[cardKey].push(keyword);
         }
-        return json({ order, cardLabels: CARD_LABELS, cardKeywords }, 200);
+        return json({ order, cardTitles, cardKeywords }, 200);
       }
 
       // Everything below this point actually needs trends.json.
@@ -564,6 +572,28 @@ function cardKeyForArticle(article) {
     if (article.includes(marker)) return key;
   }
   return null;
+}
+
+// Pulls the card's own real English copy straight out of its markup: the
+// <p class="eyebrow"> category label and the <h3> headline. Falls back to
+// null (frontend shows the card key) rather than throwing, since a future
+// copy change on the site shouldn't break the whole panel.
+function extractCardTitle(article) {
+  const eyebrowMatch = article.match(/<p class="eyebrow">([\s\S]*?)<\/p>/);
+  const headlineMatch = article.match(/<h3>([\s\S]*?)<\/h3>/);
+  return {
+    eyebrow: eyebrowMatch ? decodeHtmlEntities(eyebrowMatch[1]) : null,
+    headline: headlineMatch ? decodeHtmlEntities(headlineMatch[1]) : null,
+  };
+}
+
+function decodeHtmlEntities(str) {
+  return str
+    .replace(/&amp;/g, "&")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
 }
 
 // Moves the target card to the front of the "jobs we do most" section,
