@@ -116,13 +116,10 @@ export default {
     }
 
     try {
-      const current = await getCurrentData(env);
-
-      if (ARCHIVE_ACTIONS.includes(body.action)) {
-        const output = applyArchiveAction(current.json, body);
-        await commitToGitHub(env, current.sha, output);
-        return json(output, 200);
-      }
+      // Document actions never touch trends.json at all, so they're handled
+      // before the getCurrentData() fetch below (not after it, like every
+      // other action) -- one fewer GitHub round-trip on every list/upload/
+      // delete, since that read would otherwise be pure dead weight here.
 
       // Lists whatever's in documents/ right now -- metadata only (name,
       // path, size), never the file content itself, so this stays cheap
@@ -230,6 +227,15 @@ export default {
           throw new Error(`GitHub delete failed for ${body.path}: ${delRes.status} ${text}`);
         }
         return json({ deleted: true }, 200);
+      }
+
+      // Everything below this point actually needs trends.json.
+      const current = await getCurrentData(env);
+
+      if (ARCHIVE_ACTIONS.includes(body.action)) {
+        const output = applyArchiveAction(current.json, body);
+        await commitToGitHub(env, current.sha, output);
+        return json(output, 200);
       }
 
       // Read-only: figures out which tracked keyword is trending from data

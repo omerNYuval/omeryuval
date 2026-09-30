@@ -3420,9 +3420,7 @@
       if(!res.ok || result.error) throw new Error(result.error || `HTTP ${res.status}`);
       renderDocumentsPanel();
     }catch(err){
-      documentUploadStatus.hidden = false;
-      documentUploadStatus.className = "documents-upload-status is-error";
-      documentUploadStatus.textContent = `המחיקה נכשלה: ${err.message}`;
+      showDocumentUploadStatus("error", `המחיקה נכשלה: ${err.message}`);
     }
   }
 
@@ -3443,6 +3441,22 @@
   const documentUploadStatus = document.getElementById("documentUploadStatus");
   const DOCUMENT_UPLOAD_BTN_DEFAULT_HTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>העלה מסמך`;
 
+  // autoHideMs lets the success message clear itself after a while (errors
+  // stay put until the next action, since those need attention). Guarded by
+  // a token so an older message's timeout can never hide a newer one.
+  let documentStatusToken = 0;
+  function showDocumentUploadStatus(kind, text, autoHideMs){
+    const token = ++documentStatusToken;
+    documentUploadStatus.hidden = false;
+    documentUploadStatus.className = `documents-upload-status is-${kind}`;
+    documentUploadStatus.textContent = text;
+    if(autoHideMs){
+      setTimeout(()=>{
+        if(documentStatusToken === token) documentUploadStatus.hidden = true;
+      }, autoHideMs);
+    }
+  }
+
   documentUploadBtn.addEventListener("click", ()=> documentFileInput.click());
 
   documentFileInput.addEventListener("change", async ()=>{
@@ -3450,9 +3464,7 @@
     if(!file) return;
     documentUploadStatus.hidden = true;
     if(file.size > MAX_DOCUMENT_SIZE){
-      documentUploadStatus.hidden = false;
-      documentUploadStatus.className = "documents-upload-status is-error";
-      documentUploadStatus.textContent = `הקובץ גדול מדי (${formatFileSize(file.size)}). הגודל המקסימלי הוא 4MB.`;
+      showDocumentUploadStatus("error", `הקובץ גדול מדי (${formatFileSize(file.size)}). הגודל המקסימלי הוא 4MB.`);
       documentFileInput.value = "";
       return;
     }
@@ -3467,14 +3479,10 @@
       });
       const result = await res.json();
       if(!res.ok || result.error) throw new Error(result.error || `HTTP ${res.status}`);
-      documentUploadStatus.hidden = false;
-      documentUploadStatus.className = "documents-upload-status is-ok";
-      documentUploadStatus.textContent = `"${result.name}" הועלה בהצלחה.`;
+      showDocumentUploadStatus("ok", `"${result.name}" הועלה בהצלחה.`, 15000);
       renderDocumentsPanel();
     }catch(err){
-      documentUploadStatus.hidden = false;
-      documentUploadStatus.className = "documents-upload-status is-error";
-      documentUploadStatus.textContent = `ההעלאה נכשלה: ${err.message}`;
+      showDocumentUploadStatus("error", `ההעלאה נכשלה: ${err.message}`);
     }finally{
       documentFileInput.value = "";
       documentUploadBtn.disabled = false;
