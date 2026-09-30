@@ -305,7 +305,9 @@
   #dataManagementLabel{margin-top:56px;}
 
   .side-link{
-    display:block;
+    display:flex;
+    align-items:center;
+    gap:10px;
     width:100%;
     text-align:right;
     font-size:0.88rem;
@@ -317,6 +319,23 @@
     color:var(--paper);
     cursor:pointer;
     transition:background-color .15s ease, color .15s ease;
+  }
+  .side-link-icon{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:17px;
+    height:17px;
+    flex-shrink:0;
+    opacity:0.75;
+  }
+  .side-link-icon svg{width:15px;height:15px;}
+  .side-link.active .side-link-icon{opacity:1;}
+  .side-link.has-soon > span:first-child{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
   }
   .side-link:hover{background:var(--panel);}
   .side-link.active{
@@ -1616,24 +1635,24 @@
   <div class="layout">
     <aside class="sidebar">
       <div class="side-label">סוג פעולה</div>
-      <button class="side-link active" data-filter="all">ראשי</button>
-      <button class="side-link" data-filter="run">הרצת הבוט</button>
-      <button class="side-link" data-filter="keywords">מילות מפתח</button>
-      <button class="side-link" data-filter="scheduled">הרצות מתוזמנות</button>
-      <button class="side-link" data-filter="scan">סריקת נתונים</button>
-      <button class="side-link" data-filter="score">מונח בעלייה</button>
-      <button class="side-link" data-filter="discovery">גילויי מילות מפתח</button>
+      <button class="side-link active" data-filter="all"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span>ראשי</button>
+      <button class="side-link" data-filter="run"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg></span>הרצת הבוט</button>
+      <button class="side-link" data-filter="keywords"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></span>מילות מפתח</button>
+      <button class="side-link" data-filter="scheduled"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>הרצות מתוזמנות</button>
+      <button class="side-link" data-filter="scan"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></span>סריקת נתונים</button>
+      <button class="side-link" data-filter="score"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></span>מונח בעלייה</button>
+      <button class="side-link" data-filter="discovery"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0 0 12 2z"></path></svg></span>גילויי מילות מפתח</button>
       <div class="side-label">אזור</div>
-      <button class="side-link" data-region="Indianapolis"><span class="region-dot"></span>אינדיאנפוליס</button>
-      <button class="side-link has-soon" data-region="Boston" disabled><span><span class="region-dot"></span>בוסטון</span><span class="soon-badge">Soon</span></button>
-      <button class="side-link has-soon" data-region="Miami" disabled><span><span class="region-dot"></span>מיאמי</span><span class="soon-badge">Soon</span></button>
+      <button class="side-link" data-region="Indianapolis"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span><span class="region-dot"></span>אינדיאנפוליס</button>
+      <button class="side-link has-soon" data-region="Boston" disabled><span><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span><span class="region-dot"></span>בוסטון</span><span class="soon-badge">Soon</span></button>
+      <button class="side-link has-soon" data-region="Miami" disabled><span><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span><span class="region-dot"></span>מיאמי</span><span class="soon-badge">Soon</span></button>
       <div class="side-label">אתר משני</div>
-      <button class="side-link" data-filter="site-update">עדכון דפי אתר</button>
-      <button class="side-link has-soon" disabled><span>פרסום דפי אתר</span><span class="soon-badge">Soon</span></button>
-      <button class="side-link has-soon" disabled><span>מסמכים עידן שושני</span><span class="soon-badge">Soon</span></button>
+      <button class="side-link" data-filter="site-update"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></span>עדכון דפי אתר</button>
+      <button class="side-link has-soon" disabled><span><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></span>פרסום דפי אתר</span><span class="soon-badge">Soon</span></button>
+      <button class="side-link has-soon" disabled><span><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></span>מסמכים עידן שושני</span><span class="soon-badge">Soon</span></button>
       <div class="side-label" id="dataManagementLabel">ניהול נתונים</div>
-      <button class="side-link" data-filter="logs">לוגים</button>
-      <button class="side-link" data-filter="archive">גיבוי ושחזור</button>
+      <button class="side-link" data-filter="logs"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"></path><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="12" y2="17"></line></svg></span>לוגים</button>
+      <button class="side-link" data-filter="archive"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></span>גיבוי ושחזור</button>
     </aside>
 
     <main class="main-col">
