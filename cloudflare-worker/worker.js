@@ -453,7 +453,12 @@ export default {
 function sanitizeFilename(name) {
   if (typeof name !== "string") return "";
   const base = name.split("/").pop().split("\\").pop().trim();
-  return base.replace(/[^\w.\-() ֐-׿]/g, "_").slice(0, 200);
+  // Built via fromCharCode (not a literal unicode-escape range in the
+  // regex source) so the Hebrew-block boundary code points never need to
+  // survive as raw characters through any copy/paste step.
+  const hebrewRange = String.fromCharCode(0x0590) + "-" + String.fromCharCode(0x05ff);
+  const disallowed = new RegExp(`[^\\w.\\-() ${hebrewRange}]`, "g");
+  return base.replace(disallowed, "_").slice(0, 200);
 }
 
 // Encodes each path segment separately so the slashes stay literal (real
