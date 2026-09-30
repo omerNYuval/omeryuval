@@ -1222,6 +1222,47 @@
   .site-update-undo-btn:disabled{opacity:0.55; cursor:default;}
   .site-update-undo-btn svg{width:14px;height:14px;flex-shrink:0;}
 
+  /* ---- pages management (real live snapshot of garage-door-site's cards) ---- */
+  .pages-management-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:16px;
+  }
+  @media (max-width:900px){
+    .pages-management-grid{grid-template-columns:1fr;}
+  }
+  .pages-management-card{
+    background:rgba(var(--overlay-rgb),0.04);
+    border:1px solid rgba(var(--overlay-rgb),0.09);
+    border-radius:12px;
+    padding:16px 18px;
+  }
+  .pages-management-card.is-leading{
+    border-color:color-mix(in srgb, var(--moss) 40%, transparent);
+    background:color-mix(in srgb, var(--moss) 8%, transparent);
+  }
+  .pages-management-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:0.76rem;
+    font-weight:700;
+    padding:4px 11px;
+    border-radius:999px;
+    margin-bottom:12px;
+  }
+  .pages-management-badge.is-leading{
+    color:var(--moss);
+    background:color-mix(in srgb, var(--moss) 18%, transparent);
+  }
+  .pages-management-badge.is-other{
+    color:var(--muted);
+    background:rgba(var(--overlay-rgb),0.06);
+  }
+  .pages-management-card-title{font-size:0.92rem; font-weight:800; margin-bottom:8px;}
+  .pages-management-card-keywords{font-size:0.78rem; color:var(--muted); line-height:1.6;}
+  .pages-management-card-keywords bdi{font-weight:700;}
+
   /* ---- document upload ---- */
   .documents-upload-row{
     display:flex;
@@ -1741,6 +1782,7 @@
       <button class="side-link has-soon" data-region="Miami" disabled><span><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span><span class="region-dot"></span>מיאמי</span><span class="soon-badge">Soon</span></button>
       <div class="side-label">אתר משני</div>
       <button class="side-link" data-filter="site-update"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></span>עדכון דפי אתר</button>
+      <button class="side-link" data-filter="pages-management"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span>ניהול דפי אתר</button>
       <button class="side-link" data-filter="documents"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></span>העלאת מסמכים</button>
       <button class="side-link has-soon" disabled><span><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></span>פרסום דפי אתר</span><span class="soon-badge">Soon</span></button>
       <div class="side-label" id="dataManagementLabel">ניהול נתונים</div>
@@ -1947,6 +1989,23 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="insights-panel" id="pagesManagementPanel" hidden>
+        <div class="insights-header">
+          <span class="insights-icon" style="color:var(--wire);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          </span>
+          <div>
+            <h2>ניהול דפי אתר</h2>
+            <div class="insights-sub">מצב חי, ממש עכשיו, של 4 כרטיסי השירות ב-garage-door-site — מי מוביל ובאיזה סדר.</div>
+          </div>
+          <button type="button" class="log-refresh-btn" id="pagesManagementRefreshBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            רענן
+          </button>
+        </div>
+        <div id="pagesManagementList"><div class="documents-list-empty">טוען...</div></div>
       </div>
 
       <div class="insights-panel" id="documentsPanel" hidden>
@@ -2385,14 +2444,19 @@
     siteUpdatePanel.hidden = !showingSiteUpdate;
     if(showingSiteUpdate) renderSiteUpdatePanel();
 
+    const pagesManagementPanel = document.getElementById("pagesManagementPanel");
+    const showingPagesManagement = activeAxis === "filter" && activeFilter === "pages-management";
+    pagesManagementPanel.hidden = !showingPagesManagement;
+    if(showingPagesManagement) renderPagesManagementPanel();
+
     const documentsPanel = document.getElementById("documentsPanel");
     const showingDocuments = activeAxis === "filter" && activeFilter === "documents";
     documentsPanel.hidden = !showingDocuments;
     if(showingDocuments) renderDocumentsPanel();
 
     const showingAll = activeAxis === "filter" && activeFilter === "all";
-    feed.hidden = showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs || showingSiteUpdate || showingDocuments;
-    if(showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs || showingSiteUpdate || showingDocuments){
+    feed.hidden = showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs || showingSiteUpdate || showingPagesManagement || showingDocuments;
+    if(showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs || showingSiteUpdate || showingPagesManagement || showingDocuments){
       feed.innerHTML = "";
       return;
     }
@@ -3274,6 +3338,59 @@
   }
 
   document.getElementById("siteUpdateProposeBtn").addEventListener("click", checkSiteUpdateProposal);
+
+  // ---- pages management (real live snapshot, not demo data) ----
+  //
+  // Cached like siteUpdateMeta -- loaded once on first open, "רענן" force-
+  // refetches. Right now garage-door-site only has these 4 service cards
+  // (no separate pages yet, since the partner hasn't built any), so this
+  // shows their real current order/labels/keyword-mapping rather than the
+  // eventual per-page hidden/live concept from DECISIONS.md.
+  let pagesManagementCache = null;
+
+  function renderPagesManagementPanel(){
+    if(pagesManagementCache) renderPagesManagementCards(pagesManagementCache);
+    else loadPagesManagement();
+  }
+
+  async function loadPagesManagement(){
+    const el = document.getElementById("pagesManagementList");
+    el.innerHTML = '<div class="documents-list-empty">טוען את המצב הנוכחי מהאתר...</div>';
+    try{
+      const res = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get_site_cards" }),
+      });
+      const result = await res.json();
+      if(!res.ok || result.error) throw new Error(result.error || `HTTP ${res.status}`);
+      pagesManagementCache = result;
+      renderPagesManagementCards(result);
+    }catch(err){
+      el.innerHTML = `<div class="documents-list-empty">שגיאה בטעינת המצב מהאתר: <bdi dir="ltr">${err.message}</bdi></div>`;
+    }
+  }
+
+  function renderPagesManagementCards(data){
+    const el = document.getElementById("pagesManagementList");
+    const { order, cardLabels, cardKeywords } = data;
+    el.innerHTML = `<div class="pages-management-grid">${order.map((key, i) => {
+      const isLeading = i === 0;
+      const keywords = (cardKeywords[key] || []);
+      const keywordsHtml = keywords.length
+        ? `ממופה למונחים: ${keywords.map(k => `<bdi dir="ltr">${k}</bdi>`).join(", ")}`
+        : "לא ממופה למונח חיפוש ספציפי";
+      return `
+        <div class="pages-management-card ${isLeading ? "is-leading" : ""}">
+          <span class="pages-management-badge ${isLeading ? "is-leading" : "is-other"}">${isLeading ? "מוביל כרגע" : `מיקום #${i + 1}`}</span>
+          <div class="pages-management-card-title">${cardLabels[key] || key}</div>
+          <div class="pages-management-card-keywords">${keywordsHtml}</div>
+        </div>
+      `;
+    }).join("")}</div>`;
+  }
+
+  document.getElementById("pagesManagementRefreshBtn").addEventListener("click", loadPagesManagement);
 
   // ---- document upload panel ----
   //

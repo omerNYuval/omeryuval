@@ -229,6 +229,26 @@ export default {
         return json({ deleted: true }, 200);
       }
 
+      // Read-only, real (not cached) snapshot of garage-door-site's actual 4
+      // service cards and their current live order -- powers "ניהול דפי
+      // אתר". No trends.json needed here either (this is purely about
+      // garage-door-site's own current state), so it stays with the other
+      // actions handled before getCurrentData() below.
+      if (body.action === "get_site_cards") {
+        const siteRes = await fetch(
+          `https://raw.githubusercontent.com/${SITE_UPDATE_REPO}/${SITE_UPDATE_BRANCH}/${SITE_UPDATE_FILE_PATH}`
+        );
+        if (!siteRes.ok) throw new Error(`Failed to fetch garage-door-site: HTTP ${siteRes.status}`);
+        const html = await siteRes.text();
+        const order = extractFeatureCards(html).articles.map(cardKeyForArticle);
+        const cardKeywords = {};
+        for (const key of Object.keys(CARD_LABELS)) cardKeywords[key] = [];
+        for (const [keyword, cardKey] of Object.entries(KEYWORD_CARD_MAP)) {
+          if (cardKeywords[cardKey]) cardKeywords[cardKey].push(keyword);
+        }
+        return json({ order, cardLabels: CARD_LABELS, cardKeywords }, 200);
+      }
+
       // Everything below this point actually needs trends.json.
       const current = await getCurrentData(env);
 
