@@ -4058,7 +4058,15 @@
 
   window.addEventListener("popstate", ()=>applyHash(true));
 
-  history.replaceState(null, "", "#filter/all");
+  // A reload (F5) keeps the URL's hash -- restore whichever panel it points
+  // to instead of always resetting to "ראשי", so the page you were on stays
+  // the page you're on after a refresh. Only default to #filter/all when
+  // there's no valid hash yet (a first-ever visit).
+  if(/^#(filter|region)\/.+$/.test(location.hash)){
+    applyHash(false);
+  }else{
+    history.replaceState(null, "", "#filter/all");
+  }
 
   loadData(false).then(refreshLiveBalance);
 </script>
