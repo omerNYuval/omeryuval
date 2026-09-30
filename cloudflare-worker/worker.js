@@ -20,6 +20,11 @@ const ALLOWED_ORIGIN = "https://omernyuval.github.io";
 // the cooldown/billing path entirely rather than being folded into a "run".
 const ARCHIVE_ACTIONS = ["archive", "archive_bulk", "restore", "restore_bulk", "delete"];
 
+// Business documents (contracts, licenses, etc.) uploaded from the "העלאת
+// מסמכים" panel -- stored as ordinary files in this same private repo,
+// under their own folder, completely separate from trends.json.
+const DOCUMENTS_PATH = "documents";
+
 // ---- garage-door-site integration (see DECISIONS.md) ----
 //
 // Step 2: propose a specific, narrow content change (which of the 4 "jobs
@@ -117,6 +122,114 @@ export default {
         const output = applyArchiveAction(current.json, body);
         await commitToGitHub(env, current.sha, output);
         return json(output, 200);
+      }
+
+      // Lists whatever's in documents/ right now -- metadata only (name,
+      // path, size), never the file content itself, so this stays cheap
+      // even with many/large documents. Actual content is fetched
+      // on-demand per file via get_document, only when someone opens one.
+      if (body.action === "list_documents") {
+        const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${DOCUMENTS_PATH}?ref=${BRANCH}`, {
+          headers: {
+            Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+            "User-Agent": "garage-signal-worker",
+            Accept: "application/vnd.github+json",
+          },
+        });
+        if (res.status === 404) return json({ documents: [] }, 200);
+        if (!res.ok) throw new Error(`GitHub read failed for documents/: ${res.status}`);
+        const items = await res.json();
+        const documents = (Array.isArray(items) ? items : [])
+          .filter((it) => it.type === "file")
+          .map((it) => ({ name: it.name, path: it.path, size: it.size }))
+          .sort((a, b) => a.name.localeCompare(b.name, "he"));
+        return json({ documents }, 200);
+      }
+
+      // Fetches one document's content on demand (base64), so the client can
+      // build a Blob and open/download it -- private-repo files can't just
+      // be linked to directly, since that needs an authenticated request.
+      if (body.action === "get_document") {
+        if (!body.path || !body.path.startsWith(`${DOCUMENTS_PATH}/`)) throw new Error("Invalid document path");
+        const res = await fetch(
+          `https://api.github.com/repos/${REPO}/contents/${encodeGitHubPath(body.path)}?ref=${BRANCH}`,
+          {
+            headers: {
+              Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+              "User-Agent": "garage-signal-worker",
+              Accept: "application/vnd.github+json",
+            },
+          }
+        );
+        if (!res.ok) throw new Error(`GitHub read failed for ${body.path}: ${res.status}`);
+        const data = await res.json();
+        return json({ name: data.name, contentBase64: data.content.replace(/\n/g, "") }, 200);
+      }
+
+      // Uploads (or overwrites, same filename) one document. The client
+      // sends the raw file already base64-encoded; a 404 on the sha lookup
+      // just means it's a new file, not an error.
+      if (body.action === "upload_document") {
+        const filename = sanitizeFilename(body.filename);
+        if (!filename) throw new Error("Missing or invalid filename");
+        if (!body.contentBase64) throw new Error("Missing file content");
+        const path = `${DOCUMENTS_PATH}/${filename}`;
+        const existing = await fetch(`https://api.github.com/repos/${REPO}/contents/${encodeGitHubPath(path)}?ref=${BRANCH}`, {
+          headers: {
+            Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+            "User-Agent": "garage-signal-worker",
+            Accept: "application/vnd.github+json",
+          },
+        });
+        const existingSha = existing.ok ? (await existing.json()).sha : null;
+        const putRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${encodeGitHubPath(path)}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+            "User-Agent": "garage-signal-worker",
+            Accept: "application/vnd.github+json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: `${existingSha ? "Replace" : "Upload"} document: ${filename}`,
+            content: body.contentBase64,
+            branch: BRANCH,
+            ...(existingSha ? { sha: existingSha } : {}),
+          }),
+        });
+        if (!putRes.ok) {
+          const text = await putRes.text();
+          throw new Error(`GitHub write failed for ${path}: ${putRes.status} ${text}`);
+        }
+        return json({ uploaded: true, name: filename }, 200);
+      }
+
+      if (body.action === "delete_document") {
+        if (!body.path || !body.path.startsWith(`${DOCUMENTS_PATH}/`)) throw new Error("Invalid document path");
+        const existing = await fetch(`https://api.github.com/repos/${REPO}/contents/${encodeGitHubPath(body.path)}?ref=${BRANCH}`, {
+          headers: {
+            Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+            "User-Agent": "garage-signal-worker",
+            Accept: "application/vnd.github+json",
+          },
+        });
+        if (!existing.ok) throw new Error(`Document not found: ${body.path}`);
+        const { sha } = await existing.json();
+        const delRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${encodeGitHubPath(body.path)}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+            "User-Agent": "garage-signal-worker",
+            Accept: "application/vnd.github+json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: `Delete document: ${body.path}`, sha, branch: BRANCH }),
+        });
+        if (!delRes.ok) {
+          const text = await delRes.text();
+          throw new Error(`GitHub delete failed for ${body.path}: ${delRes.status} ${text}`);
+        }
+        return json({ deleted: true }, 200);
       }
 
       // Read-only: figures out which tracked keyword is trending from data
@@ -333,6 +446,22 @@ export default {
     }
   },
 };
+
+// Keeps only the filename itself (no path separators, so a crafted
+// filename can never write outside documents/), and drops characters
+// GitHub's contents API path handling doesn't like.
+function sanitizeFilename(name) {
+  if (typeof name !== "string") return "";
+  const base = name.split("/").pop().split("\\").pop().trim();
+  return base.replace(/[^\w.\-() ֐-׿]/g, "_").slice(0, 200);
+}
+
+// Encodes each path segment separately so the slashes stay literal (real
+// path separators) while spaces/Hebrew/special characters in a filename
+// still get properly escaped for the URL.
+function encodeGitHubPath(path) {
+  return path.split("/").map(encodeURIComponent).join("/");
+}
 
 // ---- data management: archive/restore/permanently-delete an entry ----
 //
