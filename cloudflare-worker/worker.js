@@ -900,8 +900,9 @@ async function runTrends(env, selection) {
   // way to tell whether a state/country-level signal is actually
   // Indianapolis-driven before we'd otherwise have to label it generic.
   let verifiedTag = null;
+  let subregionDebugTag = null;
   if (!isCityLevel && selection.city === "Indianapolis") {
-    const dominant = await fetchDominantSubregion(env, locationName, dateFrom, dateTo, selection.keywords);
+    const { dominant, debug } = await fetchDominantSubregion(env, dateFrom, dateTo, selection.keywords);
     if (dominant && dominant.toLowerCase().includes("indianapolis")) {
       label = CITY_LABEL.Indianapolis;
       precisionNote = `${precisionNote} — זוהה כמגיע בעיקר מאזור אינדיאנפוליס`;
@@ -909,6 +910,11 @@ async function runTrends(env, selection) {
     } else if (dominant) {
       precisionNote = `${precisionNote}, אזור מוביל בפועל: ${dominant}`;
     }
+    // TEMPORARY: surfaces the endpoint's raw response shape so we can
+    // confirm the real field names/granularity live, instead of guessing
+    // from partially-blocked docs. Remove once fetchDominantSubregion is
+    // confirmed working correctly against a real run.
+    if (debug) subregionDebugTag = `DEBUG subregion: ${debug}`;
   }
 
   const { date, time } = nowInMarket();
@@ -944,6 +950,7 @@ async function runTrends(env, selection) {
     });
     const scanTags = ["הרצה יומית", precisionNote];
     if (verifiedTag) scanTags.push(verifiedTag);
+    if (subregionDebugTag) scanTags.push(subregionDebugTag);
     newEntries.push({
       date,
       time,
@@ -982,6 +989,7 @@ async function runTrends(env, selection) {
     });
     const scanTags = ["הרצה שבועית", precisionNote];
     if (verifiedTag) scanTags.push(verifiedTag);
+    if (subregionDebugTag) scanTags.push(subregionDebugTag);
     newEntries.push({
       date,
       time,
@@ -1053,10 +1061,21 @@ async function fetchTrendsWithFallback(env, candidates, dateFrom, dateTo, keywor
 // endpoint which subregion of that broader area is actually driving the
 // interest — so we can honestly upgrade the entry to "Indianapolis" only
 // when the data itself points there, instead of always guessing broad.
-async function fetchDominantSubregion(env, locationName, dateFrom, dateTo, keywords) {
+//
+// Corrected from an earlier version that called the wrong endpoint
+// (google_trends/subregion_interests instead of the real
+// dataforseo_trends/subregion_interests) with the wrong location_name
+// (the resolved state, e.g. "Indiana,United States", instead of a country
+// -- every real example request for this endpoint uses a bare country
+// name like "United States"). Also tries resolution: "CITY" for
+// city-level granularity, since a country's own "subregion" breakdown is
+// otherwise just its states -- not confirmed from official docs (network
+// access to them is blocked from here), so this is the best real fix
+// available until a live run confirms the actual response shape.
+async function fetchDominantSubregion(env, dateFrom, dateTo, keywords) {
   try {
     const auth = btoa(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
-    const res = await fetch("https://api.dataforseo.com/v3/keywords_data/google_trends/subregion_interests/live", {
+    const res = await fetch("https://api.dataforseo.com/v3/keywords_data/dataforseo_trends/subregion_interests/live", {
       method: "POST",
       headers: {
         Authorization: `Basic ${auth}`,
@@ -1064,38 +1083,47 @@ async function fetchDominantSubregion(env, locationName, dateFrom, dateTo, keywo
       },
       body: JSON.stringify([{
         keywords,
-        location_name: locationName,
+        location_name: "United States",
+        resolution: "CITY",
         date_from: dateFrom,
         date_to: dateTo,
         type: "web",
       }]),
     });
-    if (!res.ok) return null;
+    if (!res.ok) return { dominant: null, debug: `HTTP ${res.status}` };
     const data = await res.json();
-    if (data.status_code !== 20000) return null;
+    if (data.status_code !== 20000) return { dominant: null, debug: `status ${data.status_code}: ${data.status_message}` };
     const task = data.tasks && data.tasks[0];
-    if (!task || task.status_code !== 20000) return null;
+    if (!task || task.status_code !== 20000) {
+      return { dominant: null, debug: `task status ${task ? task.status_code : "none"}: ${task ? task.status_message : ""}` };
+    }
     const result = task.result && task.result[0];
     const items = (result && result.items) || [];
-    // The exact response field names for this endpoint aren't published,
-    // so this scans defensively for the first ranked subregion's name
-    // rather than assuming a specific field/shape.
+    // Kept for one-time live debugging (see subregionDebugTag in
+    // runTrends) -- the exact response field names for this endpoint
+    // aren't confirmed, so this also logs the raw shape of what actually
+    // came back.
+    const debug = items.length ? JSON.stringify(items.slice(0, 2)) : `empty items (raw: ${JSON.stringify(result).slice(0, 300)})`;
     for (const item of items) {
-      const list = item.data || item.subregions || item.values || [];
+      // Try a flat shape first (item itself is one subregion's entry)...
+      let name = subregionName(item);
+      if (name) return { dominant: name, debug };
+      // ...then a nested shape (item wraps one keyword's own subregion list).
+      const list = item.data || item.subregions || item.values || item.subregion_interests || [];
       if (Array.isArray(list) && list.length) {
-        const name = subregionName(list[0]);
-        if (name) return name;
+        name = subregionName(list[0]);
+        if (name) return { dominant: name, debug };
       }
     }
-    return null;
+    return { dominant: null, debug };
   } catch (err) {
-    return null;
+    return { dominant: null, debug: `error: ${err.message}` };
   }
 }
 
 function subregionName(entry) {
   if (!entry || typeof entry !== "object") return null;
-  for (const key of ["geo_name", "location_name", "region_name", "name"]) {
+  for (const key of ["location_name", "geo_name", "region_name", "name", "subregion", "subregion_name"]) {
     if (typeof entry[key] === "string" && entry[key]) return entry[key];
   }
   return null;
