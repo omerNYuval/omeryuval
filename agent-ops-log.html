@@ -1217,6 +1217,121 @@
   .site-update-undo-btn:hover{border-color:var(--danger); color:var(--danger); background:color-mix(in srgb, var(--danger) 10%, transparent);}
   .site-update-undo-btn:disabled{opacity:0.55; cursor:default;}
   .site-update-undo-btn svg{width:14px;height:14px;flex-shrink:0;}
+
+  /* ---- pages library (see DECISIONS.md's "future pages" strategy) ---- */
+  .pages-library-empty{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    background:rgba(var(--overlay-rgb),0.04);
+    border:1px solid rgba(var(--overlay-rgb),0.08);
+    border-radius:12px;
+    padding:18px 20px;
+    margin-bottom:24px;
+  }
+  .pages-library-empty-icon{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:36px;
+    height:36px;
+    flex-shrink:0;
+    border-radius:50%;
+    background:rgba(var(--overlay-rgb),0.06);
+    color:var(--muted);
+  }
+  .pages-library-empty-icon svg{width:18px;height:18px;}
+  .pages-library-empty-title{font-size:0.92rem; font-weight:800; margin-bottom:4px;}
+  .pages-library-empty-text{font-size:0.85rem; color:var(--muted); line-height:1.6;}
+  .pages-library-demo-label{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:0.82rem;
+    font-weight:700;
+    color:var(--muted);
+    margin-bottom:14px;
+  }
+  .pages-library-demo-label::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:rgba(var(--overlay-rgb),0.1);
+  }
+  .pages-library-demo-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:16px;
+  }
+  @media (max-width:900px){
+    .pages-library-demo-grid{grid-template-columns:1fr;}
+  }
+  .pages-library-card{
+    position:relative;
+    background:rgba(var(--overlay-rgb),0.03);
+    border:1px dashed rgba(var(--overlay-rgb),0.16);
+    border-radius:12px;
+    padding:16px 18px;
+    opacity:0.85;
+  }
+  .pages-library-card-demo-tag{
+    position:absolute;
+    top:12px;
+    inset-inline-start:14px;
+    font-size:0.66rem;
+    font-weight:700;
+    color:var(--muted);
+    background:rgba(var(--overlay-rgb),0.06);
+    border:1px solid rgba(var(--overlay-rgb),0.14);
+    padding:2px 9px;
+    border-radius:999px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+  .pages-library-card-title{
+    font-size:0.9rem;
+    font-weight:800;
+    margin:26px 0 8px;
+  }
+  .pages-library-card-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:0.76rem;
+    font-weight:700;
+    padding:4px 11px;
+    border-radius:999px;
+    margin-bottom:12px;
+  }
+  .pages-library-card-badge.is-hidden{
+    color:var(--muted);
+    background:rgba(var(--overlay-rgb),0.06);
+    border:1px solid rgba(var(--overlay-rgb),0.14);
+  }
+  .pages-library-card-badge.is-live{
+    color:var(--moss);
+    background:color-mix(in srgb, var(--moss) 16%, transparent);
+    border:1px solid color-mix(in srgb, var(--moss) 35%, transparent);
+  }
+  .pages-library-card-badge-dot{width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0;}
+  .pages-library-card-meta{font-size:0.78rem; color:var(--muted); margin-bottom:14px;}
+  .pages-library-card-meta bdi{font-weight:700;}
+  .pages-library-card-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .pages-library-card-actions button{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family:'Heebo', sans-serif;
+    font-weight:700;
+    font-size:0.76rem;
+    padding:7px 14px;
+    border-radius:999px;
+    border:1px solid rgba(var(--overlay-rgb),0.16);
+    background:transparent;
+    color:var(--muted);
+    cursor:not-allowed;
+  }
+  .pages-library-card-actions svg{width:13px;height:13px;flex-shrink:0;}
   .insights-stats{
     display:grid;
     grid-template-columns:repeat(5,1fr);
@@ -1648,8 +1763,8 @@
       <button class="side-link has-soon" data-region="Miami" disabled><span><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span><span class="region-dot"></span>מיאמי</span><span class="soon-badge">Soon</span></button>
       <div class="side-label">אתר משני</div>
       <button class="side-link" data-filter="site-update"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></span>עדכון דפי אתר</button>
+      <button class="side-link" data-filter="pages-library"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></span>ספריית דפים</button>
       <button class="side-link has-soon" disabled><span><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></span>פרסום דפי אתר</span><span class="soon-badge">Soon</span></button>
-      <button class="side-link has-soon" disabled><span><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></span>מסמכים עידן שושני</span><span class="soon-badge">Soon</span></button>
       <div class="side-label" id="dataManagementLabel">ניהול נתונים</div>
       <button class="side-link" data-filter="logs"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"></path><line x1="8" y1="9" x2="16" y2="9"></line><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="12" y2="17"></line></svg></span>לוגים</button>
       <button class="side-link" data-filter="archive"><span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></span>גיבוי ושחזור</button>
@@ -1850,6 +1965,68 @@
               <button type="button" class="site-update-primary-btn" id="siteUpdateLoadBtn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 הצג תצוגה חיה של האתר
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insights-panel" id="pagesLibraryPanel" hidden>
+        <div class="insights-header">
+          <span class="insights-icon" style="color:var(--wire);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          </span>
+          <div>
+            <h2>ספריית דפים</h2>
+            <div class="insights-sub">דפים נוספים ל-garage-door-site שיושבים באוויר ומאונדקסים בגוגל, בלי להיות מקושרים בבולטות — עד שהבוט יחליט שהגיע זמנם (התוכנית המלאה ב-DECISIONS.md).</div>
+          </div>
+        </div>
+
+        <div class="pages-library-empty">
+          <span class="pages-library-empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          </span>
+          <div>
+            <div class="pages-library-empty-title">עדיין אין דפים בספרייה</div>
+            <div class="pages-library-empty-text">ברגע שהשותף יבנה דף חדש, הוא יפורסם ל-garage-door-site "בשקט" (בכתובת ישירה, בתוך sitemap.xml, בלי קישור בולט) ויופיע כאן — עם תג "ממתין בצל" או "מוצג באתר", מיפוי למונח חיפוש, ותצוגה מקדימה. הקפצה לבולטות תהיה פעולה אחת, בדיוק כמו אישור עדכון בפאנל "עדכון דפי אתר".</div>
+          </div>
+        </div>
+
+        <div class="pages-library-demo-label">כך זה ייראה בפועל — דוגמה להמחשה</div>
+        <div class="pages-library-demo-grid">
+          <div class="pages-library-card">
+            <span class="pages-library-card-demo-tag">דוגמה</span>
+            <div class="pages-library-card-title">תיקון קפיצי דלת מוסך — מדריך מלא</div>
+            <span class="pages-library-card-badge is-hidden">
+              <span class="pages-library-card-badge-dot"></span>ממתין בצל
+            </span>
+            <div class="pages-library-card-meta">ממופה למונח: <bdi dir="ltr">garage door spring repair</bdi> · מאונדקס בגוגל</div>
+            <div class="pages-library-card-actions">
+              <button type="button" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                תצוגה מקדימה
+              </button>
+              <button type="button" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"></polyline><line x1="12" y1="6" x2="12" y2="18"></line></svg>
+                הקפץ לבולטות
+              </button>
+            </div>
+          </div>
+          <div class="pages-library-card">
+            <span class="pages-library-card-demo-tag">דוגמה</span>
+            <div class="pages-library-card-title">התקנת מנוע חשמלי חכם לדלת מוסך</div>
+            <span class="pages-library-card-badge is-live">
+              <span class="pages-library-card-badge-dot"></span>מוצג באתר
+            </span>
+            <div class="pages-library-card-meta">ממופה למונח: <bdi dir="ltr">garage door opener repair</bdi> · מקושר מהתפריט הראשי</div>
+            <div class="pages-library-card-actions">
+              <button type="button" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                תצוגה מקדימה
+              </button>
+              <button type="button" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 13 12 18 7 13"></polyline><line x1="12" y1="18" x2="12" y2="6"></line></svg>
+                הסתר בחזרה
               </button>
             </div>
           </div>
@@ -2254,9 +2431,13 @@
     siteUpdatePanel.hidden = !showingSiteUpdate;
     if(showingSiteUpdate) renderSiteUpdatePanel();
 
+    const pagesLibraryPanel = document.getElementById("pagesLibraryPanel");
+    const showingPagesLibrary = activeAxis === "filter" && activeFilter === "pages-library";
+    pagesLibraryPanel.hidden = !showingPagesLibrary;
+
     const showingAll = activeAxis === "filter" && activeFilter === "all";
-    feed.hidden = showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs || showingSiteUpdate;
-    if(showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs || showingSiteUpdate){
+    feed.hidden = showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs || showingSiteUpdate || showingPagesLibrary;
+    if(showingAll || showingRun || showingScheduled || showingKeywords || showingArchive || showingLogs || showingSiteUpdate || showingPagesLibrary){
       feed.innerHTML = "";
       return;
     }
