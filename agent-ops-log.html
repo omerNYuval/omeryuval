@@ -1262,6 +1262,36 @@
   .pages-management-card-title{font-size:0.92rem; font-weight:800; margin-bottom:8px;}
   .pages-management-card-keywords{font-size:0.78rem; color:var(--muted); line-height:1.6;}
   .pages-management-card-keywords bdi{font-weight:700;}
+  .pages-management-section-label{
+    font-size:0.82rem;
+    font-weight:700;
+    color:var(--muted);
+    margin:22px 0 12px;
+  }
+  .pages-management-section-label:first-of-type{margin-top:0;}
+  .pages-management-empty{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    background:rgba(var(--overlay-rgb),0.04);
+    border:1px dashed rgba(var(--overlay-rgb),0.14);
+    border-radius:12px;
+    padding:16px 18px;
+  }
+  .pages-management-empty-icon{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:34px;
+    height:34px;
+    flex-shrink:0;
+    border-radius:50%;
+    background:rgba(var(--overlay-rgb),0.06);
+    color:var(--muted);
+  }
+  .pages-management-empty-icon svg{width:17px;height:17px;}
+  .pages-management-empty-title{font-size:0.9rem; font-weight:800; margin-bottom:4px;}
+  .pages-management-empty-text{font-size:0.83rem; color:var(--muted); line-height:1.6;}
 
   /* ---- document upload ---- */
   .documents-upload-row{
@@ -2005,7 +2035,19 @@
             רענן
           </button>
         </div>
+        <div class="pages-management-section-label">דפים שכרגע באתר</div>
         <div id="pagesManagementList"><div class="documents-list-empty">טוען...</div></div>
+
+        <div class="pages-management-section-label">דפים ממתינים (טרם פורסמו)</div>
+        <div class="pages-management-empty">
+          <span class="pages-management-empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+          </span>
+          <div>
+            <div class="pages-management-empty-title">אין עדיין דפים ממתינים</div>
+            <div class="pages-management-empty-text">כשתשלח דף חדש, הוא יפורסם ל-garage-door-site "בשקט" — קיים וגוגל יכולה לאנדקס אותו, אבל לא מקושר משום מקום בולט, ולכן לא באמת נראה לגולש רגיל. הוא יופיע כאן, מתחת לדפים שבאתר עכשיו. ברגע שתחליט שהגיע הזמן — הקפצה לבולטות תהיה פעולה אחת, בדיוק כמו אישור עדכון בפאנל "עדכון דפי אתר".</div>
+          </div>
+        </div>
       </div>
 
       <div class="insights-panel" id="documentsPanel" hidden>
