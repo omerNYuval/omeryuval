@@ -729,6 +729,10 @@
     color:var(--muted);
     border:1px solid var(--steel);
   }
+  .modal-btn-danger{
+    background:var(--danger);
+    color:var(--paper);
+  }
   .modal-actions.three{
     flex-wrap:wrap;
   }
@@ -1229,38 +1233,6 @@
     padding:16px 18px;
     margin-bottom:22px;
     flex-wrap:wrap;
-  }
-  .documents-upload-picker{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex:1;
-    min-width:220px;
-  }
-  .documents-upload-picker-btn{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    background:transparent;
-    color:var(--wire);
-    border:1px solid color-mix(in srgb, var(--wire) 45%, transparent);
-    padding:9px 18px;
-    border-radius:999px;
-    font-family:'Heebo', sans-serif;
-    font-weight:700;
-    font-size:0.85rem;
-    cursor:pointer;
-    white-space:nowrap;
-    transition:background-color .15s ease;
-  }
-  .documents-upload-picker-btn:hover{background:color-mix(in srgb, var(--wire) 14%, transparent);}
-  .documents-upload-picker-btn svg{width:15px;height:15px;flex-shrink:0;}
-  .documents-upload-filename{
-    font-size:0.82rem;
-    color:var(--muted);
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
   }
   .documents-upload-submit-btn{
     display:inline-flex;
@@ -1989,15 +1961,8 @@
         </div>
 
         <div class="documents-upload-row">
-          <div class="documents-upload-picker">
-            <input type="file" id="documentFileInput" hidden>
-            <button type="button" class="documents-upload-picker-btn" id="documentPickBtn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-              בחר קובץ
-            </button>
-            <span class="documents-upload-filename" id="documentFilename">לא נבחר קובץ</span>
-          </div>
-          <button type="button" class="documents-upload-submit-btn" id="documentUploadBtn" disabled>
+          <input type="file" id="documentFileInput" hidden>
+          <button type="button" class="documents-upload-submit-btn" id="documentUploadBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
             העלה מסמך
           </button>
@@ -2079,6 +2044,20 @@
     </main>
   </div>
 
+</div>
+
+<div class="modal-overlay" id="confirmModalOverlay" hidden>
+  <div class="modal-card">
+    <div class="modal-icon" id="confirmModalIcon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+    </div>
+    <div class="modal-title" id="confirmModalTitle"></div>
+    <div class="modal-text" id="confirmModalText"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-secondary" id="confirmModalCancel" type="button">ביטול</button>
+      <button class="modal-btn modal-btn-danger" id="confirmModalConfirm" type="button">מחק</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="timingModalOverlay" hidden>
@@ -3346,7 +3325,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             פתח
           </a>
-          <button type="button" data-doc-delete="${encodeURIComponent(doc.path)}">
+          <button type="button" data-doc-delete="${encodeURIComponent(doc.path)}" data-doc-name="${encodeURIComponent(doc.name)}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
             מחק
           </button>
@@ -3361,7 +3340,7 @@
       });
     });
     el.querySelectorAll("[data-doc-delete]").forEach(btn=>{
-      btn.addEventListener("click", ()=> deleteDocument(decodeURIComponent(btn.dataset.docDelete)));
+      btn.addEventListener("click", ()=> deleteDocument(decodeURIComponent(btn.dataset.docDelete), decodeURIComponent(btn.dataset.docName)));
     });
   }
 
@@ -3401,8 +3380,36 @@
     }
   }
 
-  async function deleteDocument(path){
-    if(!confirm("למחוק את המסמך הזה לצמיתות?")) return;
+  // A single reusable in-page confirm (replaces the browser's native
+  // confirm() for destructive actions) -- same modal-overlay/modal-card
+  // markup and styling as the other modals in this file, so it fits
+  // in rather than looking like a stray browser dialog.
+  const confirmModalOverlay = document.getElementById("confirmModalOverlay");
+  let confirmModalResolve = null;
+  function showConfirmModal({ title, text, confirmLabel }){
+    document.getElementById("confirmModalTitle").textContent = title;
+    document.getElementById("confirmModalText").textContent = text;
+    document.getElementById("confirmModalConfirm").textContent = confirmLabel || "אישור";
+    confirmModalOverlay.hidden = false;
+    return new Promise((resolve)=>{ confirmModalResolve = resolve; });
+  }
+  function closeConfirmModal(result){
+    confirmModalOverlay.hidden = true;
+    if(confirmModalResolve){ confirmModalResolve(result); confirmModalResolve = null; }
+  }
+  document.getElementById("confirmModalConfirm").addEventListener("click", ()=> closeConfirmModal(true));
+  document.getElementById("confirmModalCancel").addEventListener("click", ()=> closeConfirmModal(false));
+  confirmModalOverlay.addEventListener("click", (e)=>{
+    if(e.target === confirmModalOverlay) closeConfirmModal(false);
+  });
+
+  async function deleteDocument(path, name){
+    const ok = await showConfirmModal({
+      title: "למחוק מסמך?",
+      text: `"${name}" יימחק לצמיתות מהריפו. אי אפשר לשחזר אותו אחר כך.`,
+      confirmLabel: "מחק לצמיתות",
+    });
+    if(!ok) return;
     try{
       const res = await fetch(WORKER_URL, {
         method: "POST",
@@ -3413,7 +3420,9 @@
       if(!res.ok || result.error) throw new Error(result.error || `HTTP ${res.status}`);
       renderDocumentsPanel();
     }catch(err){
-      alert(`מחיקה נכשלה: ${err.message}`);
+      documentUploadStatus.hidden = false;
+      documentUploadStatus.className = "documents-upload-status is-error";
+      documentUploadStatus.textContent = `המחיקה נכשלה: ${err.message}`;
     }
   }
 
@@ -3426,33 +3435,29 @@
     });
   }
 
+  // One button does both steps: opening the file picker and (as soon as a
+  // file is chosen) uploading it -- no separate "pick" then "upload" click.
   const MAX_DOCUMENT_SIZE = 4 * 1024 * 1024; // comfortably under GitHub Contents API / Worker request-body limits
   const documentFileInput = document.getElementById("documentFileInput");
   const documentUploadBtn = document.getElementById("documentUploadBtn");
-  const documentFilenameEl = document.getElementById("documentFilename");
   const documentUploadStatus = document.getElementById("documentUploadStatus");
   const DOCUMENT_UPLOAD_BTN_DEFAULT_HTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>העלה מסמך`;
 
-  document.getElementById("documentPickBtn").addEventListener("click", ()=> documentFileInput.click());
-  documentFileInput.addEventListener("change", ()=>{
-    const file = documentFileInput.files[0];
-    documentUploadStatus.hidden = true;
-    documentFilenameEl.textContent = file ? file.name : "לא נבחר קובץ";
-    documentUploadBtn.disabled = !file;
-  });
+  documentUploadBtn.addEventListener("click", ()=> documentFileInput.click());
 
-  documentUploadBtn.addEventListener("click", async ()=>{
+  documentFileInput.addEventListener("change", async ()=>{
     const file = documentFileInput.files[0];
     if(!file) return;
+    documentUploadStatus.hidden = true;
     if(file.size > MAX_DOCUMENT_SIZE){
       documentUploadStatus.hidden = false;
       documentUploadStatus.className = "documents-upload-status is-error";
       documentUploadStatus.textContent = `הקובץ גדול מדי (${formatFileSize(file.size)}). הגודל המקסימלי הוא 4MB.`;
+      documentFileInput.value = "";
       return;
     }
     documentUploadBtn.disabled = true;
     documentUploadBtn.textContent = "מעלה…";
-    documentUploadStatus.hidden = true;
     try{
       const contentBase64 = await fileToBase64(file);
       const res = await fetch(WORKER_URL, {
@@ -3465,16 +3470,15 @@
       documentUploadStatus.hidden = false;
       documentUploadStatus.className = "documents-upload-status is-ok";
       documentUploadStatus.textContent = `"${result.name}" הועלה בהצלחה.`;
-      documentFileInput.value = "";
-      documentFilenameEl.textContent = "לא נבחר קובץ";
       renderDocumentsPanel();
     }catch(err){
       documentUploadStatus.hidden = false;
       documentUploadStatus.className = "documents-upload-status is-error";
       documentUploadStatus.textContent = `ההעלאה נכשלה: ${err.message}`;
     }finally{
+      documentFileInput.value = "";
+      documentUploadBtn.disabled = false;
       documentUploadBtn.innerHTML = DOCUMENT_UPLOAD_BTN_DEFAULT_HTML;
-      documentUploadBtn.disabled = !documentFileInput.files[0];
     }
   });
 
